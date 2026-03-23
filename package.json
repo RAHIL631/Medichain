@@ -1,0 +1,18 @@
+{
+  "name": "medichain",
+  "version": "1.0.0",
+  "description": "Blockchain-based Electronic Health Record System",
+  "private": true,
+  "scripts": {
+    "start:chain":    "cd blockchain && npx hardhat node",
+    "deploy:local":   "cd blockchain && npx hardhat run scripts/deploy.js --network localhost",
+    "start:backend":  "cd backend && nodemon server.js",
+    "start:ai":       "cd ai && python app.py",
+    "start:frontend": "cd frontend && npm start",
+    "test:chain":     "cd blockchain && npx hardhat test",
+    "test:backend":   "cd backend && npm test"
+  },
+  "keywords": ["blockchain", "EHR", "IPFS", "ethereum", "health-records"],
+  "author": "",
+  "license": "MIT"
+}
