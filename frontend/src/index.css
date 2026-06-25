@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-medichain-bg-dark to-medichain-bg-light text-text-primary min-h-screen antialiased selection:bg-accent-cyan selection:text-white font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-text-primary;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-medichain-surface-glass backdrop-blur-xl border border-medichain-border rounded-2xl shadow-xl shadow-cyan-900/10;
+  }
+  
+  .glass-card {
+    @apply bg-medichain-surface-glass backdrop-blur-md border border-medichain-border rounded-xl shadow-lg;
+  }
+
+  .neon-glow {
+    @apply shadow-[0_0_15px_rgba(34,211,238,0.5)];
+  }
+
+  .neon-glow-hover {
+    @apply hover:shadow-[0_0_20px_rgba(56,189,248,0.6)] transition-shadow duration-300;
+  }
+}

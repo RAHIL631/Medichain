@@ -4,15 +4,28 @@
   "description": "Blockchain-based Electronic Health Record System",
   "private": true,
   "scripts": {
-    "start:chain":    "cd blockchain && npx hardhat node",
-    "deploy:local":   "cd blockchain && npx hardhat run scripts/deploy.js --network localhost",
-    "start:backend":  "cd backend && nodemon server.js",
-    "start:ai":       "cd ai && python app.py",
+    "dev": "concurrently --kill-others-on-fail --names \"BACKEND,FRONTEND\" --prefix-colors \"cyan,magenta\" \"cd backend && npm run dev\" \"cd frontend && npm start\"",
+    "start:backend": "cd backend && nodemon server.js",
     "start:frontend": "cd frontend && npm start",
-    "test:chain":     "cd blockchain && npx hardhat test",
-    "test:backend":   "cd backend && npm test"
+    "start:chain": "cd blockchain && npx hardhat node",
+    "deploy:local": "cd blockchain && npx hardhat run scripts/deploy.js --network localhost",
+    "start:ai": "cd ai && python app.py",
+    "test:chain": "cd blockchain && npx hardhat test",
+    "test:backend": "cd backend && npm test"
   },
-  "keywords": ["blockchain", "EHR", "IPFS", "ethereum", "health-records"],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "blockchain",
+    "EHR",
+    "IPFS",
+    "ethereum",
+    "health-records"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.2.4"
+  }
 }

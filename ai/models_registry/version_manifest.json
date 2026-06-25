@@ -1,0 +1,90 @@
+{
+  "_updated_at": "2026-06-25T17:36:20.865699+00:00",
+  "_note": "Auto-updated by scripts/train_all.py after each training run. Do not edit manually.",
+  "xgb_heart": {
+    "disease": "heart",
+    "algorithm": "XGBoost",
+    "version": "1.0.0",
+    "trained_at": null,
+    "auc": null,
+    "f1": null
+  },
+  "xgb_diabetes": {
+    "disease": "diabetes",
+    "algorithm": "XGBoost",
+    "version": "1.0.0",
+    "trained_at": null,
+    "auc": null,
+    "f1": null
+  },
+  "xgb_stroke": {
+    "disease": "stroke",
+    "algorithm": "XGBoost",
+    "version": "1.0.0",
+    "trained_at": null,
+    "auc": null,
+    "f1": null
+  },
+  "xgb_kidney": {
+    "disease": "kidney",
+    "algorithm": "XGBoost",
+    "version": "1.0.0",
+    "trained_at": null,
+    "auc": null,
+    "f1": null
+  },
+  "xgb_liver": {
+    "disease": "liver",
+    "algorithm": "XGBoost",
+    "version": "1.0.0",
+    "trained_at": null,
+    "auc": null,
+    "f1": null
+  },
+  "adherence": {
+    "disease": "adherence",
+    "algorithm": "XGBoost",
+    "version": "1.0.0",
+    "trained_at": null,
+    "auc": null,
+    "f1": null
+  },
+  "dosage_safety_rf": {
+    "algorithm": "dosage_safety_rf",
+    "auc": 0.818,
+    "f1": 0.4503,
+    "accuracy": 0.4867,
+    "target": "risk_level",
+    "trained_at": "2026-06-25T17:34:41.479067+00:00"
+  },
+  "dosage_safety_gb": {
+    "algorithm": "dosage_safety_gb",
+    "auc": 0.8078,
+    "f1": 0.4622,
+    "accuracy": 0.4733,
+    "target": "risk_level",
+    "trained_at": "2026-06-25T17:36:00.268589+00:00"
+  },
+  "dosage_safety_xgb": {
+    "algorithm": "dosage_safety_xgb",
+    "auc": 0.812,
+    "f1": 0.4743,
+    "accuracy": 0.4867,
+    "target": "risk_level",
+    "trained_at": "2026-06-25T17:36:19.989192+00:00"
+  },
+  "dosage_toxicity": {
+    "algorithm": "dosage_toxicity",
+    "auc": 0.5191,
+    "f1": 0.0435,
+    "target": "is_toxic",
+    "trained_at": "2026-06-25T17:36:20.287060+00:00"
+  },
+  "dosage_emergency": {
+    "algorithm": "dosage_emergency",
+    "auc": 0.4546,
+    "f1": 0.3577,
+    "target": "emergency_flag",
+    "trained_at": "2026-06-25T17:36:20.776760+00:00"
+  }
+}
