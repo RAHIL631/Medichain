@@ -12,6 +12,7 @@ const hpp           = require('hpp');
 const morgan        = require('morgan');
 
 const connectDB = require('./config/db');
+const { connectRedis } = require('./utils/cache');
 
 // ── IPFS startup test ─────────────────────────────────────────────────────────
 // Imported here so Pinata credentials are verified as soon as dotenv loads.
@@ -23,9 +24,16 @@ const authRoutes    = require('./routes/auth');
 const patientRoutes = require('./routes/patient');
 const doctorRoutes  = require('./routes/doctor');
 const aiRoutes      = require('./routes/ai');
+const prescriptionRoutes = require('./routes/prescriptionValidator');
+const healthRiskRoutes = require('./routes/healthRisk');
+const ensemblePredictRoutes = require('./routes/ensemblePredict');
+const adherenceSysRoutes = require('./routes/adherenceSys');
+const digitalTwinRoutes = require('./routes/digitalTwin');
+const analyticsRoutes = require('./routes/analytics');
 
-// ── Connect to MongoDB ────────────────────────────────────────────────────────
+// ── Connect to MongoDB & Redis ──────────────────────────────────────────────────
 connectDB();
+connectRedis();
 
 const app = express();
 
@@ -111,11 +119,23 @@ app.use('/api/auth', authLimiter);
 // ROUTES
 // ══════════════════════════════════════════════════════════════════════════════
 
-app.use('/api/auth',    authRoutes);
-app.use('/api/patient', patientRoutes);
-app.use('/api/doctor',  doctorRoutes);
+app.use('/api/auth',         authRoutes);
+app.use('/api/patient',      patientRoutes);
+app.use('/api/doctor',       doctorRoutes);
 // /api/ai proxies to the Python Flask microservice on port 5001
-app.use('/api/ai',      aiRoutes);
+app.use('/api/ai',           aiRoutes);
+// /api/prescription — AI prescription validation pipeline
+app.use('/api/prescription', prescriptionRoutes);
+// /api/health-risk — AI health risk scoring and SHAP engine
+app.use('/api/health-risk',  healthRiskRoutes);
+// /api/ensemble-predict — AI XGBoost + LightGBM + CatBoost multi-model disease predictor
+app.use('/api/ensemble-predict', ensemblePredictRoutes);
+// /api/adherence-sys — AI Medication Adherence Predictor pipeline
+app.use('/api/adherence-sys', adherenceSysRoutes);
+// /api/digital-twin — Patient Digital Twin simulation engine routes
+app.use('/api/digital-twin', digitalTwinRoutes);
+// /api/analytics — Real-Time Platform Analytics
+app.use('/api/analytics', analyticsRoutes);
 
 // ── Health check endpoint ─────────────────────────────────────────────────────
 app.get('/health', (req, res) =>

@@ -204,6 +204,34 @@ def gen_adherence_data(n=2000):
     })
 
 
+def gen_cancer_data(n=2000):
+    age = RNG.integers(18, 90, n)
+    gender = RNG.integers(0, 2, n)
+    smoking = (RNG.random(n) > 0.75).astype(int)
+    alcohol = (RNG.random(n) > 0.70).astype(int)
+    family_history = (RNG.random(n) > 0.85).astype(int)
+    bmi = RNG.uniform(15, 45, n).round(1)
+    inactivity = (RNG.random(n) > 0.60).astype(int)
+    inflammation = (RNG.random(n) > 0.80).astype(int)
+
+    risk = (0.04*age + 0.1*gender + 0.35*smoking + 0.2*alcohol +
+            0.5*family_history + 0.02*bmi + 0.15*inactivity + 0.3*inflammation)
+    prob = 1 / (1 + np.exp(-risk + 3.8))
+    cancer = (RNG.random(n) < prob).astype(int)
+
+    return pd.DataFrame({
+        'age': age.astype(float),
+        'gender': gender.astype(float),
+        'smoking': smoking.astype(float),
+        'alcohol': alcohol.astype(float),
+        'family_history': family_history.astype(float),
+        'bmi': bmi.astype(float),
+        'inactivity': inactivity.astype(float),
+        'inflammation': inflammation.astype(float),
+        'cancer': cancer
+    })
+
+
 # ── Core Training Function ─────────────────────────────────────────────────────
 
 def train_disease_model(name: str, df: pd.DataFrame, target_col: str, prefix="xgb") -> dict:
@@ -304,6 +332,7 @@ def main():
         {"name": "stroke",   "gen": gen_stroke_data,   "target": "stroke",       "csv": "stroke.csv"},
         {"name": "kidney",   "gen": gen_kidney_data,   "target": "ckd",          "csv": "kidney.csv"},
         {"name": "liver",    "gen": gen_liver_data,    "target": "liver_disease", "csv": "liver.csv"},
+        {"name": "cancer",   "gen": gen_cancer_data,   "target": "cancer",        "csv": "cancer.csv"},
         {"name": "adherence","gen": gen_adherence_data,"target": "adherent",     "csv": "adherence.csv"},
     ]
 

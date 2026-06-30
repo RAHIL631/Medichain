@@ -30,7 +30,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("medichain.train")
 
-AVAILABLE_DISEASES = ["heart", "diabetes", "stroke", "kidney", "liver", "adherence"]
+AVAILABLE_DISEASES = ["heart", "diabetes", "stroke", "kidney", "liver", "cancer", "adherence"]
 
 
 def train_all_cdss(diseases: list, data_dir: Path, model_dir: Path) -> dict:
@@ -41,7 +41,7 @@ def train_all_cdss(diseases: list, data_dir: Path, model_dir: Path) -> dict:
     from cdss.train_cdss import (
         train_disease_model,
         gen_heart_data, gen_diabetes_data, gen_stroke_data,
-        gen_kidney_data, gen_liver_data, gen_adherence_data,
+        gen_kidney_data, gen_liver_data, gen_cancer_data, gen_adherence_data,
         DATA_DIR as CDSS_DATA_DIR, MODEL_DIR as CDSS_MODEL_DIR,
     )
 
@@ -51,6 +51,7 @@ def train_all_cdss(diseases: list, data_dir: Path, model_dir: Path) -> dict:
         "stroke":    (gen_stroke_data,    "stroke",        "stroke.csv"),
         "kidney":    (gen_kidney_data,    "ckd",           "kidney.csv"),
         "liver":     (gen_liver_data,     "liver_disease", "liver.csv"),
+        "cancer":    (gen_cancer_data,    "cancer",        "cancer.csv"),
         "adherence": (gen_adherence_data, "adherent",      "adherence.csv"),
     }
 

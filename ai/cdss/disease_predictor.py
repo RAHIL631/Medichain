@@ -35,7 +35,7 @@ def _try_load(path):
 
 def load_all_models():
     """Load XGBoost models (primary) and sklearn models (fallback) at startup."""
-    diseases = ["heart", "kidney", "liver", "diabetes", "stroke"]
+    diseases = ["heart", "kidney", "liver", "diabetes", "stroke", "cancer"]
     
     for d in diseases:
         # XGBoost (new CDSS models)
@@ -206,6 +206,21 @@ def predict_liver(features: dict, model=None, scaler=None) -> float:
     return min(0.99, risk)
 
 
+def predict_cancer(features: dict, model, scaler) -> float:
+    """Cancer layout: age, gender, smoking, alcohol, family_history, bmi, inactivity, inflammation"""
+    f = np.zeros(8)
+    f[0] = features.get("age", 45)
+    f[1] = 1 if str(features.get("gender", "M")).upper().startswith("M") else 0
+    f[2] = 1 if features.get("smoking", False) else 0
+    f[3] = 1 if features.get("alcohol_use", False) else 0
+    f[4] = 1 if features.get("family_history_cancer", False) else 0
+    f[5] = features.get("bmi", 25.0)
+    f[6] = 1 if features.get("physical_inactivity", False) else 0
+    f[7] = 1 if features.get("chronic_inflammation", False) else 0
+    scaled = scaler.transform([f])
+    return float(model.predict_proba(scaled)[0][1])
+
+
 def predict_all_diseases(patient_features: dict) -> dict:
     """
     Run all 5 disease predictions and return ranked results.
@@ -322,6 +337,29 @@ def predict_all_diseases(patient_features: dict) -> dict:
         "risk_level": get_risk_label(prob_l),
         "model_used": "XGBoost" if model_l else "clinical_heuristic",
         "organ": "hepatic"
+    })
+
+    # ── Cancer Disease ────────────────────────────────────────────────────────
+    model_c = XGB_MODELS.get("cancer") or SKLEARN_MODELS.get("cancer")
+    scaler_c = XGB_SCALERS.get("cancer") or SKLEARN_SCALERS.get("cancer")
+    if model_c and scaler_c:
+        prob_c = predict_cancer(patient_features, model_c, scaler_c)
+    else:
+        # clinical heuristic fallback
+        prob_c = 0.05 + (age - 30) * 0.003 + (bmi - 25) * 0.005
+        prob_c += 0.15 if patient_features.get("smoking") else 0
+        prob_c += 0.10 if patient_features.get("alcohol_use") else 0
+        prob_c += 0.20 if patient_features.get("family_history_cancer") else 0
+        prob_c = min(0.99, max(0.01, prob_c))
+
+    predictions.append({
+        "disease": "Cancer",
+        "disease_key": "cancer",
+        "probability": round(prob_c * 100, 1),
+        "probability_raw": round(prob_c, 4),
+        "risk_level": get_risk_label(prob_c),
+        "model_used": "XGBoost" if model_c else "clinical_heuristic",
+        "organ": "cancer"
     })
 
     # ── Sort by probability descending ───────────────────────────────────────

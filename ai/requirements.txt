@@ -35,3 +35,9 @@ pdf2image==1.17.0
 # ── External APIs ─────────────────────────────────────────────────────────────
 # HTTP requests (RxNorm drug interaction API)
 requests==2.31.0
+
+# ── PDF Report Generation ─────────────────────────────────────────────────────
+reportlab==4.1.0
+lightgbm==4.3.0
+catboost==1.2.5
+

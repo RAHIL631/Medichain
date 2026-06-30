@@ -317,4 +317,79 @@ contract MediChain {
 
         return filtered;
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Prescription Validation — On-Chain Hash Anchoring
+    // ─────────────────────────────────────────────────────────────────────────
+
+    struct PrescriptionValidation {
+        string  reportHash;   // SHA-256 hex (64 chars)
+        uint8   safetyScore;  // 0–100
+        string  severity;     // SAFE / LOW / MODERATE / HIGH / CRITICAL
+        uint256 timestamp;
+        address validator;
+    }
+
+    mapping(address => PrescriptionValidation[]) private prescriptionValidations;
+
+    event PrescriptionValidated(
+        address indexed patient,
+        address indexed validator,
+        string  reportHash,
+        uint8   safetyScore,
+        string  severity,
+        uint256 timestamp
+    );
+
+    function addPrescriptionValidation(
+        address patientAddr,
+        string  calldata reportHash,
+        uint8   safetyScore,
+        string  calldata severity
+    ) external patientMustExist(patientAddr) {
+        require(bytes(reportHash).length == 64, "MediChain: reportHash must be 64 hex chars");
+        require(safetyScore <= 100, "MediChain: safetyScore out of range");
+        require(bytes(severity).length > 0, "MediChain: severity cannot be empty");
+        prescriptionValidations[patientAddr].push(PrescriptionValidation({
+            reportHash:  reportHash,
+            safetyScore: safetyScore,
+            severity:    severity,
+            timestamp:   block.timestamp,
+            validator:   msg.sender
+        }));
+        emit PrescriptionValidated(
+            patientAddr, msg.sender, reportHash, safetyScore, severity, block.timestamp
+        );
+    }
+
+    function getPrescriptionValidations(address patientAddr)
+        external view patientMustExist(patientAddr)
+        returns (PrescriptionValidation[] memory)
+    {
+        require(
+            msg.sender == patientAddr || doctorAccess[patientAddr][msg.sender],
+            "MediChain: access denied"
+        );
+        return prescriptionValidations[patientAddr];
+    }
+
+    function getPrescriptionValidationCount(address patientAddr)
+        external view returns (uint256)
+    {
+        return prescriptionValidations[patientAddr].length;
+    }
+
+    function verifyPrescriptionHash(address patientAddr, string calldata reportHash)
+        external view returns (bool found, uint8 score, string memory sev)
+    {
+        PrescriptionValidation[] storage pvs = prescriptionValidations[patientAddr];
+        bytes32 target = keccak256(bytes(reportHash));
+        for (uint256 i = 0; i < pvs.length; i++) {
+            if (keccak256(bytes(pvs[i].reportHash)) == target) {
+                return (true, pvs[i].safetyScore, pvs[i].severity);
+            }
+        }
+        return (false, 0, "");
+    }
 }
+

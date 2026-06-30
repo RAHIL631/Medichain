@@ -21,6 +21,12 @@ const UploadReport        = lazy(() => import('./pages/UploadReport'));
 const QRScannerPage       = lazy(() => import('./pages/QRScannerPage'));
 const PatientRegistry     = lazy(() => import('./pages/PatientRegistry'));
 const CDSSPage            = lazy(() => import('./pages/CDSSPage'));
+const PrescriptionValidator = lazy(() => import('./pages/PrescriptionValidator'));
+const HealthRiskDashboard = lazy(() => import('./pages/HealthRiskDashboard'));
+const EnsemblePredictorDashboard = lazy(() => import('./pages/EnsemblePredictorDashboard'));
+const AdherenceDashboard  = lazy(() => import('./pages/AdherenceDashboard'));
+const DigitalTwinDashboard = lazy(() => import('./pages/DigitalTwinDashboard'));
+const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
 
 // ── Full-screen spinner (Suspense fallback) ───────────────────────────────────
 const PageLoader = () => (
@@ -109,6 +115,36 @@ function App() {
             <Route path="/upload-prescription" element={
               <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
                 <UploadPrescription />
+              </ProtectedRoute>
+            } />
+            <Route path="/prescription-validator" element={
+              <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                <PrescriptionValidator />
+              </ProtectedRoute>
+            } />
+            <Route path="/health-risk" element={
+              <ProtectedRoute>
+                <HealthRiskDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/ensemble-predict" element={
+              <ProtectedRoute>
+                <EnsemblePredictorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/adherence-prediction" element={
+              <ProtectedRoute>
+                <AdherenceDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/digital-twin" element={
+              <ProtectedRoute>
+                <DigitalTwinDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <AnalyticsDashboard />
               </ProtectedRoute>
             } />
             <Route path="/scan" element={

@@ -26,6 +26,7 @@ ORGAN_LABELS = {
     "liver":    {"label": "Hepatic",        "icon": "🟤",  "organ_key": "liver"},
     "diabetes": {"label": "Endocrine",      "icon": "🩸",  "organ_key": "diabetes"},
     "stroke":   {"label": "Neurological",   "icon": "🧠",  "organ_key": "stroke"},
+    "cancer":   {"label": "Oncology",       "icon": "🎗️",  "organ_key": "cancer"},
 }
 
 
@@ -163,6 +164,7 @@ def compute_health_risks(patient: dict) -> dict:
         "liver_enzymes": "Quarterly" if organ_risks.get("liver", {}).get("risk_score", 0) > 40 else "Annually",
         "cholesterol": "Annually" if organ_risks.get("heart", {}).get("risk_score", 0) > 40 else "Every 2 years",
         "cardiac_assessment": "Annually" if organ_risks.get("heart", {}).get("risk_score", 0) > 55 else "As needed",
+        "cancer_screening": "Annually" if age > 50 or patient.get("family_history_cancer") or patient.get("smoking") or organ_risks.get("cancer", {}).get("risk_score", 0) > 40 else "Every 3 years",
     }
     
     # ── Lifestyle recommendations ─────────────────────────────────────────────
@@ -186,6 +188,9 @@ def compute_health_risks(patient: dict) -> dict:
     if organ_risks.get("liver", {}).get("risk_score", 0) > 30:
         lifestyle_recs.append("Hepatic health: Limit alcohol; avoid hepatotoxic supplements")
     
+    if organ_risks.get("cancer", {}).get("risk_score", 0) > 30:
+        lifestyle_recs.append("Oncology risk: Increase antioxidant-rich foods, limit processed meats, and ensure sun protection")
+    
     if bp > 130:
         lifestyle_recs.append("DASH diet: Reduce sodium, increase potassium-rich foods")
     
@@ -195,6 +200,7 @@ def compute_health_risks(patient: dict) -> dict:
         "organ_risks": organ_risks,
         "overall_risk": overall_risk,
         "overall_risk_score": overall_score,
+        "overall_health_score": round(max(0.0, 100.0 - overall_score), 1),
         "predictions_ranked": predictions,
         "urgent_flags": urgent_flags,
         "monitoring_schedule": monitoring,

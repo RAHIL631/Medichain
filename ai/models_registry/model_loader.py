@@ -35,7 +35,7 @@ class ModelRegistry:
       {disease}_scaler.pkl      — sklearn fallback scaler
     """
 
-    DISEASES = ["heart", "diabetes", "stroke", "kidney", "liver", "adherence"]
+    DISEASES = ["heart", "diabetes", "stroke", "kidney", "liver", "cancer", "adherence"]
 
     # Dosage safety model keys (stored separately from disease models)
     DOSAGE_MODELS = [

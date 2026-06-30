@@ -1,5 +1,5 @@
 {
-  "_updated_at": "2026-06-25T17:36:20.865699+00:00",
+  "_updated_at": "2026-06-30T16:07:11.889701+00:00",
   "_note": "Auto-updated by scripts/train_all.py after each training run. Do not edit manually.",
   "xgb_heart": {
     "disease": "heart",
@@ -86,5 +86,13 @@
     "f1": 0.3577,
     "target": "emergency_flag",
     "trained_at": "2026-06-25T17:36:20.776760+00:00"
+  },
+  "xgb_cancer": {
+    "disease": "cancer",
+    "algorithm": "RandomForest",
+    "version": "1.0.0",
+    "trained_at": "2026-06-30T16:07:11.887654+00:00",
+    "auc": 0.6567,
+    "f1": 0.3826
   }
 }

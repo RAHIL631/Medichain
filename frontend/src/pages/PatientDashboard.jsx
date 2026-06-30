@@ -350,10 +350,28 @@ const PatientDashboard = () => {
               <h2 className="text-xl font-display font-bold text-white">AI Health Risk Analysis</h2>
               <div className="flex gap-4">
                 <Link
-                  to="/ai-dashboard?tab=risks"
+                  to="/health-risk"
                   className="text-xs text-accent-cyan hover:text-white transition-colors font-bold uppercase tracking-wider font-display"
                 >
                   Full Insights →
+                </Link>
+                <Link
+                  to="/ensemble-predict"
+                  className="text-xs text-accent-cyan hover:text-white transition-colors font-bold uppercase tracking-wider font-display"
+                >
+                  🧬 Ensemble Predictor →
+                </Link>
+                <Link
+                  to="/adherence-prediction"
+                  className="text-xs text-accent-cyan hover:text-white transition-colors font-bold uppercase tracking-wider font-display"
+                >
+                  🗓️ Adherence Predictor →
+                </Link>
+                <Link
+                  to="/digital-twin"
+                  className="text-xs text-accent-cyan hover:text-white transition-colors font-bold uppercase tracking-wider font-display"
+                >
+                  👥 Patient Digital Twin →
                 </Link>
                 <button
                   onClick={fetchAIRisk}

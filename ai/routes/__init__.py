@@ -59,4 +59,36 @@ def register_routes(app):
         logger.warning(f"⚠️  CDSS sub-blueprints failed to load: {e}")
         logger.warning("   Run: pip install -r requirements.txt")
 
+    # ── Prescription Validation Pipeline ─────────────────────────────────────
+    try:
+        from .validator import validator_bp
+        app.register_blueprint(validator_bp)
+        logger.info("✅ Prescription validator blueprint registered")
+    except Exception as e:
+        logger.warning(f"⚠️  Prescription validator blueprint failed to load: {e}")
+
+    # ── Multi-model Ensemble Predictor ───────────────────────────────────────
+    try:
+        from .ensemble_routes import ensemble_bp
+        app.register_blueprint(ensemble_bp)
+        logger.info("✅ Ensemble predict blueprint registered")
+    except Exception as e:
+        logger.warning(f"⚠️  Ensemble predict blueprint failed to load: {e}")
+
+    # ── AI Medication Adherence Predictor ────────────────────────────────────
+    try:
+        from .adherence_sys_routes import adherence_sys_bp
+        app.register_blueprint(adherence_sys_bp)
+        logger.info("✅ Adherence system blueprint registered")
+    except Exception as e:
+        logger.warning(f"⚠️  Adherence system blueprint failed to load: {e}")
+
+    # ── Patient Digital Twin ─────────────────────────────────────────────────
+    try:
+        from .digital_twin_routes import twin_bp
+        app.register_blueprint(twin_bp)
+        logger.info("✅ Patient digital twin blueprint registered")
+    except Exception as e:
+        logger.warning(f"⚠️  Patient digital twin blueprint failed to load: {e}")
+
     logger.info("✅ All routes registered successfully")

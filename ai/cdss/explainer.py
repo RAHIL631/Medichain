@@ -48,6 +48,9 @@ FEATURE_NAMES = {
         "Alkaline Phosphatase", "ALT", "AST", "Albumin",
         "Child-Pugh Score", "Alcohol Use"
     ],
+    "cancer": [
+        "Age", "Sex (M=1)", "Smoking", "Alcohol Use", "Family History", "BMI", "Physical Inactivity", "Chronic Inflammation"
+    ],
 }
 
 # Feature descriptions for plain-English explanation
@@ -64,6 +67,11 @@ FEATURE_CLINICAL_CONTEXT = {
     "Smoking Status": "Active or former smoking is a major risk factor for cardiovascular disease",
     "Sex (M=1)": "Biological sex affects risk — males have higher risk of certain conditions",
     "Max Heart Rate": "Maximum heart rate achieved during exercise — lower max HR may indicate cardiac dysfunction",
+    "Smoking": "Active smoking increases risk of multiple cancers (especially lung, bladder, throat)",
+    "Alcohol Use": "Regular alcohol consumption is a known carcinogen linked to liver, breast, and GI cancers",
+    "Family History": "Genetics and family history of malignancy increase personal oncology risk",
+    "Physical Inactivity": "Sedentary lifestyle reduces metabolic efficiency and increases risk of colon and breast cancers",
+    "Chronic Inflammation": "Prolonged systemic inflammation promotes cellular mutation and tumor progression",
 }
 
 
@@ -274,7 +282,69 @@ def explain_all_diseases(patient_features: dict) -> dict:
             explanations["stroke"] = explain_prediction("stroke", f, model_s, scaler_s)
         except Exception as e:
             logger.error(f"Stroke explanation failed: {e}")
-    
+
+    # Kidney explanation
+    model_k = XGB_MODELS.get("kidney") or SKLEARN_MODELS.get("kidney")
+    scaler_k = XGB_SCALERS.get("kidney") or SKLEARN_SCALERS.get("kidney")
+    if model_k:
+        f = np.array([
+            patient_features.get("age", 45),
+            patient_features.get("kidney_gfr", 90),
+            patient_features.get("creatinine", 1.0),
+            patient_features.get("urea", 20),
+            patient_features.get("sodium", 140),
+            patient_features.get("potassium", 4.0),
+            patient_features.get("hemoglobin", 13.5),
+            patient_features.get("bloodPressure", 120),
+            1 if any("diabet" in c for c in conditions) else 0,
+            1 if any("hypertension" in c or "blood pressure" in c for c in conditions) else 0,
+            patient_features.get("bmi", 25.0)
+        ], dtype=float)
+        try:
+            explanations["kidney"] = explain_prediction("kidney", f, model_k, scaler_k)
+        except Exception as e:
+            logger.error(f"Kidney explanation failed: {e}")
+
+    # Liver explanation
+    model_l = XGB_MODELS.get("liver") or SKLEARN_MODELS.get("liver")
+    scaler_l = XGB_SCALERS.get("liver") or SKLEARN_SCALERS.get("liver")
+    if model_l:
+        f = np.array([
+            patient_features.get("age", 45),
+            1 if str(patient_features.get("gender", "M")).upper().startswith("M") else 0,
+            patient_features.get("total_bilirubin", 0.8),
+            patient_features.get("direct_bilirubin", 0.2),
+            patient_features.get("alkaline_phosphatase", 90),
+            patient_features.get("alt", 25),
+            patient_features.get("ast", 25),
+            patient_features.get("albumin", 4.0),
+            patient_features.get("liver_score", 0),
+            1 if patient_features.get("alcohol_use", False) else 0
+        ], dtype=float)
+        try:
+            explanations["liver"] = explain_prediction("liver", f, model_l, scaler_l)
+        except Exception as e:
+            logger.error(f"Liver explanation failed: {e}")
+
+    # Cancer explanation
+    model_c = XGB_MODELS.get("cancer") or SKLEARN_MODELS.get("cancer")
+    scaler_c = XGB_SCALERS.get("cancer") or SKLEARN_SCALERS.get("cancer")
+    if model_c:
+        f = np.array([
+            patient_features.get("age", 45),
+            1 if str(patient_features.get("gender", "M")).upper().startswith("M") else 0,
+            1 if patient_features.get("smoking", False) else 0,
+            1 if patient_features.get("alcohol_use", False) else 0,
+            1 if patient_features.get("family_history_cancer", False) else 0,
+            patient_features.get("bmi", 25.0),
+            1 if patient_features.get("physical_inactivity", False) else 0,
+            1 if patient_features.get("chronic_inflammation", False) else 0
+        ], dtype=float)
+        try:
+            explanations["cancer"] = explain_prediction("cancer", f, model_c, scaler_c)
+        except Exception as e:
+            logger.error(f"Cancer explanation failed: {e}")
+
     return {
         "explanations": explanations,
         "shap_available": SHAP_AVAILABLE,

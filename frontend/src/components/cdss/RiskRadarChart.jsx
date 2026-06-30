@@ -14,6 +14,7 @@ const ORGAN_ICONS = {
   liver: '🟤',
   diabetes: '🩸',
   stroke: '🧠',
+  cancer: '🎗️',
 };
 
 const CustomTooltip = ({ active, payload }) => {
