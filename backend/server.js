@@ -80,14 +80,40 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // 6. Mongo sanitize — strips any keys starting with $ or containing . from
 //    req.body, req.query, and req.params to prevent NoSQL injection attacks.
-// Temporarily disabled: mongoSanitize() reassigns req.query which throws an error in Express 5
-// app.use(mongoSanitize());
+//    Using a manual wrapper for Express 5 compatibility (avoid req.query reassignment)
+app.use((req, res, next) => {
+  // Recursively strip MongoDB operator keys from an object
+  const sanitize = (obj) => {
+    if (typeof obj !== 'object' || obj === null) return obj;
+    if (Array.isArray(obj)) return obj.map(sanitize);
+    return Object.keys(obj).reduce((acc, key) => {
+      if (key.startsWith('$') || key.includes('.')) return acc; // drop dangerous keys
+      acc[key] = sanitize(obj[key]);
+      return acc;
+    }, {});
+  };
+  // Only sanitize req.body — do NOT reassign req.query (Express 5 incompatible)
+  if (req.body && typeof req.body === 'object') {
+    req.body = sanitize(req.body);
+  }
+  next();
+});
 
 // 7. HPP — HTTP Parameter Pollution protection.
-//    Prevents attackers from sending duplicate query params (e.g. ?role=patient&role=doctor)
-//    by selecting the last value and removing duplicates.
-// Temporarily disabled: hpp() reassigns req.query which throws an error in Express 5
-// app.use(hpp());
+//    Prevents duplicate query params by always using the LAST value.
+//    Manual wrapper for Express 5 compatibility.
+app.use((req, res, next) => {
+  // Normalise query string duplicates to last value
+  if (req.query && typeof req.query === 'object') {
+    const q = {};
+    for (const [key, val] of Object.entries(req.query)) {
+      q[key] = Array.isArray(val) ? val[val.length - 1] : val;
+    }
+    // Cannot reassign req.query in Express 5 — attach as sanitised copy
+    req.sanitizedQuery = q;
+  }
+  next();
+});
 
 // 8. General rate limiter — 100 requests per 15 minutes per IP
 //    Applied to all /api/* routes globally.

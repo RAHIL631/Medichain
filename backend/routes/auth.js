@@ -1,5 +1,5 @@
 // medichain/backend/routes/auth.js
-// Public authentication routes: register, login, me, logout.
+// Public authentication routes: register, login, me, logout, refresh, wallet.
 // All routes are mounted at /api/auth in server.js.
 
 const express = require('express');
@@ -7,11 +7,12 @@ const router  = express.Router();
 const jwt     = require('jsonwebtoken');
 const User    = require('../models/User');
 const { protect } = require('../middleware/auth');
-const { 
-  registerValidation, 
-  loginValidation, 
-  walletValidation, 
-  handleValidationErrors 
+const { auditLog, AuditEvents } = require('../utils/auditLogger');
+const {
+  registerValidation,
+  loginValidation,
+  walletValidation,
+  handleValidationErrors,
 } = require('../middleware/validate');
 
 // ── Helper: generate a signed JWT ─────────────────────────────────────────────
@@ -20,12 +21,29 @@ const {
  * The role is embedded so that protect/authorize can act without a DB hit
  * on every single request (though protect still verifies the user exists).
  */
-const generateToken = (user) =>
+/**
+ * Signs a short-lived access JWT (24h).
+ */
+const generateAccessToken = (user) =>
   jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: '24h' }
   );
+
+/**
+ * Signs a long-lived refresh JWT (30d).
+ * Stored client-side — used only to obtain new access tokens.
+ */
+const generateRefreshToken = (user) =>
+  jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh',
+    { expiresIn: '30d' }
+  );
+
+// Backward-compatible alias (existing code uses generateToken)
+const generateToken = generateAccessToken;
 
 // ── Helper: safe user shape for API responses ─────────────────────────────────
 // Strips password and internal fields; never sends sensitive data to the client.
@@ -106,24 +124,30 @@ router.post('/register', registerValidation, handleValidationErrors, async (req,
       user: safeUser(user),
     });
 
+    auditLog(AuditEvents.REGISTER, req, { email: userData.email, role: userData.role });
+
+    return res.status(201).json({
+      token,
+      refreshToken: generateRefreshToken(user),
+      user: safeUser(user),
+    });
+
   } catch (err) {
     console.error('[AUTH] Register error:', err.message);
 
-    // Handle Mongoose unique-index violation (race condition)
     if (err.code === 11000) {
       return res.status(400).json({ error: 'Email already registered' });
     }
-    // Handle Mongoose validation errors (e.g. invalid email format)
     if (err.name === 'ValidationError') {
       const messages = Object.values(err.errors).map((e) => e.message);
       return res.status(400).json({ error: messages.join('. ') });
     }
 
+    // Never expose stack traces — even in development via the API
     return res.status(500).json({
       error: process.env.NODE_ENV === 'production'
         ? 'Server error during registration'
-        : `Server error during registration: ${err.message}`,
-      details: process.env.NODE_ENV === 'production' ? undefined : err.stack
+        : `Registration failed: ${err.message}`,
     });
   }
 });
@@ -160,11 +184,15 @@ router.post('/login', loginValidation, handleValidationErrors, async (req, res) 
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // 4. Issue token and respond
-    const token = generateToken(user);
+    // 4. Issue tokens and respond
+    const token        = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    auditLog(AuditEvents.LOGIN_SUCCESS, req, { userId: user._id.toString(), role: user.role });
 
     return res.status(200).json({
       token,
+      refreshToken,
       user: safeUser(user),
     });
 
@@ -197,7 +225,51 @@ router.get('/me', protect, (req, res) => {
  * Headers: Authorization: Bearer <token>  (optional)
  */
 router.post('/logout', (req, res) => {
+  auditLog(AuditEvents.LOGOUT, req);
   return res.status(200).json({ message: 'Logged out' });
+});
+
+// ── POST /api/auth/refresh ────────────────────────────────────────────────────
+/**
+ * Issues a new access token given a valid refresh token.
+ * Body: { refreshToken }
+ */
+router.post('/refresh', async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(400).json({ error: 'Refresh token required' });
+
+  try {
+    const secret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh';
+    const decoded = jwt.verify(refreshToken, secret);
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) return res.status(401).json({ error: 'User not found' });
+
+    const newToken = generateAccessToken(user);
+    return res.status(200).json({ token: newToken });
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired refresh token' });
+  }
+});
+
+// ── PATCH /api/auth/blockchain-registered ─────────────────────────────────────
+/**
+ * Marks the logged-in user as blockchain-registered.
+ * Called after patient calls registerPatient() on the smart contract.
+ */
+router.patch('/blockchain-registered', protect, async (req, res) => {
+  try {
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      { isBlockchainRegistered: true },
+      { new: true }
+    );
+    return res.status(200).json({
+      message: 'Blockchain registration confirmed',
+      isBlockchainRegistered: updated.isBlockchainRegistered,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Could not update blockchain status' });
+  }
 });
 
 // ── PATCH /api/auth/wallet ────────────────────────────────────────────────────
