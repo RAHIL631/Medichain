@@ -1,9 +1,9 @@
 // frontend/src/pages/PatientDashboard.jsx
 // Patient home page — 6 sections: TopBar, Stats, QR Health ID, AI Risk, Records, Access
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+
 
 import { useAuth }      from '../context/AuthContext';
 import api              from '../utils/api';
@@ -17,6 +17,7 @@ import GlassCard     from '../components/GlassCard';
 import WalletSetup   from '../components/WalletSetup';
 import useContract    from '../hooks/useContract';
 import useContractEvents from '../hooks/useContractEvents';
+import { MEDICAL_IMAGES, DOCTOR_IMAGES, MEDICINE_IMAGES } from '../utils/images';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const RECORD_TYPES = ['All', 'prescription', 'lab-report', 'diagnosis', 'imaging', 'vaccination'];
@@ -291,6 +292,45 @@ const PatientDashboard = () => {
 
         {user?.walletAddress && (
           <>
+            {/* ── WELCOME BANNER WITH REAL IMAGE ─────────────────────────────── */}
+            <div className="relative rounded-2xl overflow-hidden border border-medichain-border/60">
+              <img
+                src={MEDICAL_IMAGES.stethoscope}
+                alt="Healthcare"
+                className="w-full h-40 object-cover"
+                onError={(e) => { e.target.src = MEDICAL_IMAGES.default; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-medichain-bg-dark/90 via-medichain-bg-dark/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-medichain-bg-dark/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 p-5 flex flex-col justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-accent-cyan animate-pulse" />
+                  <span className="text-[10px] font-mono text-accent-cyan uppercase tracking-wider">Patient Health Record — Blockchain Secured</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-display font-bold text-white">Welcome, {user?.name?.split(' ')[0] || 'Patient'}</h2>
+                    <p className="text-sm text-text-secondary mt-1">Your decentralised health vault is active and secured on-chain</p>
+                  </div>
+                  <div className="hidden md:flex gap-3">
+                    {[
+                      { label: 'Records', value: records.length, img: MEDICINE_IMAGES.prescription },
+                      { label: 'Doctors', value: doctorCount, img: DOCTOR_IMAGES.male_1 },
+                    ].map(({ label, value, img }) => (
+                      <div key={label} className="relative w-20 h-16 rounded-xl overflow-hidden border border-white/20">
+                        <img src={img} alt={label} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/60" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <p className="text-lg font-bold text-white">{value}</p>
+                          <p className="text-[9px] text-gray-300">{label}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* ── SECTION 2: STATS CARDS ─────────────────────────────────────────── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard

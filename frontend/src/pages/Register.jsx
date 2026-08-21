@@ -1,18 +1,27 @@
 // c:\Users\Rahil hassan\OneDrive\Desktop\Major project\MediChain\frontend\src\pages\Register.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+// Password rules — must mirror backend/middleware/validate.js exactly
+const passwordRules = [
+  { id: 'length',    label: 'At least 8 characters',               test: (p) => p.length >= 8 },
+  { id: 'uppercase', label: 'At least one uppercase letter (A–Z)',   test: (p) => /[A-Z]/.test(p) },
+  { id: 'number',    label: 'At least one number (0–9)',             test: (p) => /\d/.test(p) },
+  { id: 'special',   label: 'At least one special character (!@#$%^&*)', test: (p) => /[!@#$%^&*]/.test(p) },
+];
 
 const Register = () => {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState('');
-  
+  const [showPasswordHints, setShowPasswordHints] = useState(false);
+
   // Common Fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
   // Patient Specific Fields
   const [bloodGroup, setBloodGroup] = useState('');
   const [dob, setDob] = useState('');
@@ -31,11 +40,19 @@ const Register = () => {
   const [registrationNumber, setRegistrationNumber] = useState('');
 
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // Memoised password rule states for live checklist
+  const passwordChecks = useMemo(
+    () => passwordRules.map((r) => ({ ...r, passed: r.test(password) })),
+    [password]
+  );
+  const passwordValid = passwordChecks.every((r) => r.passed);
 
   // Handle adding an allergy tag when pressing enter
   const handleAddAllergy = (e) => {
@@ -62,26 +79,33 @@ const Register = () => {
   const handleNextToStep3 = (e) => {
     e.preventDefault();
     setError('');
-    
+    setFieldErrors([]);
+
     if (!fullName || !email || !password || !confirmPassword) {
       return setError('All common fields are required.');
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return setError('Please enter a valid email address.');
     }
 
+    if (!passwordValid) {
+      setShowPasswordHints(true);
+      return setError('Your password does not meet all the requirements listed below.');
+    }
+
     if (password !== confirmPassword) {
       return setError('Passwords do not match.');
     }
-    
+
     setStep(3);
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors([]);
     setLoading(true);
 
     let userData = { role, name: fullName, email, password };
@@ -98,7 +122,7 @@ const Register = () => {
         setLoading(false);
         return setError('All doctor fields are required.');
       }
-      userData = { ...userData, specialization, hospitalName: hospitalNameDoc, licenseNumber, experience };
+      userData = { ...userData, specialization, hospitalName: hospitalNameDoc, licenseNumber, yearsExperience: Number(experience) };
     } else if (role === 'hospital') {
       if (!hospitalName || !location || !registrationNumber) {
         setLoading(false);
@@ -114,9 +138,14 @@ const Register = () => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      // Extract the actual error message sent by the backend
-      const backendError = err.response?.data?.error || err.message || 'Registration failed. Please try again.';
-      setError(backendError);
+      const data = err.response?.data;
+      // Backend may return { error, errors: [{field, message}] }
+      if (data?.errors?.length) {
+        setFieldErrors(data.errors);
+        setError(data.error || 'Validation failed. Please fix the issues below.');
+      } else {
+        setError(data?.error || err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -141,11 +170,20 @@ const Register = () => {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm flex items-start gap-3">
-            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{error}</span>
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{error}</span>
+            </div>
+            {fieldErrors.length > 0 && (
+              <ul className="mt-2 ml-8 list-disc space-y-1">
+                {fieldErrors.map((fe, i) => (
+                  <li key={i}><span className="font-medium capitalize">{fe.field}</span>: {fe.message}</li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
@@ -229,28 +267,49 @@ const Register = () => {
                   required 
                 />
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                <input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                  placeholder="••••••••" 
-                  required 
-                  minLength="6" 
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setShowPasswordHints(true); }}
+                  onFocus={() => setShowPasswordHints(true)}
+                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  placeholder="Min 8 chars, uppercase, number, special char"
+                  required
+                  minLength="8"
                 />
+                {showPasswordHints && (
+                  <ul className="mt-2 space-y-1">
+                    {passwordChecks.map((rule) => (
+                      <li key={rule.id} className={`flex items-center gap-2 text-xs transition-colors ${rule.passed ? 'text-green-400' : 'text-gray-500'}`}>
+                        {rule.passed
+                          ? <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+                          : <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                        }
+                        {rule.label}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
-                <input 
-                  type="password" 
-                  value={confirmPassword} 
-                  onChange={(e) => setConfirmPassword(e.target.value)} 
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                  placeholder="••••••••" 
-                  required 
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full bg-gray-900 border rounded-lg px-4 py-3 text-white focus:outline-none transition-colors ${
+                    confirmPassword && confirmPassword !== password
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-gray-700 focus:border-blue-500'
+                  }`}
+                  placeholder="••••••••"
+                  required
                 />
+                {confirmPassword && confirmPassword !== password && (
+                  <p className="mt-1 text-xs text-red-400">Passwords do not match</p>
+                )}
               </div>
             </div>
             

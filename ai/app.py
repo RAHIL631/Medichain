@@ -109,8 +109,8 @@ def create_app(config_overrides: dict = None) -> Flask:
 if __name__ == "__main__":
     app = create_app()
     port = settings.PORT
-    logger._log = logging.getLogger("medichain.app")
-    logging.getLogger("medichain.app").info(
-        f"🌐 Dev server: http://{settings.HOST}:{port}"
+    _main_logger = logging.getLogger("medichain.app")
+    _main_logger.info(
+        f"Dev server: http://{settings.HOST}:{port}"
     )
     app.run(host=settings.HOST, port=port, debug=settings.DEBUG)

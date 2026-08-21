@@ -1,10 +1,17 @@
 # ── Dependencies ──────────────────────────────────────────────────────────────
 node_modules/
 
-# ── Environment & Secrets ─────────────────────────────────────────────────────
+# ── Environment & Secrets — NEVER commit these ─────────────────────────────────
+# CRITICAL: .env files contain API keys, JWT secrets, database passwords.
+# They must NEVER be committed to version control.
 .env
 .env.local
 .env.*.local
+backend/.env
+ai/.env
+blockchain/.env
+frontend/.env
+frontend/.env.local
 
 # ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
@@ -13,18 +20,25 @@ __pycache__/
 *.pyd
 venv/
 .venv/
+venvmvenv/
 *.pkl          # trained ML model files
 .coverage
 coverage/
+htmlcov/
 
 # ── Hardhat / Solidity ────────────────────────────────────────────────────────
 artifacts/
 cache/
 typechain-types/
+gas-report.txt
 
 # ── Build outputs ─────────────────────────────────────────────────────────────
 dist/
 build/
+
+# ── Test coverage ─────────────────────────────────────────────────────────────
+coverage/
+*.lcov
 
 # ── OS / Editor ───────────────────────────────────────────────────────────────
 .DS_Store
@@ -32,3 +46,14 @@ Thumbs.db
 .idea/
 .vscode/
 *.log
+
+# ── Secret management ─────────────────────────────────────────────────────────
+*.pem
+*.key
+*.p12
+*.pfx
+private-key.json
+keystore/
+
+# ── Deployed contract addresses (may contain sensitive network info) ──────────
+# deployedContract.json should be treated carefully if it contains mainnet addresses

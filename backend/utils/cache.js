@@ -8,12 +8,18 @@ const connectRedis = async () => {
     try {
         redisClient = createClient({ url: redisUrl });
         
-        redisClient.on('error', (err) => console.log('[Redis] Client Error:', err));
-        redisClient.on('connect', () => console.log('[Redis] Connected gracefully 🚀'));
+        let redisErrorLogged = false;
+        redisClient.on('error', (err) => {
+            if (!redisErrorLogged) {
+                console.warn('[Redis] Unavailable — caching disabled. Run Redis to enable it.');
+                redisErrorLogged = true;
+            }
+        });
+        redisClient.on('connect', () => console.log('[Redis] Connected ✓'));
 
         await redisClient.connect();
     } catch (err) {
-        console.error('[Redis] Failed to connect:', err);
+        console.warn('[Redis] Could not connect — caching disabled.');
     }
 };
 

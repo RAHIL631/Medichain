@@ -38,7 +38,7 @@ describe("MediChain", function () {
 
     it("should add patient to patientList array", async function () {
       await contract.connect(patient2).registerPatient();
-      const patients = await contract.getAllPatients();
+      const patients = await contract.getPatientsPaginated(0, 100);
       expect(patients).to.include(patient1.address);
       expect(patients).to.include(patient2.address);
     });
@@ -241,9 +241,9 @@ describe("MediChain", function () {
   });
 
   describe("View Functions", function () {
-    it("getAllPatients should return array with registered patients", async function () {
+    it("getPatientsPaginated should return array with registered patients", async function () {
       await contract.connect(patient2).registerPatient();
-      const patients = await contract.getAllPatients();
+      const patients = await contract.getPatientsPaginated(0, 100);
       expect(patients.length).to.equal(2);
       expect(patients[0]).to.equal(patient1.address);
       expect(patients[1]).to.equal(patient2.address);

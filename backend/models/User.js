@@ -43,7 +43,7 @@ const UserSchema = new mongoose.Schema({
     type:     String,
     required: [true, 'Role is required'],
     enum:     {
-      values:  ['patient', 'doctor', 'hospital'],
+      values:  ['patient', 'doctor', 'hospital', 'admin'],
       message: '{VALUE} is not a valid role',
     },
   },
@@ -122,6 +122,49 @@ const UserSchema = new mongoose.Schema({
     min:  [0, 'Experience cannot be negative'],
   },
 
+  // ── Account Security ────────────────────────────────────────────────────────
+  // Brute-force lockout: track failed login attempts
+  loginAttempts: {
+    type:    Number,
+    default: 0,
+    select:  false,
+  },
+  lockUntil: {
+    type:   Date,
+    select: false,
+  },
+
+  // Email verification
+  isEmailVerified: {
+    type:    Boolean,
+    default: false,
+  },
+  emailVerifyToken: {
+    type:   String,
+    select: false,
+  },
+  emailVerifyExpires: {
+    type:   Date,
+    select: false,
+  },
+
+  // Password reset
+  passwordResetToken: {
+    type:   String,
+    select: false,
+  },
+  passwordResetExpires: {
+    type:   Date,
+    select: false,
+  },
+
+  // Soft-delete / suspension
+  isActive: {
+    type:    Boolean,
+    default: true,
+    index:   true,
+  },
+
   // ── Timestamps ──────────────────────────────────────────────────────────────
   createdAt: {
     type:    Date,
@@ -158,6 +201,42 @@ UserSchema.pre('save', function () {
 UserSchema.methods.comparePassword = async function (candidatePassword) {
   // 'this.password' may not be selected — callers must use .select('+password')
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+// ── Virtual: isLocked ─────────────────────────────────────────────────────────
+UserSchema.virtual('isLocked').get(function () {
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+});
+
+// ── Instance Method: incrementLoginAttempts ───────────────────────────────────
+// Call on each failed login. After MAX_ATTEMPTS, locks for LOCK_DURATION.
+const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5');
+const LOCK_DURATION_MS   = parseInt(process.env.LOCK_DURATION_MINS || '15') * 60 * 1000;
+
+UserSchema.methods.incrementLoginAttempts = async function () {
+  // If a previous lock has expired, reset the counter first
+  if (this.lockUntil && this.lockUntil < Date.now()) {
+    return this.updateOne({
+      $set:   { loginAttempts: 1 },
+      $unset: { lockUntil: 1 },
+    });
+  }
+
+  const updates = { $inc: { loginAttempts: 1 } };
+  // Lock the account if this attempt hits the threshold
+  if (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS) {
+    updates.$set = { lockUntil: new Date(Date.now() + LOCK_DURATION_MS) };
+  }
+  return this.updateOne(updates);
+};
+
+// ── Instance Method: resetLoginAttempts ───────────────────────────────────────
+// Call on successful login to clear the counter and any lock.
+UserSchema.methods.resetLoginAttempts = function () {
+  return this.updateOne({
+    $set:   { loginAttempts: 0 },
+    $unset: { lockUntil: 1 },
+  });
 };
 
 // ── Instance Method: toJSON ───────────────────────────────────────────────────

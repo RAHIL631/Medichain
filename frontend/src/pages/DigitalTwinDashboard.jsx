@@ -422,7 +422,7 @@ export default function DigitalTwinDashboard() {
         )}
 
         {/* TAB 2: PROFILE FORM */}
-        {activeTab === 'baseline' && (
+        {activeSubTab === 'baseline' && (
           <GlassCard className="max-w-2xl mx-auto">
             <h3 className="text-lg font-bold text-white mb-6">⚙️ Configure Digital Twin Baseline Profile</h3>
             

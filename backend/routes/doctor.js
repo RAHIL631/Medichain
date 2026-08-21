@@ -19,7 +19,10 @@ const axios         = require('axios');
 const { protect, authorize }    = require('../middleware/auth');
 const User                      = require('../models/User');
 const MedicalRecord             = require('../models/MedicalRecord');
+const ConsentRecord             = require('../models/ConsentRecord');
 const { uploadToIPFS }          = require('../utils/ipfs');
+const { validateFileMagicBytes }= require('../middleware/fileValidator');
+const { encryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
 
 // ── Multer config ─────────────────────────────────────────────────────────────
 // Files are kept in memory (Buffer) — never touch disk — then streamed to IPFS.
@@ -65,7 +68,7 @@ router.use(authorize('doctor', 'hospital'));
  *  - notes            (string, optional)
  *  - medications      (comma-separated string, e.g. "Metformin,Aspirin")
  */
-router.post('/upload-record', upload.single('file'), async (req, res) => {
+router.post('/upload-record', upload.single('file'), validateFileMagicBytes, async (req, res) => {
   try {
     // ── 1. Validate required form fields ──────────────────────────────────────
     const { patientWalletAddress, recordType, notes, medications } = req.body;
@@ -106,21 +109,51 @@ router.post('/upload-record', upload.single('file'), async (req, res) => {
       });
     }
 
+    // ── CONSENT VERIFICATION ───────────────────────────────────────────────
+    // Doctors must have an active ConsentRecord from the patient.
+    // This is in addition to the blockchain access grant.
+    const hasConsent = await ConsentRecord.hasActiveConsent(patient._id, req.user._id);
+    if (!hasConsent) {
+      return res.status(403).json({
+        error: 'Access denied: patient has not granted consent for you to upload records. ' +
+               'The patient must grant you access first.',
+      });
+    }
+
     // Reload doctor to get walletAddress (req.user comes from protect middleware)
     const doctor = await User.findById(req.user._id).select('walletAddress name');
 
-    // ── 3. Upload file buffer to IPFS via Pinata ──────────────────────────
-    // uploadToIPFS pins the file AND stores searchable metadata on Pinata:
-    //   patientWalletAddress, recordType, uploadedBy (doctor), timestamp
-    // The returned CID is a SHA-256 hash of the file — tamper-proof.
+    // ── 3. Encrypt file buffer & Upload to IPFS via Pinata ──────────────────
+    let bufferToUpload = req.file.buffer;
+    let encryptionMeta = null;
+    let isEncrypted    = false;
+
+    if (isEncryptionConfigured()) {
+      const encResult = encryptBuffer(req.file.buffer);
+      bufferToUpload  = encResult.encryptedBuffer;
+      isEncrypted     = true;
+      encryptionMeta  = {
+        encryptedKey: encResult.encryptedKey,
+        iv:           encResult.iv,
+        authTag:      encResult.authTag,
+        algorithm:    'aes-256-gcm',
+        encryptedAt:  new Date(),
+      };
+      console.log('[DOCTOR] 🔒 File encrypted with AES-256-GCM before upload');
+    } else {
+      console.warn('[DOCTOR] ⚠️ ENCRYPTION_MASTER_KEY missing! Uploading unencrypted file to IPFS.');
+    }
+
+    // uploadToIPFS pins the file AND stores searchable metadata on Pinata
     const { cid, url: ipfsURL, size: ipfsSize } = await uploadToIPFS(
-      req.file.buffer,
+      bufferToUpload,
       req.file.originalname,
       {
         patientWalletAddress: patient.walletAddress,
         recordType,
         uploadedBy:  doctor?.walletAddress || req.user._id.toString(),
         timestamp:   new Date().toISOString(),
+        encrypted:   isEncrypted ? 'true' : 'false',
       }
     );
     console.log(`[DOCTOR] IPFS ✅  CID: ${cid}  Size: ${ipfsSize} bytes`);
@@ -213,10 +246,15 @@ router.post('/upload-record', upload.single('file'), async (req, res) => {
       ipfsURL:              ipfsURL,
       recordType:           recordType,
       fileName:             req.file.originalname,
+      // If we use validatedMime, it ensures accuracy over whatever header was sent
+      fileMimeType:         req.file.validatedMime || req.file.mimetype,
       fileSize:             req.file.size,
-      fileMimeType:         req.file.mimetype,
       notes:                notes || '',
       medications:          medicationList,
+      
+      // Encryption data
+      isEncrypted,
+      ...(encryptionMeta && { encryptionMeta }),
       // AI Analysis — stored inline if CDSS ran successfully
       ...(cdssAnalysis && {
         aiAnalysis: {

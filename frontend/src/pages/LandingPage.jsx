@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { LANDING_IMAGES, HOSPITAL_IMAGES } from '../utils/images';
 
 // ── Animated counter hook ────────────────────────────────────────────────────
 const useCounter = (target, duration = 2000, startTrigger = false) => {
@@ -227,7 +228,34 @@ const LandingPage = () => {
         </div>
 
         {/* ── Hero Visual ─────────────────────────────────────────────────────── */}
-        <div className="mt-20 w-full max-w-6xl px-2 relative">
+        {/* Real doctors team photo */}
+        <div className="mt-16 w-full max-w-5xl relative rounded-2xl overflow-hidden border border-medichain-border/60 shadow-2xl shadow-accent-cyan/10">
+          <img
+            src={LANDING_IMAGES.doctors_team}
+            alt="Medical professionals collaborating with digital health technology"
+            className="w-full h-52 md:h-72 object-cover object-top"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-medichain-bg-dark/85 via-medichain-bg-dark/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-medichain-bg-dark/70 via-transparent to-transparent" />
+          <div className="absolute bottom-5 left-6 right-6 flex flex-wrap gap-3">
+            {[
+              { icon: '🔒', label: 'Blockchain Secured', value: '1M+ Records' },
+              { icon: '🧠', label: 'AI-Powered CDSS', value: '99.9% Accuracy' },
+              { icon: '🏥', label: 'Verified Hospitals', value: '500+ Partners' },
+            ].map(({ icon, label, value }) => (
+              <div key={label} className="flex items-center gap-2 bg-medichain-bg-dark/80 backdrop-blur-md border border-medichain-border/60 rounded-xl px-3 py-2">
+                <span className="text-lg">{icon}</span>
+                <div>
+                  <p className="text-[10px] text-text-secondary">{label}</p>
+                  <p className="text-xs font-bold text-white">{value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Original dashboard mockup */}
+        <div className="mt-12 w-full max-w-6xl px-2 relative">
           {/* Glow behind the card */}
           <div className="absolute inset-0 bg-gradient-to-r from-accent-blue/20 via-accent-cyan/10 to-accent-indigo/20 blur-3xl opacity-40 rounded-3xl" />
 
@@ -254,7 +282,7 @@ const LandingPage = () => {
               {[
                 { label: 'Total Records', value: '12', color: 'accent-cyan', icon: '📋', float: 'float-1' },
                 { label: 'AI Risk Score', value: 'LOW', color: 'status-success', icon: '🧠', float: 'float-2' },
-                { label: 'Doctors Authorized', value: '3', color: 'accent-indigo', icon: '👨‍⚕️', float: 'float-3' },
+                { label: 'Doctors Authorized', value: '3', color: 'accent-indigo', icon: '👨\u200d⚕️', float: 'float-3' },
                 { label: 'Blockchain Blocks', value: '18.2M', color: 'accent-blue', icon: '⛓️', float: 'float-4' },
               ].map(({ label, value, color, icon, float: floatClass }) => (
                 <div key={label} className={`bg-medichain-surface/60 border border-medichain-border rounded-2xl p-4 flex flex-col justify-between ${floatClass}`}>
@@ -317,6 +345,38 @@ const LandingPage = () => {
               {statsVisible ? `${(uptime / 100).toFixed(2)}%` : '0'}
             </h3>
             <p className="text-xs text-text-secondary uppercase tracking-widest">Blockchain Uptime</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Partner Hospitals Strip ────────────────────────────────────────── */}
+      <section className="py-12 px-4 md:px-8 border-y border-medichain-border bg-medichain-surface/5">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-center text-xs uppercase tracking-widest text-text-secondary mb-8">Trusted by India's Leading Medical Institutions</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { name: 'Apollo Hospitals', img: HOSPITAL_IMAGES.apollo, city: 'Mumbai' },
+              { name: 'Fortis Healthcare', img: HOSPITAL_IMAGES.fortis, city: 'Delhi' },
+              { name: 'AIIMS New Delhi', img: HOSPITAL_IMAGES.aiims, city: 'New Delhi' },
+              { name: 'Tata Memorial Centre', img: HOSPITAL_IMAGES.tata, city: 'Mumbai' },
+            ].map(({ name, img, city }) => (
+              <div key={name} className="relative rounded-2xl overflow-hidden border border-medichain-border/60 group cursor-pointer hover:border-accent-cyan/30 transition-all duration-300">
+                <img
+                  src={img}
+                  alt={name}
+                  className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80'; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-medichain-bg-dark/90 via-medichain-bg-dark/30 to-transparent" />
+                <div className="absolute bottom-2 left-3">
+                  <p className="text-xs font-bold text-white leading-tight">{name}</p>
+                  <p className="text-[10px] text-text-secondary">{city}</p>
+                </div>
+                <div className="absolute top-2 right-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse block" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

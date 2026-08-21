@@ -10,6 +10,8 @@ const MONGO_OPTIONS = {
   maxPoolSize:             10,     // Max simultaneous connections in the pool
 };
 
+let mongoServer;
+
 // ── connectDB ─────────────────────────────────────────────────────────────────
 /**
  * Establishes the Mongoose connection.
@@ -22,6 +24,22 @@ const connectDB = async () => {
     console.log(`✅  MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`❌  MongoDB connection error: ${error.message}`);
+    
+    // Auto-fallback to in-memory DB in development if local mongo is down
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔄  Falling back to in-memory MongoDB (mongodb-memory-server)...');
+      try {
+        const { MongoMemoryServer } = require('mongodb-memory-server');
+        mongoServer = await MongoMemoryServer.create();
+        const uri = mongoServer.getUri();
+        const conn = await mongoose.connect(uri, MONGO_OPTIONS);
+        console.log(`✅  MongoDB (In-Memory) connected: ${conn.connection.host}`);
+        return; // Success, exit the function
+      } catch (fallbackError) {
+        console.error(`❌  In-Memory MongoDB fallback failed: ${fallbackError.message}`);
+      }
+    }
+    
     // Exit the process — nodemon/PM2 will restart it, retrying the connection
     process.exit(1);
   }
@@ -50,6 +68,9 @@ mongoose.connection.on('error', (err) => {
 const gracefulDisconnect = async (signal) => {
   console.log(`\n⚠️  ${signal} received — closing MongoDB connection...`);
   await mongoose.connection.close();
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
   console.log('✅  MongoDB connection closed cleanly');
   process.exit(0);
 };

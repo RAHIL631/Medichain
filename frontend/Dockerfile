@@ -6,18 +6,18 @@ FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app
 
-# Accept API URL at build time for Vite
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+# Accept API URL at build time (CRA uses REACT_APP_* prefix, not VITE_*)
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 # Copy dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy application source code
 COPY . .
 
-# Build the Vite application for production
+# Build the Create React App application for production
 RUN npm run build
 
 # ── Stage 2: Serve via Nginx ──────────────────────────────────────────────────
@@ -30,7 +30,7 @@ LABEL description="MediChain React Frontend served via Nginx"
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copy the built React app from the builder stage
-COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
 
 # Copy custom Nginx configuration for Single Page Application routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf

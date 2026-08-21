@@ -14,7 +14,7 @@ const QRScannerPage = () => {
     const [loading, setLoading]             = useState(false);
     const [error, setError]                 = useState('');
     
-    const { checkAccess } = useBlockchain();
+    const { checkAccess } = useBlockchain(); // eslint-disable-line no-unused-vars
     const navigate = useNavigate();
 
     const navItems = [

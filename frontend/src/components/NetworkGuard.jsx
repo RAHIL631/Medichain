@@ -36,10 +36,11 @@ const SUPPORTED_NETWORKS = {
   },
 };
 
-// Target varies by environment — change VITE_TARGET_CHAIN_ID in .env to override
+// Target varies by environment — change REACT_APP_TARGET_CHAIN_ID in .env to override
+// Note: This project uses Create React App (CRA), not Vite. Use process.env.REACT_APP_* and process.env.NODE_ENV.
 const TARGET_CHAIN_ID =
-  Number(import.meta?.env?.VITE_TARGET_CHAIN_ID) ||
-  (import.meta?.env?.MODE === 'production' ? 11155111 : 31337);
+  Number(process.env.REACT_APP_TARGET_CHAIN_ID) ||
+  (process.env.NODE_ENV === 'production' ? 11155111 : 31337);
 
 const TARGET_NETWORK = SUPPORTED_NETWORKS[TARGET_CHAIN_ID];
 

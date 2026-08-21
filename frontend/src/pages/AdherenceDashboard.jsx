@@ -17,7 +17,7 @@ export default function AdherenceDashboard() {
   // Sub-tabs: 'assess' | 'history'
   const [activeTab, setActiveTab] = useState('assess');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); // eslint-disable-line no-unused-vars
 
   // Form params
   const [patientId, setPatientId] = useState('');

@@ -1,17 +1,18 @@
-# 🏥 MediChain
-### Blockchain-Based Electronic Health Record System with AI-Assisted Medical Insights
+# 🏥 MediChain Enterprise v3.0
+### Blockchain-Based Electronic Health Record System with AI-Assisted Clinical Intelligence
 
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.19-363636?logo=solidity)](https://soliditylang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express%205-339933?logo=node.js)](https://expressjs.com/)
 [![Python](https://img.shields.io/badge/Python-Flask-3776AB?logo=python)](https://flask.palletsprojects.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)](https://www.mongodb.com/atlas)
+[![Neo4j](https://img.shields.io/badge/Neo4j-v5-008CC1?logo=neo4j)](https://neo4j.com/)
 [![IPFS](https://img.shields.io/badge/IPFS-Pinata-65C2CB?logo=ipfs)](https://www.pinata.cloud/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **VTU Final Year Project | IEEE Publication Ready | Hackathon-Grade Architecture**
+> **VTU Final Year Project | IEEE Publication Ready | Enterprise-Grade Healthcare Platform**
 
-MediChain is a production-quality decentralised EHR platform where patients own their medical records on Ethereum, doctors get patient-controlled access, and an AI ensemble (XGBoost + LightGBM + CatBoost) provides clinical decision support.
+MediChain v3.0 is an enterprise-grade AI Healthcare Intelligence Platform that pairs blockchain-verified Electronic Health Records (EHR) with an advanced Clinical Decision Support System (CDSS), Knowledge Graph, Weighted Hospital Recommendation Engine, and Predictive Analytics.
 
 ---
 
@@ -20,42 +21,43 @@ MediChain is a production-quality decentralised EHR platform where patients own 
 1. [Architecture Overview](#architecture-overview)
 2. [Tech Stack](#tech-stack)
 3. [Key Features](#key-features)
-4. [Prerequisites](#prerequisites)
-5. [Installation & Setup](#installation--setup)
-6. [Environment Variables](#environment-variables)
-7. [Running the Project](#running-the-project)
-8. [Smart Contract API](#smart-contract-api)
-9. [Backend API Reference](#backend-api-reference)
-10. [AI Microservice API](#ai-microservice-api)
-11. [Security](#security)
-12. [Project Structure](#project-structure)
-13. [Contributing](#contributing)
+4. [Enterprise Modules (Phase 1–15)](#enterprise-modules-phase-115)
+5. [Prerequisites](#prerequisites)
+6. [Installation & Setup](#installation--setup)
+7. [Environment Variables](#environment-variables)
+8. [Running the Project](#running-the-project)
+9. [Smart Contract API](#smart-contract-api)
+10. [Backend API Reference](#backend-api-reference)
+11. [AI Microservice API](#ai-microservice-api)
+12. [Security & Compliance](#security--compliance)
+13. [Project Structure](#project-structure)
+14. [Contributing](#contributing)
 
 ---
 
 ## 🏗️ Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│               Patient / Doctor / Hospital            │
-│                   React Frontend (5173)              │
-└──────────┬──────────────────────┬───────────────────┘
-           │ REST / Axios          │ ethers.js / MetaMask
-           ▼                      ▼
-┌─────────────────┐   ┌──────────────────────────────┐
-│  Express API    │   │   Ethereum Smart Contract     │
-│  Node.js :5000  │   │   (Sepolia / Hardhat Local)   │
-└────┬────────────┘   └──────────────────────────────┘
-     │                         ↑ IPFS CID anchored on-chain
-     ├── MongoDB Atlas (off-chain metadata)
-     ├── Pinata / IPFS (encrypted file storage)
-     │
+┌────────────────────────────────────────────────────────────────────────┐
+│                      Patient / Doctor / Hospital                       │
+│                      React 18 Frontend (:5173)                         │
+└──────────┬────────────────────────────┬────────────────────────────────┘
+           │ REST / Axios                │ ethers.js / MetaMask
+           ▼                            ▼
+┌──────────────────────┐   ┌──────────────────────────────┐
+│  Express API Gateway │   │   Ethereum Smart Contract    │
+│  Node.js :5000       │   │   (Sepolia / Hardhat Local)  │
+└────┬────────────┬────┘   └──────────────────────────────┘
+     │            │                     ↑ IPFS CID anchored on-chain
+     │            ├── MongoDB Atlas (off-chain metadata & audit logs)
+     │            ├── Neo4j Medical Knowledge Graph (Cypher / Mock)
+     │            └── Pinata / IPFS (encrypted file storage)
      ▼
-┌─────────────────────────────────────────┐
-│   Python AI Microservice Flask :5001    │
-│   XGBoost + LightGBM + CatBoost        │
-│   SHAP Explainability + CDSS Engine    │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│           Python AI Microservice Flask :5001            │
+│  Clinical Intelligence Engine | 6 Predictive Analytics  │
+│  AI Health Assistant | SHAP Explainability Engine      │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -64,39 +66,48 @@ MediChain is a production-quality decentralised EHR platform where patients own 
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | React 18, TailwindCSS, Recharts, ethers.js v6 |
-| **Backend** | Node.js, Express 5, Mongoose, JWT |
+| **Frontend** | React 18, TailwindCSS, Recharts, ethers.js v6, Vite |
+| **Backend** | Node.js, Express 5, Mongoose, Neo4j Driver, JWT |
 | **Blockchain** | Solidity 0.8.19, Hardhat, ethers.js |
-| **Storage** | MongoDB Atlas, IPFS via Pinata SDK |
-| **AI/ML** | Python, Flask, XGBoost, LightGBM, CatBoost, SHAP |
-| **Security** | Helmet.js, bcrypt, express-rate-limit, AES-256 |
+| **Storage** | MongoDB Atlas, Neo4j, IPFS via Pinata SDK |
+| **AI/ML** | Python 3.10, Flask, XGBoost, LightGBM, CatBoost, SHAP, NumPy, Pandas |
+| **Security** | Helmet.js, bcrypt, Audit Logging, Consent Manager, AES-256 |
 | **DevOps** | Docker, Hardhat Local, dotenv |
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features & Enterprise Modules (v3.0)
 
-### 🔒 Blockchain Layer
-- **Patient-Controlled Access**: `grantDoctorAccess()` / `revokeDoctorAccess()` on-chain
-- **Time-Limited Access**: `grantTimedDoctorAccess(doctor, durationSeconds)` — NEW v2.0
-- **Emergency Access**: Emergency contacts can grant 24h access — NEW v2.0
-- **IPFS CID Anchoring**: Medical files stored on IPFS; only CID on-chain
-- **Prescription Validation**: On-chain SHA-256 hash anchoring — NEW v2.0
-- **Soft Delete**: `deactivateRecord()` — records are never permanently deleted
+### 🧠 Clinical Intelligence Engine (Phase 2)
+- Unified multi-system disease risk orchestration
+- Emergency risk scoring (0–100) with critical care action triggers
+- Specialist recommendation and follow-up scheduler
+- Educational treatment guidance & patient similarity profiling
 
-### 🤖 AI Clinical Decision Support (CDSS)
-- **Drug Interaction Detection**: RxNorm-based interaction checking
-- **Ensemble Risk Prediction**: XGBoost + LightGBM + CatBoost
-- **SHAP Explainability**: Feature importance visualisation
-- **Disease Prediction**: Heart disease, diabetes, Parkinson's, stroke
-- **Medication Adherence**: ML-based adherence prediction
-- **Digital Twin**: Virtual patient simulation
+### 🏥 Hospital & Specialist Recommendation Engine (Phases 4, 5, 6)
+- Neo4j Knowledge Graph integration with Mock fallback
+- Geospatial Haversine distance calculations & 6-factor weighted scoring
+- Ranked hospital listing across major Indian super-specialty hospitals
+- Specialist mapping based on disease profile and emergency severity
 
-### 🏥 Multi-Role Dashboard
-- **Patient**: Records, QR Health ID, Access management, AI insights
-- **Doctor**: Patient registry, Upload prescriptions, CDSS, QR Scanner
-- **Hospital**: Institutional portal, Upload reports, Analytics
-- **Admin**: Platform-wide analytics, User registry, System health *(NEW)*
+### 📅 Health Timeline Engine (Phase 8)
+- Aggregates MedicalRecords, PrescriptionReports, HealthRiskReports, EnsembleReports, and AdherenceLogs
+- Filterable by category, date range, and severity
+- On-chain blockchain verification badges for every record
+
+### 🤖 AI Health Assistant (Phase 9)
+- Plain-English medical question answering
+- Intent recognition for diseases, drugs, medical terms, and lab tests
+- Suggestion categories with interactive cards and medical disclaimers
+
+### 📊 Predictive Analytics (Phase 11)
+- 6 clinical outcome models: 30-Day Readmission (HOSPITAL score), Short-term Mortality (APACHE-II style), 90-Day Emergency Visit, Treatment Success, Length of Stay (LOS), and 12-Month Disease Progression
+
+### 🔒 Enterprise Security & Auditability (Phase 12)
+- Non-blocking global audit trail logging (`backend/middleware/auditLog.js`)
+- Patient consent tracking model (`backend/models/ConsentRecord.js`)
+- Role-based access control (`patient`, `doctor`, `hospital`, `admin`)
+
 
 ### 🔐 Security
 - OWASP-compliant middleware stack

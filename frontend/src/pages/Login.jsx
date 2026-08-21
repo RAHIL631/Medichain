@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LANDING_IMAGES, HOSPITAL_IMAGES, DOCTOR_IMAGES } from '../utils/images';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -53,12 +54,39 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 font-sans text-white relative overflow-hidden">
-      {/* Background glowing effects */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-[150px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-900/20 rounded-full blur-[150px] pointer-events-none"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 font-sans text-white relative overflow-hidden">
+      {/* Full-page real hospital background */}
+      <div className="absolute inset-0">
+        <img
+          src={HOSPITAL_IMAGES.apollo}
+          alt="Hospital background"
+          className="w-full h-full object-cover"
+          onError={(e) => { e.target.src = LANDING_IMAGES.hero_bg; }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 via-blue-950/85 to-gray-900/95" />
+      </div>
+
+      {/* Left panel — real doctor image */}
+      <div className="hidden lg:block w-1/2 h-screen absolute left-0 top-0 overflow-hidden">
+        <img
+          src={DOCTOR_IMAGES.female_1}
+          alt="Medical professional"
+          className="w-full h-full object-cover object-top"
+          onError={(e) => { e.target.src = HOSPITAL_IMAGES.fortis; }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-gray-900/95" />
+        <div className="absolute bottom-12 left-8 right-8">
+          <p className="text-3xl font-bold text-white leading-tight">Blockchain-Secured<br />Patient Health Records</p>
+          <p className="text-sm text-blue-300 mt-2">HIPAA Ready · Zero Data Broker · Patient-Owned</p>
+          <div className="flex gap-2 mt-4">
+            {['Apollo Hospitals', 'AIIMS', 'Fortis'].map(h => (
+              <span key={h} className="text-[10px] bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-2 py-1 text-white">{h}</span>
+            ))}
+          </div>
+        </div>
+      </div>
       
-      <div className="w-full max-w-md bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-700 p-8 relative z-10">
+      <div className="w-full lg:w-auto lg:ml-auto lg:mr-16 max-w-md bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-700 p-8 relative z-10">
         
         {/* Logo and Header */}
         <div className="flex flex-col items-center mb-8">

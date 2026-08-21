@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, Legend as ChartLegend
+  XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip,
 } from 'recharts';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';

@@ -9,6 +9,7 @@ const helmet        = require('helmet');
 const rateLimit     = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp           = require('hpp');
+const xss           = require('xss-clean');
 const morgan        = require('morgan');
 
 const connectDB = require('./config/db');
@@ -19,7 +20,7 @@ const { connectRedis } = require('./utils/cache');
 // testPinataConnection() is called inside the server.listen callback (non-blocking).
 const { testPinataConnection } = require('./utils/ipfs');
 
-// ── Route imports ─────────────────────────────────────────────────────────────
+// ── Route imports ─────────────────────────────────────────────────────────────────────────────────
 const authRoutes    = require('./routes/auth');
 const patientRoutes = require('./routes/patient');
 const doctorRoutes  = require('./routes/doctor');
@@ -30,6 +31,15 @@ const ensemblePredictRoutes = require('./routes/ensemblePredict');
 const adherenceSysRoutes = require('./routes/adherenceSys');
 const digitalTwinRoutes = require('./routes/digitalTwin');
 const analyticsRoutes = require('./routes/analytics');
+const accountRoutes   = require('./routes/account');
+
+// ── Enterprise AI Platform Route Imports (Phase 4–8) ──────────────────────────
+const adminRoutes              = require('./routes/admin');
+const hospitalRecommendRoutes  = require('./routes/hospitalRecommendation');
+const timelineRoutes           = require('./routes/timeline');
+
+// ── Middleware imports ─────────────────────────────────────────────────────────────────
+const { auditLog } = require('./middleware/auditLog');
 
 // ── Connect to MongoDB & Redis ──────────────────────────────────────────────────
 connectDB();
@@ -45,10 +55,12 @@ const app = express();
 //    e.g. X-Content-Type-Options, X-Frame-Options, HSTS, CSP, etc.
 app.use(helmet());
 
-// 2. Morgan — HTTP request logger (only log in development to avoid noise in prod)
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));
-}
+// 2. Pino HTTP Logger (replaces Morgan) — Structured JSON logging for production observability
+const pinoHttp = require('pino-http');
+app.use(pinoHttp({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty' } : undefined
+}));
 
 // 3. CORS — allow requests from the configured frontend origin, or all in dev
 const allowedOrigins = [
@@ -99,6 +111,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// 6.5. XSS Clean — sanitize user input coming from POST body, GET queries, and url params
+//      to prevent Cross-Site Scripting attacks.
+app.use(xss());
+
 // 7. HPP — HTTP Parameter Pollution protection.
 //    Prevents duplicate query params by always using the LAST value.
 //    Manual wrapper for Express 5 compatibility.
@@ -115,7 +131,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// 8. General rate limiter — 100 requests per 15 minutes per IP
+// 8. Request ID middleware — attach a unique ID to every request for distributed tracing
+const nodeCrypto = require('crypto');
+const generateRequestId = () => nodeCrypto.randomBytes(8).toString('hex');
+app.use((req, res, next) => {
+  req.requestId = req.headers['x-request-id'] || `${Date.now()}-${generateRequestId()}`;
+  res.setHeader('X-Request-ID', req.requestId);
+  next();
+});
+
+// 9. General rate limiter — 100 requests per 15 minutes per IP
 //    Applied to all /api/* routes globally.
 const generalLimiter = rateLimit({
   windowMs:         15 * 60 * 1000, // 15 minutes
@@ -142,28 +167,41 @@ const authLimiter = rateLimit({
 app.use('/api/auth', authLimiter);
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ROUTES
-// ══════════════════════════════════════════════════════════════════════════════
 
-app.use('/api/auth',         authRoutes);
-app.use('/api/patient',      patientRoutes);
-app.use('/api/doctor',       doctorRoutes);
-// /api/ai proxies to the Python Flask microservice on port 5001
-app.use('/api/ai',           aiRoutes);
-// /api/prescription — AI prescription validation pipeline
-app.use('/api/prescription', prescriptionRoutes);
-// /api/health-risk — AI health risk scoring and SHAP engine
-app.use('/api/health-risk',  healthRiskRoutes);
-// /api/ensemble-predict — AI XGBoost + LightGBM + CatBoost multi-model disease predictor
-app.use('/api/ensemble-predict', ensemblePredictRoutes);
-// /api/adherence-sys — AI Medication Adherence Predictor pipeline
-app.use('/api/adherence-sys', adherenceSysRoutes);
-// /api/digital-twin — Patient Digital Twin simulation engine routes
-app.use('/api/digital-twin', digitalTwinRoutes);
-// /api/analytics — Real-Time Platform Analytics
-app.use('/api/analytics', analyticsRoutes);
+// Helper to mount routes to support both /api and /api/v1 (API versioning)
+const mountApi = (prefix) => {
+  app.use(`${prefix}/auth`,         authRoutes);
+  app.use(`${prefix}/account`,      accountRoutes);
+  app.use(`${prefix}/patient`,      patientRoutes);
+  app.use(`${prefix}/doctor`,       doctorRoutes);
+  // /api/ai proxies to the Python Flask microservice on port 5001
+  app.use(`${prefix}/ai`,           aiRoutes);
+  // /api/prescription — AI prescription validation pipeline
+  app.use(`${prefix}/prescription`, prescriptionRoutes);
+  // /api/health-risk — AI health risk scoring and SHAP engine
+  app.use(`${prefix}/health-risk`,  healthRiskRoutes);
+  // /api/ensemble-predict — AI XGBoost + LightGBM + CatBoost multi-model predictor
+  app.use(`${prefix}/ensemble-predict`, ensemblePredictRoutes);
+  // /api/adherence-sys — AI Medication Adherence Predictor pipeline
+  app.use(`${prefix}/adherence-sys`, adherenceSysRoutes);
+  // /api/digital-twin — Patient Digital Twin simulation engine routes
+  app.use(`${prefix}/digital-twin`, digitalTwinRoutes);
+  // /api/analytics — Real-Time Platform Analytics
+  app.use(`${prefix}/analytics`, analyticsRoutes);
 
-// ── Health check endpoint ─────────────────────────────────────────────────────
+  // ── Enterprise AI Platform Routes (Phase 4–8) ───────────────────────────────
+  app.use(`${prefix}/admin`,                  adminRoutes);
+  app.use(`${prefix}/hospital-recommendation`, hospitalRecommendRoutes);
+  app.use(`${prefix}/timeline`,               timelineRoutes);
+
+  // ── Audit Log (Security — Phase 12) ─────────────────────────────────────────
+  app.use(prefix, auditLog);
+};
+
+mountApi('/api');
+mountApi('/api/v1');
+
+// ── Health check endpoint ───────────────────────────────────────────────────
 app.get('/health', (req, res) =>
   res.status(200).json({
     status:    'ok',
@@ -172,6 +210,21 @@ app.get('/health', (req, res) =>
     env:       process.env.NODE_ENV || 'development',
   })
 );
+
+// ── Readiness check endpoint ─────────────────────────────────────────────
+const mongoose = require('mongoose');
+app.get('/ready', async (req, res) => {
+  const checks = {
+    database: mongoose.connection.readyState === 1 ? 'ok' : 'not_connected',
+    service:  'MediChain API',
+    timestamp: new Date().toISOString(),
+  };
+  const allOk = checks.database === 'ok';
+  return res.status(allOk ? 200 : 503).json({
+    status: allOk ? 'ready' : 'not_ready',
+    checks,
+  });
+});
 
 // ── 404 handler — catches any unmatched route ─────────────────────────────────
 app.use((req, res) =>
@@ -187,10 +240,10 @@ app.use((req, res) =>
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   console.error('[SERVER ERROR]', {
     message: err.message,
-    stack: err.stack,
+    stack: process.env.NODE_ENV !== 'production' ? err.stack : '[hidden in production]',
     path: req.path,
     method: req.method,
-    body: req.body
+    // NOTE: req.body intentionally omitted to prevent credential/PII leakage in logs
   });
 
   // Mongoose validation error (e.g. required field missing, enum mismatch)

@@ -35,6 +35,12 @@ _AI_DIR = Path(__file__).parent.parent
 if str(_AI_DIR) not in sys.path:
     sys.path.insert(0, str(_AI_DIR))
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",

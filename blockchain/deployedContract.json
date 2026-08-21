@@ -1,5 +1,5 @@
 {
-  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
   "abi": [
     {
       "anonymous": false,
@@ -61,6 +61,56 @@
           "type": "address"
         },
         {
+          "indexed": true,
+          "internalType": "address",
+          "name": "requester",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "EmergencyAccessGranted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "patient",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "contact",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "EmergencyContactSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "patient",
+          "type": "address"
+        },
+        {
           "indexed": false,
           "internalType": "uint256",
           "name": "timestamp",
@@ -68,6 +118,49 @@
         }
       ],
       "name": "PatientRegistered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "patient",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "validator",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reportHash",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "safetyScore",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "severity",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "PrescriptionValidated",
       "type": "event"
     },
     {
@@ -133,6 +226,31 @@
       "type": "event"
     },
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "patient",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "doctor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "expiresAt",
+          "type": "uint256"
+        }
+      ],
+      "name": "TimedAccessGranted",
+      "type": "event"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
@@ -173,6 +291,34 @@
           "type": "address"
         },
         {
+          "internalType": "string",
+          "name": "reportHash",
+          "type": "string"
+        },
+        {
+          "internalType": "uint8",
+          "name": "safetyScore",
+          "type": "uint8"
+        },
+        {
+          "internalType": "string",
+          "name": "severity",
+          "type": "string"
+        }
+      ],
+      "name": "addPrescriptionValidation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "patientAddr",
+          "type": "address"
+        },
+        {
           "internalType": "uint256",
           "name": "index",
           "type": "uint256"
@@ -184,13 +330,19 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "getAllPatients",
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "patientAddr",
+          "type": "address"
+        }
+      ],
+      "name": "getEmergencyContact",
       "outputs": [
         {
-          "internalType": "address[]",
-          "name": "patients",
-          "type": "address[]"
+          "internalType": "address",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -245,8 +397,21 @@
             }
           ],
           "internalType": "struct MediChain.MedicalRecord[]",
-          "name": "records",
+          "name": "",
           "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPatientCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -306,7 +471,96 @@
             }
           ],
           "internalType": "struct MediChain.MedicalRecord[]",
-          "name": "records",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "offset",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "limit",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPatientsPaginated",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "patientAddr",
+          "type": "address"
+        }
+      ],
+      "name": "getPrescriptionValidationCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "patientAddr",
+          "type": "address"
+        }
+      ],
+      "name": "getPrescriptionValidations",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "reportHash",
+              "type": "string"
+            },
+            {
+              "internalType": "uint8",
+              "name": "safetyScore",
+              "type": "uint8"
+            },
+            {
+              "internalType": "string",
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "validator",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct MediChain.PrescriptionValidation[]",
+          "name": "",
           "type": "tuple[]"
         }
       ],
@@ -325,7 +579,31 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "count",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "patientAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "doctorAddr",
+          "type": "address"
+        }
+      ],
+      "name": "getTimedAccessRemaining",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -358,11 +636,47 @@
           "type": "address"
         }
       ],
+      "name": "grantEmergencyAccess",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "doctorAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "durationSeconds",
+          "type": "uint256"
+        }
+      ],
+      "name": "grantTimedDoctorAccess",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "patientAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "doctorAddr",
+          "type": "address"
+        }
+      ],
       "name": "hasAccess",
       "outputs": [
         {
           "internalType": "bool",
-          "name": "allowed",
+          "name": "",
           "type": "bool"
         }
       ],
@@ -407,8 +721,55 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "contactAddr",
+          "type": "address"
+        }
+      ],
+      "name": "setEmergencyContact",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "patientAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "reportHash",
+          "type": "string"
+        }
+      ],
+      "name": "verifyPrescriptionHash",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "found",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint8",
+          "name": "score",
+          "type": "uint8"
+        },
+        {
+          "internalType": "string",
+          "name": "sev",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
   ],
   "network": "localhost",
-  "deployedAt": "2026-05-03T08:52:55.799Z"
+  "deployedAt": "2026-08-20T14:39:29.834Z"
 }

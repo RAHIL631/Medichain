@@ -2,13 +2,14 @@
 // Complete Hospital Dashboard — real API calls, stats, charts, uploads.
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import GlassCard from '../components/GlassCard';
 import DashboardLayout from '../components/DashboardLayout';
+import { getHospitalImage, HOSPITAL_IMAGES } from '../utils/images';
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 
@@ -76,8 +77,7 @@ const CHART_COLORS = ['#38BDF8', '#22D3EE', '#818CF8', '#22C55E', '#F59E0B'];
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const HospitalDashboard = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [stats, setStats]           = useState({ records: 0, patientsServed: 0, pendingSync: 0, todayUploads: 0 });
   const [recentRecords, setRecent]  = useState([]);
@@ -161,23 +161,39 @@ const HospitalDashboard = () => {
     <DashboardLayout role="Hospital" navItems={navItems}>
       <div className="space-y-8 py-6">
 
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white">Institutional Portal</h1>
-            <p className="text-text-secondary mt-1">
-              {user?.name || 'Hospital'} ·{' '}
-              <span className="text-accent-cyan font-mono text-xs">MC-H-NODE</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-medichain-surface border border-medichain-border rounded-xl text-text-secondary hover:text-white hover:border-accent-cyan/30 transition-all text-sm">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              Refresh
-            </button>
-            <Link to="/upload-report" className="px-5 py-2 bg-gradient-to-r from-accent-blue to-accent-cyan rounded-xl text-white text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-accent-cyan/20">
-              + Upload Report
-            </Link>
+        {/* ── Hospital Image Banner ────────────────────────────────────────── */}
+        <div className="relative rounded-2xl overflow-hidden border border-medichain-border/60">
+          <img
+            src={getHospitalImage({ name: user?.name || '', type: 'private' })}
+            alt={user?.name || 'Hospital'}
+            className="w-full h-44 object-cover"
+            onError={(e) => { e.target.src = HOSPITAL_IMAGES.default; }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-medichain-bg-dark/90 via-medichain-bg-dark/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-medichain-bg-dark/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 p-6 flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider">Verified Medical Institution</span>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-display font-bold text-white">{user?.name || 'Hospital'}</h1>
+                <p className="text-text-secondary mt-1 text-sm">
+                  Institutional Portal ·{' '}
+                  <span className="text-accent-cyan font-mono text-xs">MC-H-NODE</span>
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-sm border border-white/20 rounded-xl text-white hover:bg-black/70 transition-all text-sm">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  Refresh
+                </button>
+                <Link to="/upload-report" className="px-5 py-2 bg-gradient-to-r from-accent-blue to-accent-cyan rounded-xl text-white text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-accent-cyan/20">
+                  + Upload Report
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
 

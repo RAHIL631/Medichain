@@ -74,8 +74,8 @@ const STEP_DELAYS = [400, 300, 300, 400, 600, 300, 300, 400, 400, 300];
 // ── Main Component ────────────────────────────────────────────────────────────
 const PrescriptionValidator = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { account, connected } = useWallet();
+  const navigate = useNavigate(); // eslint-disable-line no-unused-vars
+  const { account, connected } = useWallet(); // eslint-disable-line no-unused-vars
 
   // Phase: 'upload' | 'processing' | 'results'
   const [phase, setPhase] = useState('upload');
@@ -378,6 +378,59 @@ const PrescriptionValidator = () => {
                     </p>
                   </>
                 )}
+              </div>
+
+              {/* Sample Real Prescription Images */}
+              <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: '14px',
+                padding: '14px 18px',
+              }}>
+                <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 700, marginBottom: '10px' }}>
+                  📸 Try Real Medicine Sample Images
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMedications("Metformin 500mg BD, Atorvastatin 20mg OD, Lisinopril 10mg OD");
+                      setPatientCtx(prev => ({ ...prev, age: 58, kidney_gfr: 45, allergies: 'Penicillin' }));
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      padding: '8px', borderRadius: '10px',
+                      background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)',
+                      cursor: 'pointer', textAlign: 'left',
+                    }}
+                  >
+                    <img src="/images/medicine_pill_bottles.png" alt="Pill Bottles" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} />
+                    <div>
+                      <div style={{ color: '#06b6d4', fontSize: '12px', fontWeight: 700 }}>Rx Pill Bottles</div>
+                      <div style={{ color: '#6b7280', fontSize: '10px' }}>Metformin, Atorvastatin, Lisinopril</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMedications("Amoxicillin 500mg TDS, Ibuprofen 400mg BD, Omeprazole 20mg OD");
+                      setPatientCtx(prev => ({ ...prev, age: 34, pregnant: true }));
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      padding: '8px', borderRadius: '10px',
+                      background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)',
+                      cursor: 'pointer', textAlign: 'left',
+                    }}
+                  >
+                    <img src="/images/medicine_blister_packs.png" alt="Blister Packs" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} />
+                    <div>
+                      <div style={{ color: '#a855f7', fontSize: '12px', fontWeight: 700 }}>Blister Pack Rx</div>
+                      <div style={{ color: '#6b7280', fontSize: '10px' }}>Amoxicillin, Ibuprofen, Omeprazole</div>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Manual medication input */}

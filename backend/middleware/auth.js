@@ -1,15 +1,16 @@
 // medichain/backend/middleware/auth.js
 // JWT Bearer token verification and role-based access control middleware.
-// Used as route guards across all protected API endpoints.
+// Includes server-side token blocklist check for true server-side logout.
 
 const jwt  = require('jsonwebtoken');
 const User = require('../models/User');
+const { isTokenBlocked } = require('../services/tokenBlocklist');
 
 // ── protect ───────────────────────────────────────────────────────────────────
 /**
  * Extracts and verifies the JWT from the Authorization header.
- * On success, attaches the full Mongoose user document to req.user
- * and the raw token string to req.token.
+ * Checks the token against the server-side blocklist (for logout).
+ * Attaches the full Mongoose user document to req.user.
  *
  * Usage:  router.get('/profile', protect, handler)
  */
@@ -21,29 +22,35 @@ const protect = async (req, res, next) => {
     return res.status(401).json({ error: 'No token provided' });
   }
 
-  const token = authHeader.split(' ')[1]; // Extract the token portion
+  const token = authHeader.split(' ')[1];
 
   try {
-    // 2. Verify token signature and expiry against the server secret
+    // 2. Verify token signature and expiry
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // decoded = { id: <userId>, role: <role>, iat: <issued>, exp: <expiry> }
 
-    // 3. Confirm the user still exists in the database.
-    //    This catches cases where an account is deleted after a token is issued.
-    //    Password is explicitly excluded (-password) even if select:false is bypassed.
+    // 3. Check token blocklist (server-side revocation for logout)
+    const blocked = await isTokenBlocked(token);
+    if (blocked) {
+      return res.status(401).json({ error: 'Token has been revoked. Please log in again.' });
+    }
+
+    // 4. Confirm the user still exists and is active
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {
       return res.status(401).json({ error: 'User no longer exists' });
     }
 
-    // 4. Attach the user document and raw token for use in downstream handlers
+    if (user.isActive === false) {
+      return res.status(403).json({ error: 'Account suspended. Please contact support.' });
+    }
+
+    // 5. Attach user document and raw token
     req.user  = user;
     req.token = token;
 
     next();
   } catch (err) {
-    // jwt.verify throws JsonWebTokenError or TokenExpiredError
     return res.status(401).json({ error: 'Token invalid or expired' });
   }
 };
@@ -51,13 +58,11 @@ const protect = async (req, res, next) => {
 // ── authorize ─────────────────────────────────────────────────────────────────
 /**
  * Role-based access control guard. Must be used AFTER protect.
- * Pass one or more allowed role strings as arguments.
  *
  * Usage:  router.post('/upload', protect, authorize('doctor', 'hospital'), handler)
  */
 const authorize = (...roles) => {
   return (req, res, next) => {
-    // req.user is guaranteed to exist here (set by protect above)
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         error: 'Access denied: insufficient permissions',

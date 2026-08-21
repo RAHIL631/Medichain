@@ -2,14 +2,13 @@
 // MediChain Admin Dashboard — Platform-wide analytics, user management, audit logs.
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import GlassCard from '../components/GlassCard';
 import DashboardLayout from '../components/DashboardLayout';
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -93,7 +92,7 @@ const COLORS = ['#38BDF8','#22D3EE','#818CF8','#22C55E','#F59E0B'];
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  useAuth();
   const [stats,   setStats]   = useState({ totalUsers: 0, totalRecords: 0, totalDoctors: 0, totalHospitals: 0, totalPatients: 0 });
   const [users,   setUsers]   = useState([]);
   const [growth,  setGrowth]  = useState([]);

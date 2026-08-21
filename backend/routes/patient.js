@@ -21,13 +21,30 @@ router.use(authorize('patient'));
  */
 router.get('/records', async (req, res) => {
   try {
-    const records = await MedicalRecord
-      .find({ patientId: req.user._id, isActive: true })
-      // Populate doctor details from the User collection
-      .populate('doctorId', 'name specialization licenseNumber')
-      .sort({ createdAt: -1 }); // newest first
+    const page       = Math.max(1, parseInt(req.query.page)  || 1);
+    const limit      = Math.min(100, parseInt(req.query.limit) || 20);
+    const recordType = req.query.recordType;
 
-    return res.status(200).json({ records });
+    const filter = { patientId: req.user._id, isActive: true };
+    if (recordType) filter.recordType = recordType;
+
+    const [records, total] = await Promise.all([
+      MedicalRecord
+        .find(filter)
+        .populate('doctorId', 'name specialization licenseNumber')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      MedicalRecord.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      records,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      limit,
+    });
   } catch (err) {
     console.error('[PATIENT] GET /records error:', err.message);
     return res.status(500).json({ error: 'Failed to fetch records' });
@@ -52,11 +69,52 @@ router.get('/records/:recordId', async (req, res) => {
     return res.status(200).json({ record });
   } catch (err) {
     console.error('[PATIENT] GET /records/:recordId error:', err.message);
-    // Handle malformed MongoDB ObjectId
-    if (err.name === 'CastError') {
-      return res.status(404).json({ error: 'Record not found' });
-    }
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Record not found' });
     return res.status(500).json({ error: 'Failed to fetch record' });
+  }
+});
+
+// ── GET /api/patient/records/:recordId/download ──────────────────────────────
+/**
+ * Proxies the file download from IPFS and decrypts it if encrypted.
+ */
+const axios = require('axios');
+const { decryptBuffer } = require('../utils/encryption');
+
+router.get('/records/:recordId/download', async (req, res) => {
+  try {
+    const record = await MedicalRecord
+      .findOne({ _id: req.params.recordId, patientId: req.user._id, isActive: true })
+      .select('+encryptionMeta.encryptedKey +encryptionMeta.authTag');
+
+    if (!record) return res.status(404).json({ error: 'Record not found' });
+
+    // Fetch ciphertext from IPFS Gateway
+    const response = await axios.get(record.ipfsURL, { responseType: 'arraybuffer' });
+    let fileBuffer = Buffer.from(response.data);
+
+    // Decrypt if necessary
+    if (record.isEncrypted && record.encryptionMeta) {
+      try {
+        fileBuffer = decryptBuffer(
+          fileBuffer,
+          record.encryptionMeta.encryptedKey,
+          record.encryptionMeta.iv,
+          record.encryptionMeta.authTag
+        );
+      } catch (decErr) {
+        console.error('[PATIENT] Decryption failed:', decErr.message);
+        return res.status(500).json({ error: 'Failed to decrypt file' });
+      }
+    }
+
+    res.setHeader('Content-Type', record.fileMimeType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${record.fileName}"`);
+    res.setHeader('Content-Length', fileBuffer.length);
+    return res.send(fileBuffer);
+  } catch (err) {
+    console.error('[PATIENT] File download error:', err.message);
+    return res.status(500).json({ error: 'Failed to download file' });
   }
 });
 
@@ -112,7 +170,7 @@ router.put('/profile', async (req, res) => {
       req.user._id,
       updates,
       {
-        new:          true,  // return the updated document
+        returnDocument: 'after', // return the updated document
         runValidators: true, // enforce schema validators (e.g. bloodGroup enum)
         select:       '-password -__v',
       }

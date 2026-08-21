@@ -591,4 +591,174 @@ const handleAiError = (err, res) => {
     return res.status(status).json({ error: 'AI service error', message, fallback: true });
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ENTERPRISE AI PLATFORM ROUTES (Phase 2–11)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * @route   POST /api/ai/cdss/clinical-intelligence
+ * @desc    Unified Clinical Intelligence Report (Phase 2)
+ *          Orchestrates disease risk, emergency score, specialist recs, follow-up
+ * @access  Private
+ */
+router.post('/cdss/clinical-intelligence', protect, async (req, res) => {
+    try {
+        const payload = {
+            ...req.body,
+            age: req.body.age || (req.user.dateOfBirth
+                ? new Date().getFullYear() - new Date(req.user.dateOfBirth).getFullYear()
+                : undefined),
+            gender: req.body.gender || req.user.gender,
+        };
+
+        const response = await axios.post(
+            `${AI_URL}/cdss/clinical-intelligence`,
+            payload,
+            { timeout: AI_TIMEOUT_LONG }
+        );
+        log(`Clinical intelligence report generated for user ${req.user._id}`);
+        res.json(response.data);
+    } catch (err) {
+        handleAiError(err, res);
+    }
+});
+
+/**
+ * @route   POST /api/ai/cdss/predictive-analytics
+ * @desc    Predict readmission, mortality, emergency visit, LOS, treatment success (Phase 11)
+ * @access  Private
+ */
+router.post('/cdss/predictive-analytics', protect, async (req, res) => {
+    try {
+        const payload = {
+            ...req.body,
+            age: req.body.age || (req.user.dateOfBirth
+                ? new Date().getFullYear() - new Date(req.user.dateOfBirth).getFullYear()
+                : undefined),
+            gender: req.body.gender || req.user.gender,
+        };
+
+        const response = await axios.post(
+            `${AI_URL}/cdss/predictive-analytics`,
+            payload,
+            { timeout: AI_TIMEOUT_LONG }
+        );
+        log(`Predictive analytics completed for user ${req.user._id}`);
+        res.json(response.data);
+    } catch (err) {
+        handleAiError(err, res);
+    }
+});
+
+/**
+ * @route   POST /api/ai/assistant/explain-disease
+ * @desc    Explain a disease in plain English (Phase 9)
+ * @access  Private
+ */
+router.post('/assistant/explain-disease', protect, async (req, res) => {
+    try {
+        const response = await axios.post(
+            `${AI_URL}/cdss/assistant/explain-disease`,
+            req.body,
+            { timeout: AI_TIMEOUT_DEFAULT }
+        );
+        res.json(response.data);
+    } catch (err) { handleAiError(err, res); }
+});
+
+/**
+ * @route   POST /api/ai/assistant/explain-term
+ * @desc    Explain a medical term (Phase 9)
+ * @access  Private
+ */
+router.post('/assistant/explain-term', protect, async (req, res) => {
+    try {
+        const response = await axios.post(
+            `${AI_URL}/cdss/assistant/explain-term`,
+            req.body,
+            { timeout: AI_TIMEOUT_DEFAULT }
+        );
+        res.json(response.data);
+    } catch (err) { handleAiError(err, res); }
+});
+
+/**
+ * @route   POST /api/ai/assistant/explain-drug
+ * @desc    Explain a medication (Phase 9)
+ * @access  Private
+ */
+router.post('/assistant/explain-drug', protect, async (req, res) => {
+    try {
+        const response = await axios.post(
+            `${AI_URL}/cdss/assistant/explain-drug`,
+            req.body,
+            { timeout: AI_TIMEOUT_DEFAULT }
+        );
+        res.json(response.data);
+    } catch (err) { handleAiError(err, res); }
+});
+
+/**
+ * @route   POST /api/ai/assistant/explain-lab
+ * @desc    Explain a lab test result (Phase 9)
+ * @access  Private
+ */
+router.post('/assistant/explain-lab', protect, async (req, res) => {
+    try {
+        const response = await axios.post(
+            `${AI_URL}/cdss/assistant/explain-lab`,
+            req.body,
+            { timeout: AI_TIMEOUT_DEFAULT }
+        );
+        res.json(response.data);
+    } catch (err) { handleAiError(err, res); }
+});
+
+/**
+ * @route   POST /api/ai/assistant/explain-prediction
+ * @desc    Explain an AI risk prediction in plain English (Phase 9)
+ * @access  Private
+ */
+router.post('/assistant/explain-prediction', protect, async (req, res) => {
+    try {
+        const response = await axios.post(
+            `${AI_URL}/cdss/assistant/explain-prediction`,
+            req.body,
+            { timeout: AI_TIMEOUT_DEFAULT }
+        );
+        res.json(response.data);
+    } catch (err) { handleAiError(err, res); }
+});
+
+/**
+ * @route   POST /api/ai/assistant/summarize
+ * @desc    Generate a patient health summary in plain English (Phase 9)
+ * @access  Private
+ */
+router.post('/assistant/summarize', protect, async (req, res) => {
+    try {
+        // Enrich with user's actual records if not provided
+        const payload = { ...req.body };
+
+        if (!payload.recentRecords) {
+            const MedicalRecord = require('../models/MedicalRecord');
+            const records = await MedicalRecord
+                .find({ patientId: req.user._id, isActive: true })
+                .select('recordType createdAt')
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .lean();
+            payload.recentRecords = records;
+        }
+
+        const response = await axios.post(
+            `${AI_URL}/cdss/assistant/summarize`,
+            payload,
+            { timeout: AI_TIMEOUT_DEFAULT }
+        );
+        res.json(response.data);
+    } catch (err) { handleAiError(err, res); }
+});
+
 module.exports = router;
+

@@ -104,6 +104,24 @@ class ColourTextFormatter(logging.Formatter):
         return base
 
 
+class SafeStreamHandler(logging.StreamHandler):
+    """
+    Stream handler that gracefully replaces unencodable Unicode characters
+    (e.g. emojis on Windows cp1252 consoles) instead of throwing UnicodeEncodeError.
+    """
+    def emit(self, record):
+        try:
+            super().emit(record)
+        except UnicodeEncodeError:
+            try:
+                msg = self.format(record)
+                safe_msg = msg.encode("ascii", errors="replace").decode("ascii")
+                self.stream.write(safe_msg + self.terminator)
+                self.flush()
+            except Exception:
+                self.handleError(record)
+
+
 # ── Public setup function ──────────────────────────────────────────────────────
 
 def configure_logging(log_level: str = "INFO", log_format: str = "text") -> None:
@@ -115,6 +133,12 @@ def configure_logging(log_level: str = "INFO", log_format: str = "text") -> None
         log_format: "json"  → production JSON lines
                     "text"  → development coloured text
     """
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
     level = getattr(logging, log_level.upper(), logging.INFO)
 
     if log_format.lower() == "json":
@@ -122,7 +146,7 @@ def configure_logging(log_level: str = "INFO", log_format: str = "text") -> None
     else:
         formatter = ColourTextFormatter()
 
-    handler = logging.StreamHandler(sys.stdout)
+    handler = SafeStreamHandler(sys.stdout)
     handler.setFormatter(formatter)
 
     root = logging.getLogger()

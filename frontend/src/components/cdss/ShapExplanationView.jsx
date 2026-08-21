@@ -3,6 +3,7 @@
 // Renders SVG-based Waterfall and Decision plots for model risk predictions.
 
 import React, { useState } from 'react';
+import GlassCard from '../GlassCard';
 
 export default function ShapExplanationView({ shapData, title = "Model Prediction Explanation" }) {
   const [plotType, setPlotType] = useState('waterfall'); // 'waterfall' | 'decision'

@@ -10,7 +10,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install all dependencies (including devDependencies if needed for build steps)
-RUN npm ci
+RUN npm install
 
 # Copy application source code
 COPY . .
@@ -30,7 +30,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 
 # Install ONLY production dependencies to keep image size small
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Copy application source from builder stage
 COPY --from=builder /usr/src/app/ .

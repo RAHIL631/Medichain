@@ -2,7 +2,6 @@
 // Interactive component to link MetaMask wallet and register on the blockchain
 
 import React, { useState } from 'react';
-import { ethers } from 'ethers';
 import useWallet from '../hooks/useWallet';
 import useContract from '../hooks/useContract';
 import api from '../utils/api';
@@ -13,7 +12,7 @@ import { formatAddress } from '../utils/web3';
  * Handles the 3-step process: Connect -> Link (Backend) -> Register (Blockchain)
  */
 const WalletSetup = ({ onComplete }) => {
-  const { account, connected, connect, network, error: walletError } = useWallet();
+  const { account, connect, network } = useWallet();
   const { contract } = useContract();
 
   const [step, setStep] = useState(1); // 1: Connect, 2: Confirm/Link, 3: Registering

@@ -192,12 +192,28 @@ const uploadToIPFS = async (fileBuffer, fileName, metadata = {}) => {
   };
 
   try {
-    // Race the upload against a 60-second timeout
-    const result = await withTimeout(
-      pinata.pinFileToIPFS(stream, options),
-      UPLOAD_TIMEOUT_MS,
-      fileName
-    );
+    let result;
+    let attempt = 0;
+    const MAX_RETRIES = 3;
+    const INITIAL_DELAY = 1000;
+
+    while (attempt < MAX_RETRIES) {
+      try {
+        result = await withTimeout(
+          pinata.pinFileToIPFS(bufferToStream(fileBuffer), options),
+          UPLOAD_TIMEOUT_MS,
+          fileName
+        );
+        break; // Success
+      } catch (err) {
+        attempt++;
+        if (attempt >= MAX_RETRIES || (err.response?.status === 401)) {
+          throw err;
+        }
+        console.warn(`[IPFS] Upload failed (attempt ${attempt}/${MAX_RETRIES}). Retrying in ${INITIAL_DELAY * Math.pow(2, attempt - 1)}ms...`);
+        await new Promise(res => setTimeout(res, INITIAL_DELAY * Math.pow(2, attempt - 1)));
+      }
+    }
 
     // result.IpfsHash  → the CID (e.g. "bafybei...")
     // result.PinSize   → pin size in bytes
@@ -439,10 +455,12 @@ const testPinataConnection = async () => {
 
     const result = await pinata.testAuthentication();
 
-    // Pinata returns { message: "Congratulations! You are communicating with the Pinata API!" }
-    if (result && result.message) {
-      console.log('📦  [IPFS] Pinata connection: ✅ Authenticated');
-      return { authenticated: true, message: result.message };
+    // Pinata SDK may return:
+    //   { message: "Congratulations!..." }  — older SDK versions
+    //   { authenticated: true }              — newer SDK versions
+    if (result && (result.message || result.authenticated === true)) {
+      console.log('📦  [IPFS] Pinata connection: ✅ Authenticated successfully');
+      return { authenticated: true, message: result.message || 'Pinata authenticated' };
     }
 
     console.warn('📦  [IPFS] Pinata connection: ⚠️  Unexpected response —', result);

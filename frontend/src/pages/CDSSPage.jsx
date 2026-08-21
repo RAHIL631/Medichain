@@ -110,7 +110,7 @@ export default function CDSSPage() {
   const [explainData, setExplainData] = useState(null);
   const [selectedDisease, setSelectedDisease] = useState('heart');
   const [loadingExplain, setLoadingExplain] = useState(false);
-  const [errorExplain, setErrorExplain] = useState('');
+  const [errorExplain, setErrorExplain] = useState(''); // eslint-disable-line no-unused-vars
 
   // ── TAB 5: DOSAGE SAFETY ML STATE ───────────────────────────────────────────
   const [dosageSafetyResult, setDosageSafetyResult] = useState(null);

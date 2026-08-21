@@ -644,5 +644,8 @@ export const useAccessControl = (contract) => {
   };
 };
 
+
 // ── Default export: all hooks as a named map (convenient for lazy imports) ─────
-export default { useWallet, useContract, usePatientRecords, useAccessControl };
+const hooksMap = { useWallet, useContract, usePatientRecords, useAccessControl };
+export default hooksMap;
+

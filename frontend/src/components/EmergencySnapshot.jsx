@@ -3,8 +3,8 @@
 // Designed for high-urgency medical decision making.
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { aiApi } from '../utils/api';
 
 const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
   const [aiRisk, setAiRisk] = useState(null);
@@ -25,7 +25,7 @@ const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
         chronicConditions: profile.chronicConditions
       };
       
-      const { data } = await axios.post('http://localhost:5001/predict', payload, { timeout: 8000 });
+      const { data } = await aiApi.post('/predict', payload, { timeout: 8000 });
       setAiRisk({
         level: data.risk_level || 'LOW',
         heartDisease: data.heart_disease || 15,

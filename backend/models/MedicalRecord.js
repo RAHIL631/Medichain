@@ -105,6 +105,25 @@ const MedicalRecordSchema = new mongoose.Schema({
     type: Number,
   },
 
+  // ── Encryption Metadata ──────────────────────────────────────────────────────
+  // AES-256-GCM encryption info for the IPFS file.
+  // Populated when ENCRYPTION_MASTER_KEY is configured.
+  // If null, file was uploaded without encryption (legacy / dev mode).
+  encryptionMeta: {
+    // Encrypted data key + key IV + key auth tag (all concatenated, hex)
+    encryptedKey: { type: String, select: false }, // sensitive — never return to client
+    iv:           { type: String },                // needed to display "encrypted" status
+    authTag:      { type: String, select: false }, // sensitive
+    algorithm:    { type: String, default: 'aes-256-gcm' },
+    encryptedAt:  { type: Date },
+  },
+
+  // Whether this file is encrypted at rest (derived from encryptionMeta presence)
+  isEncrypted: {
+    type:    Boolean,
+    default: false,
+  },
+
   // ── Clinical Content ─────────────────────────────────────────────────────────
 
   notes: {

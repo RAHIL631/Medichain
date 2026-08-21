@@ -116,7 +116,7 @@ export default function SafetyCheckCard({ title, icon, results = [], showExtra =
   ).length;
   const warnCount = results.filter(r => r.status === 'USE_WITH_CAUTION').length;
 
-  const headerColor = flagCount > 0 ? '#a855f7' : warnCount > 0 ? '#f97316' : '#22c55e';
+  const headerColor = flagCount > 0 ? '#a855f7' : warnCount > 0 ? '#f97316' : '#22c55e'; // eslint-disable-line no-unused-vars
 
   return (
     <div style={{

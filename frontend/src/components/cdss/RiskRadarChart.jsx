@@ -5,7 +5,7 @@
 import React from 'react';
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
-  PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend
+  PolarRadiusAxis, ResponsiveContainer, Tooltip,
 } from 'recharts';
 
 const ORGAN_ICONS = {

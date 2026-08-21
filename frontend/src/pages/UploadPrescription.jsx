@@ -1,5 +1,5 @@
 // frontend/src/pages/UploadPrescription.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import GlassCard from '../components/GlassCard';
@@ -9,6 +9,7 @@ import api from '../utils/api';
 import useBlockchain from '../hooks/useBlockchain';
 import useWallet from '../hooks/useWallet';
 import { cidToGatewayUrl } from '../utils/web3';
+import { MEDICINE_IMAGES, MEDICAL_IMAGES } from '../utils/images';
 
 const UploadPrescription = () => {
     const [searchParams] = useSearchParams();
@@ -178,6 +179,29 @@ const UploadPrescription = () => {
                     </div>
 
                     <div className="space-y-6">
+                        {/* Real medicine / record type image */}
+                        <GlassCard className="p-0 overflow-hidden">
+                          <div className="relative w-full h-36">
+                            <img
+                              src={
+                                recordType === 'prescription' ? MEDICINE_IMAGES.prescription :
+                                recordType === 'lab_report'   ? MEDICAL_IMAGES.lab :
+                                recordType === 'xray'         ? MEDICAL_IMAGES.xray :
+                                recordType === 'diagnosis'    ? MEDICAL_IMAGES.stethoscope :
+                                MEDICINE_IMAGES.pharmacy
+                              }
+                              alt={`${recordType} illustration`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.src = MEDICINE_IMAGES.pills; }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/30 to-transparent" />
+                            <div className="absolute bottom-3 left-4">
+                              <p className="text-xs font-bold text-white capitalize">{recordType.replace(/_/g, ' ')}</p>
+                              <p className="text-[10px] text-cyan-300">AI-validated · IPFS-stored · On-chain</p>
+                            </div>
+                          </div>
+                        </GlassCard>
+
                         <GlassCard glowBorder={true} className="border-accent-blue/30">
                             <h3 className="text-sm font-bold uppercase tracking-widest text-accent-blue mb-4">File Attachment</h3>
                             <div className="relative group">

@@ -108,7 +108,7 @@ export default function BlockchainProof({
   onAnchor, // callback to trigger on-chain anchoring
 }) {
   const { contract } = useContract();
-  const { account, connected } = useWallet();
+  const { account, connected } = useWallet(); // eslint-disable-line no-unused-vars
   const [anchoring, setAnchoring] = useState(false);
   const [anchorError, setAnchorError] = useState(null);
   const [anchorDone, setAnchorDone] = useState(false);

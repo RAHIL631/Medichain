@@ -123,8 +123,23 @@ contract MediChain {
         emit PatientRegistered(msg.sender, block.timestamp);
     }
 
-    function getAllPatients() external view returns (address[] memory) {
-        return patientList;
+    function getPatientsPaginated(uint256 offset, uint256 limit) external view returns (address[] memory) {
+        uint256 count = patientList.length;
+        if (offset >= count) {
+            return new address[](0);
+        }
+        
+        uint256 end = offset + limit;
+        if (end > count) {
+            end = count;
+        }
+        
+        uint256 length = end - offset;
+        address[] memory page = new address[](length);
+        for (uint256 i = 0; i < length; i++) {
+            page[i] = patientList[offset + i];
+        }
+        return page;
     }
 
     function getPatientCount() external view returns (uint256) {
@@ -305,7 +320,7 @@ contract MediChain {
         string calldata reportHash,
         uint8           safetyScore,
         string calldata severity
-    ) external patientMustExist(patientAddr) {
+    ) external patientMustExist(patientAddr) onlyAuthorizedDoctor(patientAddr) {
         require(bytes(reportHash).length == 64, "MediChain: reportHash must be 64 hex chars");
         require(safetyScore <= 100,             "MediChain: safetyScore out of range");
         require(bytes(severity).length > 0,     "MediChain: severity cannot be empty");

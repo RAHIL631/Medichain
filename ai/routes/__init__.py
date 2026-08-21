@@ -91,4 +91,31 @@ def register_routes(app):
     except Exception as e:
         logger.warning(f"⚠️  Patient digital twin blueprint failed to load: {e}")
 
+    # ── Enterprise AI Platform Blueprints (Phase 2–11) ────────────────────────
+
+    # Phase 2: Clinical Intelligence Engine
+    try:
+        from cdss.clinical_intelligence_engine import cie_bp
+        app.register_blueprint(cie_bp)
+        logger.info("✅ Clinical Intelligence Engine blueprint registered")
+    except Exception as e:
+        logger.warning(f"⚠️  Clinical Intelligence Engine blueprint failed to load: {e}")
+
+    # Phase 9: AI Health Assistant
+    try:
+        from cdss.health_assistant import assistant_bp
+        app.register_blueprint(assistant_bp)
+        logger.info("✅ AI Health Assistant blueprint registered")
+    except Exception as e:
+        logger.warning(f"⚠️  AI Health Assistant blueprint failed to load: {e}")
+
+    # Phase 11: Predictive Analytics
+    try:
+        from cdss.predictive_analytics import predictive_bp
+        app.register_blueprint(predictive_bp)
+        logger.info("✅ Predictive Analytics blueprint registered")
+    except Exception as e:
+        logger.warning(f"⚠️  Predictive Analytics blueprint failed to load: {e}")
+
     logger.info("✅ All routes registered successfully")
+

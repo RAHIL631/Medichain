@@ -2,8 +2,8 @@
 // MediChain — AI Health Risk Scoring Dashboard
 // Shows Overall Health Score, 6 organ systems, trend charts, SHAP analysis, and recommendation schedules.
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip as ChartTooltip, Legend as ChartLegend
@@ -177,7 +177,9 @@ export default function HealthRiskDashboard() {
   ];
 
   // SHAP explainer records
+  // eslint-disable-next-line no-unused-vars
   const shapExpList = currentReport?.explanations?.[selectedExplainerDisease]?.feature_importance || [];
+  // eslint-disable-next-line no-unused-vars
   const explanationText = currentReport?.explanations?.[selectedExplainerDisease]?.explanation_text || '';
 
   return (

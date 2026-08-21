@@ -1,10 +1,9 @@
 // frontend/src/pages/DoctorDashboard.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
+import api, { aiApi } from '../utils/api';
 import useWallet from '../hooks/useWallet';
 import { getContract, formatAddress } from '../utils/web3';
 
@@ -114,7 +113,7 @@ const DoctorDashboard = () => {
                 dob: patient.dateOfBirth,
                 recordCount: patientRecords.length || 0
             };
-            const { data } = await axios.post('http://localhost:5001/predict', payload, { timeout: 10000 });
+            const { data } = await aiApi.post('/predict', payload, { timeout: 10000 });
             setRiskProfile({
                 heart: data.heart_disease_risk || data.heart_disease || 'LOW',
                 diabetes: data.diabetes_risk || data.diabetes || 'LOW',
@@ -186,7 +185,7 @@ const DoctorDashboard = () => {
                 console.warn('Could not fetch existing patient meds, checking new ones only.');
             }
 
-            const { data } = await axios.post('http://localhost:5001/check-drugs', {
+            const { data } = await aiApi.post('/check-drugs', {
                 newDrugs: medications,
                 currentMedications: currentMeds
             });

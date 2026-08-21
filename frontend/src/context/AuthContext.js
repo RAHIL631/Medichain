@@ -2,7 +2,6 @@
 // Global authentication state via useReducer + Context API
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 
 // ── State Shape ──────────────────────────────────────────────────────────────

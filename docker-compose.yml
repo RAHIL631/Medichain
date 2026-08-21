@@ -10,6 +10,7 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - medichain-net
     healthcheck:
@@ -17,6 +18,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 20s
 
   # ── CACHE ───────────────────────────────────────────────────────────
   redis:
@@ -34,28 +36,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
-  # ── NODE.JS BACKEND API ─────────────────────────────────────────────
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: medichain-backend
+  # ── SMTP CATCHER (MAILHOG) ──────────────────────────────────────────
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: medichain-mailhog
     restart: unless-stopped
     ports:
-      - "5000:5000"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - ./backend/.env
-    environment:
-      - PORT=5000
-      - MONGO_URI=mongodb://mongodb:27017/medichain
-      - REDIS_URL=redis://redis:6379
-      - AI_SERVICE_URL=http://ai:5001
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
     networks:
       - medichain-net
 
@@ -73,6 +63,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=5001
+      - ENV=production
     networks:
       - medichain-net
     deploy:
@@ -80,6 +71,45 @@ services:
         limits:
           memory: 4G
           cpus: '2.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+
+  # ── NODE.JS BACKEND API ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medichain-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ai:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017/medichain
+      - REDIS_URL=redis://redis:6379
+      - AI_SERVICE_URL=http://ai:5001
+    networks:
+      - medichain-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # ── REACT FRONTEND (NGINX) ──────────────────────────────────────────
   frontend:
@@ -87,19 +117,27 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:5000/api
+        - REACT_APP_API_URL=http://localhost:5000/api
     container_name: medichain-frontend
     restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - medichain-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   mongodb_data:
+    driver: local
   redis_data:
+    driver: local
 
 networks:
   medichain-net:
