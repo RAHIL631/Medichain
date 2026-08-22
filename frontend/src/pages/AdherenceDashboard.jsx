@@ -32,17 +32,6 @@ export default function AdherenceDashboard() {
   const [history, setHistory] = useState([]);
 
   // Prepopulate if patient
-  useEffect(() => {
-    if (isPatient && user) {
-      if (user.dateOfBirth) {
-        const calculatedAge = new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear();
-        setAge(calculatedAge);
-      }
-      setChronicDiseases(user.chronicConditions?.length || 1);
-      fetchPatientLogs();
-    }
-  }, [isPatient, user, fetchPatientLogs]);
-
   const fetchPatientLogs = useCallback(async () => {
     setLoading(true);
     try {
@@ -61,6 +50,17 @@ export default function AdherenceDashboard() {
       setLoading(false);
     }
   }, [isPatient, user, patientId]);
+
+  useEffect(() => {
+    if (isPatient && user) {
+      if (user.dateOfBirth) {
+        const calculatedAge = new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear();
+        setAge(calculatedAge);
+      }
+      setChronicDiseases(user.chronicConditions?.length || 1);
+      fetchPatientLogs();
+    }
+  }, [isPatient, user, fetchPatientLogs]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

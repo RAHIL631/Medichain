@@ -57,18 +57,6 @@ export default function EnsemblePredictorDashboard() {
   const [history, setHistory] = useState([]);
   const [selectedEnsembleShapDisease, setSelectedEnsembleShapDisease] = useState('');
 
-  // Prepopulate if user is patient
-  useEffect(() => {
-    if (isPatient && user) {
-      if (user.dateOfBirth) {
-        const calculatedAge = new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear();
-        setAge(calculatedAge);
-      }
-      setChronicConditions(user.chronicConditions || []);
-      fetchPatientLogs();
-    }
-  }, [isPatient, user, fetchPatientLogs]);
-
   const fetchPatientLogs = useCallback(async () => {
     setLoading(true);
     try {
@@ -88,6 +76,18 @@ export default function EnsemblePredictorDashboard() {
       setLoading(false);
     }
   }, [isPatient, user, patientId]);
+
+  // Prepopulate if user is patient
+  useEffect(() => {
+    if (isPatient && user) {
+      if (user.dateOfBirth) {
+        const calculatedAge = new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear();
+        setAge(calculatedAge);
+      }
+      setChronicConditions(user.chronicConditions || []);
+      fetchPatientLogs();
+    }
+  }, [isPatient, user, fetchPatientLogs]);
 
   const handleToggleCondition = (cond) => {
     if (chronicConditions.includes(cond)) {
