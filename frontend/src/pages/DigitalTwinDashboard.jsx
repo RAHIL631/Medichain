@@ -2,7 +2,7 @@
 // MediChain — AI Patient Digital Twin Dashboard
 // Features anatomical SVG visualizers, medication simulators, and progression line charts.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip as ChartTooltip, Legend as ChartLegend,
@@ -57,13 +57,22 @@ export default function DigitalTwinDashboard() {
   const [selectedOrganNode, setSelectedOrganNode] = useState('heart');
 
   // Prepopulate baseline
-  useEffect(() => {
-    if (isPatient && user) {
-      fetchProfile();
-    }
-  }, [isPatient, user]);
+  const runSimulationCall = useCallback(async (baselineObj, drug, dosage) => {
+    const payload = {
+      patientId: isPatient ? user._id : patientId,
+      drug,
+      dosage_mg: dosage
+    };
 
-  const fetchProfile = async () => {
+    try {
+      const { data } = await api.post('/digital-twin/simulate', payload);
+      setSimResults(data.simulation);
+    } catch (err) {
+      setError('Medication simulation failed.');
+    }
+  }, [isPatient, user, patientId]);
+
+  const fetchProfile = useCallback(async () => {
     setLoading(true);
     try {
       const pId = isPatient ? user._id : patientId;
@@ -92,11 +101,18 @@ export default function DigitalTwinDashboard() {
       }
     } catch (err) {
       console.error(err);
-      setError('Could not load patient digital twin profile.');
+      setError('Could not fetch baseline profile.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [isPatient, user, patientId, runSimulationCall]);
+
+  // Prepopulate baseline
+  useEffect(() => {
+    if (isPatient && user) {
+      fetchProfile();
+    }
+  }, [isPatient, user, fetchProfile]);
 
   const handleUpdateBaseline = async (e) => {
     e.preventDefault();
@@ -134,20 +150,6 @@ export default function DigitalTwinDashboard() {
     }
   };
 
-  const runSimulationCall = async (baselineObj, drug, dosage) => {
-    const payload = {
-      patientId: isPatient ? user._id : patientId,
-      drug,
-      dosage_mg: dosage
-    };
-
-    try {
-      const { data } = await api.post('/digital-twin/simulate', payload);
-      setSimResults(data.simulation);
-    } catch (err) {
-      setError('Medication simulation failed.');
-    }
-  };
 
   const triggerSimulation = async () => {
     setLoading(true);

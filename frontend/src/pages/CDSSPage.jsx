@@ -1135,7 +1135,7 @@ function DosageSafetyTab({
     api.get('/ai/cdss/dosage-safety/status')
       .then(res => setMlStatus(res.data))
       .catch(() => setMlStatus({ ml_ready: false, fallback_mode: true }));
-  }, []);
+  }, [setMlStatus]);
 
   const runDosageSafetyAnalysis = async () => {
     if (!analyzerDosages.length) {

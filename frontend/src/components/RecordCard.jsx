@@ -152,7 +152,7 @@ const RecordCard = ({ record }) => {
 
         {/* On-Chain Verify */}
         <a 
-          href={isPending ? '#' : `https://sepolia.etherscan.io/tx/${record.blockchainTxHash}`}
+          href={isPending ? undefined : `https://sepolia.etherscan.io/tx/${record.blockchainTxHash}`}
           target={isPending ? "_self" : "_blank"}
           rel="noopener noreferrer"
           className={`py-3 flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors border-r border-gray-800 ${

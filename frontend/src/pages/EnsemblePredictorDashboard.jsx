@@ -2,7 +2,7 @@
 // MediChain — Upgraded AI Multi-Model Ensemble Disease Predictor Dashboard
 // Features XGBoost + LightGBM + CatBoost probabilities, confidence intervals, and specialist maps.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip as ChartTooltip, Legend as ChartLegend
@@ -67,9 +67,9 @@ export default function EnsemblePredictorDashboard() {
       setChronicConditions(user.chronicConditions || []);
       fetchPatientLogs();
     }
-  }, [isPatient, user]);
+  }, [isPatient, user, fetchPatientLogs]);
 
-  const fetchPatientLogs = async () => {
+  const fetchPatientLogs = useCallback(async () => {
     setLoading(true);
     try {
       const pId = isPatient ? user._id : patientId;
@@ -83,11 +83,11 @@ export default function EnsemblePredictorDashboard() {
       }
     } catch (err) {
       console.error(err);
-      setError('Could not fetch assessment logs.');
+      setError('Could not fetch predictive logs.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [isPatient, user, patientId]);
 
   const handleToggleCondition = (cond) => {
     if (chronicConditions.includes(cond)) {

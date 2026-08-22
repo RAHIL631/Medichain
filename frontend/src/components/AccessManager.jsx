@@ -2,7 +2,6 @@
 // Complete React component for patient-controlled access management on-chain
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ethers } from 'ethers';
 import useContract from '../hooks/useContract';
 import useWallet from '../hooks/useWallet';
 import { isValidEthAddress } from '../utils/web3';

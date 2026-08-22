@@ -2,7 +2,7 @@
 // MediChain — AI Medication Adherence Prediction System Dashboard
 // Implements inputs, scores, risk ratings, and notification channel referrers.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
@@ -41,9 +41,9 @@ export default function AdherenceDashboard() {
       setChronicDiseases(user.chronicConditions?.length || 1);
       fetchPatientLogs();
     }
-  }, [isPatient, user]);
+  }, [isPatient, user, fetchPatientLogs]);
 
-  const fetchPatientLogs = async () => {
+  const fetchPatientLogs = useCallback(async () => {
     setLoading(true);
     try {
       const pId = isPatient ? user._id : patientId;
@@ -60,7 +60,7 @@ export default function AdherenceDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isPatient, user, patientId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

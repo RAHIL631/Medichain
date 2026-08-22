@@ -180,7 +180,6 @@ const StorageProof = ({
 }) => {
   const explorerBase = etherscanBase(networkName);
   const txLink       = explorerBase && txHash ? `${explorerBase}/tx/${txHash}` : null;
-  const addressLink  = explorerBase && ipfsCID ? `${explorerBase}/search?q=${ipfsCID}` : null;
 
   return (
     <div style={{

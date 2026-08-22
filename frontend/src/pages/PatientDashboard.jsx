@@ -144,7 +144,7 @@ const PatientDashboard = () => {
     } finally {
       setRiskLoading(false);
     }
-  }, [user, records.length]);
+  }, [user]);
 
   useEffect(() => {
     fetchRecords();
