@@ -100,12 +100,12 @@ router.post('/register', registerValidation, handleValidationErrors, async (req,
       if (yearsExperience)  userData.yearsExperience = yearsExperience;
     }
 
-    // 3. Generate email verification token (raw → hashed for storage)
-    const rawToken    = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    // 3. Generate 6-digit OTP (raw → hashed for storage)
+    const otp         = crypto.randomInt(100000, 999999).toString();
+    const hashedToken = crypto.createHash('sha256').update(otp).digest('hex');
 
     userData.emailVerifyToken   = hashedToken;
-    userData.emailVerifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    userData.emailVerifyExpires = new Date(Date.now() + 10 * 60 * 1000); // 10m
     userData.isEmailVerified    = false;
 
     // 4. Persist user
@@ -113,8 +113,8 @@ router.post('/register', registerValidation, handleValidationErrors, async (req,
     const token        = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // 5. Send verification email (non-blocking — don't fail registration on email error)
-    sendVerificationEmail(user.email, user.name, rawToken).catch((err) => {
+    // 5. Send verification email (non-blocking)
+    sendVerificationEmail(user.email, user.name, otp).catch((err) => {
       console.error('[AUTH] Failed to send verification email:', err.message);
     });
 
@@ -144,33 +144,58 @@ router.post('/register', registerValidation, handleValidationErrors, async (req,
   }
 });
 
-// ── GET /api/auth/verify-email ────────────────────────────────────────────────
+// ── POST/GET /api/auth/verify-email ───────────────────────────────────────────
 /**
- * Verifies a user's email address using the token from the email link.
- * Query: ?token=<raw_token>
+ * Verifies a user's email address using a 6-digit OTP.
+ * Query or Body: { email, token/otp }
  */
-router.get('/verify-email', async (req, res) => {
+router.all('/verify-email', async (req, res) => {
   try {
-    const { token } = req.query;
-    if (!token) return res.status(400).json({ error: 'Verification token is required' });
+    const otp = req.query.token || req.body.token || req.body.otp;
+    const email = req.query.email || req.body.email;
 
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-    const user = await User.findOne({
-      emailVerifyToken:   hashedToken,
-      emailVerifyExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        error: 'Verification token is invalid or has expired. Please request a new verification email.',
-      });
+    if (!otp || !email) {
+      return res.status(400).json({ error: 'Both email and OTP token are required' });
     }
 
-    // Mark as verified and clear token fields
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+emailVerifyToken +emailVerifyExpires +otpVerifyAttempts +otpLockUntil');
+
+    if (!user) {
+      return res.status(400).json({ error: 'User not found.' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(200).json({ message: 'Email already verified.', isEmailVerified: true });
+    }
+
+    // Check OTP lockout
+    if (user.otpLockUntil && user.otpLockUntil > Date.now()) {
+      const waitMins = Math.ceil((user.otpLockUntil - Date.now()) / 60000);
+      return res.status(429).json({ error: `Too many failed attempts. Try again in ${waitMins} minute(s).` });
+    }
+
+    // Check expiration
+    if (!user.emailVerifyToken || !user.emailVerifyExpires || user.emailVerifyExpires < Date.now()) {
+      return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+    if (user.emailVerifyToken !== hashedOtp) {
+      user.otpVerifyAttempts += 1;
+      if (user.otpVerifyAttempts >= 5) {
+        user.otpLockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15m lockout
+      }
+      await user.save();
+      return res.status(400).json({ error: 'Invalid OTP code.' });
+    }
+
+    // Success
     user.isEmailVerified    = true;
     user.emailVerifyToken   = undefined;
     user.emailVerifyExpires = undefined;
+    user.otpVerifyAttempts  = 0;
+    user.otpLockUntil       = undefined;
     await user.save();
 
     auditLog(AuditEvents.EMAIL_VERIFIED || 'EMAIL_VERIFIED', req, { userId: user._id.toString() });
@@ -188,7 +213,7 @@ router.get('/verify-email', async (req, res) => {
 
 // ── POST /api/auth/resend-verification ───────────────────────────────────────
 /**
- * Resends the email verification link.
+ * Resends the email verification OTP.
  * Body: { email }
  */
 router.post('/resend-verification', async (req, res) => {
@@ -200,19 +225,21 @@ router.post('/resend-verification', async (req, res) => {
 
     // Always respond with 200 to prevent email enumeration
     if (!user || user.isEmailVerified) {
-      return res.status(200).json({ message: 'If that email exists and is unverified, a new link has been sent.' });
+      return res.status(200).json({ message: 'If that email exists and is unverified, a new OTP has been sent.' });
     }
 
-    const rawToken    = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const otp         = crypto.randomInt(100000, 999999).toString();
+    const hashedToken = crypto.createHash('sha256').update(otp).digest('hex');
 
     user.emailVerifyToken   = hashedToken;
-    user.emailVerifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    user.emailVerifyExpires = new Date(Date.now() + 10 * 60 * 1000); // 10m
+    user.otpVerifyAttempts  = 0;
+    user.otpLockUntil       = undefined;
     await user.save();
 
-    sendVerificationEmail(user.email, user.name, rawToken).catch(console.error);
+    sendVerificationEmail(user.email, user.name, otp).catch(console.error);
 
-    return res.status(200).json({ message: 'If that email exists and is unverified, a new link has been sent.' });
+    return res.status(200).json({ message: 'If that email exists and is unverified, a new OTP has been sent.' });
 
   } catch (err) {
     return res.status(500).json({ error: 'Server error' });
@@ -368,19 +395,21 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(200).json({ message: 'If an account exists with that email, a reset link has been sent.' });
     }
 
-    // Generate reset token
-    const rawToken    = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    // Generate 6-digit OTP
+    const otp         = crypto.randomInt(100000, 999999).toString();
+    const hashedToken = crypto.createHash('sha256').update(otp).digest('hex');
 
     user.passwordResetToken   = hashedToken;
-    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    user.otpVerifyAttempts    = 0;
+    user.otpLockUntil         = undefined;
     await user.save();
 
-    sendPasswordResetEmail(user.email, user.name, rawToken).catch((err) => {
+    sendPasswordResetEmail(user.email, user.name, otp).catch((err) => {
       console.error('[AUTH] Failed to send reset email:', err.message);
     });
 
-    return res.status(200).json({ message: 'If an account exists with that email, a reset link has been sent.' });
+    return res.status(200).json({ message: 'If an account exists with that email, a reset OTP has been sent.' });
 
   } catch (err) {
     console.error('[AUTH] Forgot password error:', err.message);
@@ -390,14 +419,14 @@ router.post('/forgot-password', async (req, res) => {
 
 // ── POST /api/auth/reset-password ────────────────────────────────────────────
 /**
- * Resets a user's password using the token from the reset email.
- * Body: { token, newPassword }
+ * Resets a user's password using the 6-digit OTP.
+ * Body: { email, token, newPassword }
  */
 router.post('/reset-password', async (req, res) => {
   try {
-    const { token, newPassword } = req.body;
-    if (!token || !newPassword) {
-      return res.status(400).json({ error: 'Token and newPassword are required' });
+    const { email, token, newPassword } = req.body;
+    if (!email || !token || !newPassword) {
+      return res.status(400).json({ error: 'Email, token, and newPassword are required' });
     }
 
     // Password strength check

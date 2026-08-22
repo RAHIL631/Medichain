@@ -35,16 +35,16 @@ let _transport = null;
 const getTransport = () => {
   if (_transport) return _transport;
 
-  const hasSmtp = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+  const hasSmtp = process.env.SMTP_HOST && process.env.SMTP_USER && (process.env.SMTP_PASS || process.env.SMTP_PASSWORD);
 
   if (nodemailer && hasSmtp) {
     _transport = nodemailer.createTransport({
       host:   process.env.SMTP_HOST,
       port:   parseInt(process.env.SMTP_PORT || '587'),
-      secure: parseInt(process.env.SMTP_PORT || '587') === 465,
+      secure: process.env.SMTP_SECURE === 'true' || parseInt(process.env.SMTP_PORT || '587') === 465,
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: process.env.SMTP_PASSWORD || process.env.SMTP_PASS,
       },
     });
     console.log('[EMAIL] SMTP transport configured:', process.env.SMTP_HOST);
@@ -95,19 +95,17 @@ const sendEmail = async (opts) => {
 // ── Email templates ───────────────────────────────────────────────────────────
 
 /**
- * Sends an email verification link to a newly registered user.
+ * Sends an email verification OTP to a newly registered user.
  *
  * @param {string} email       — recipient email
  * @param {string} name        — recipient name
- * @param {string} token       — raw (unhashed) verification token
+ * @param {string} otp         — 6-digit verification code
  */
-const sendVerificationEmail = async (email, name, token) => {
-  const link = `${APP_URL}/verify-email?token=${token}`;
-
+const sendVerificationEmail = async (email, name, otp) => {
   return sendEmail({
     to:      email,
     subject: 'Verify your MediChain email address',
-    text:    `Hi ${name},\n\nPlease verify your email:\n${link}\n\nThis link expires in 24 hours.\n\nMediChain Team`,
+    text:    `Hi ${name},\n\nPlease verify your email with this one-time code: ${otp}\n\nThis code expires in 10 minutes.\n\nMediChain Team`,
     html:    `
       <!DOCTYPE html>
       <html>
@@ -118,16 +116,12 @@ const sendVerificationEmail = async (email, name, token) => {
             <p style="color: #a0aec0; margin: 0 0 32px;">Secure Health Records Platform</p>
             <h2 style="font-size: 20px; margin: 0 0 16px;">Verify your email address</h2>
             <p>Hi ${name},</p>
-            <p>Welcome to MediChain! Please verify your email address to activate your account.</p>
-            <a href="${link}" style="display: inline-block; background: linear-gradient(135deg, #00d4ff, #7c3aed); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 24px 0;">
-              Verify Email Address
-            </a>
-            <p style="color: #718096; font-size: 14px; margin-top: 24px;">
-              Or paste this link in your browser:<br>
-              <a href="${link}" style="color: #00d4ff;">${link}</a>
-            </p>
+            <p>Welcome to MediChain! Enter the code below to activate your account.</p>
+            <div style="background: #08121e; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0; border: 1px solid #00d4ff;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #00d4ff;">${otp}</span>
+            </div>
             <p style="color: #718096; font-size: 12px; border-top: 1px solid #2d3748; padding-top: 16px; margin-top: 32px;">
-              This link expires in 24 hours. If you didn't create a MediChain account, you can safely ignore this email.
+              This code expires in 10 minutes. If you didn't create a MediChain account, you can safely ignore this email.
             </p>
           </div>
         </body>
@@ -137,19 +131,17 @@ const sendVerificationEmail = async (email, name, token) => {
 };
 
 /**
- * Sends a password reset link.
+ * Sends a password reset OTP.
  *
  * @param {string} email  — recipient email
  * @param {string} name   — recipient name
- * @param {string} token  — raw (unhashed) reset token
+ * @param {string} otp    — 6-digit reset code
  */
-const sendPasswordResetEmail = async (email, name, token) => {
-  const link = `${APP_URL}/reset-password?token=${token}`;
-
+const sendPasswordResetEmail = async (email, name, otp) => {
   return sendEmail({
     to:      email,
     subject: 'Reset your MediChain password',
-    text:    `Hi ${name},\n\nReset your password:\n${link}\n\nThis link expires in 1 hour.\n\nIf you did not request this, ignore this email.\n\nMediChain Team`,
+    text:    `Hi ${name},\n\nReset your password with this one-time code: ${otp}\n\nThis code expires in 10 minutes.\n\nIf you did not request this, ignore this email.\n\nMediChain Team`,
     html:    `
       <!DOCTYPE html>
       <html>
@@ -160,16 +152,12 @@ const sendPasswordResetEmail = async (email, name, token) => {
             <p style="color: #a0aec0; margin: 0 0 32px;">Secure Health Records Platform</p>
             <h2 style="font-size: 20px; margin: 0 0 16px;">Password Reset Request</h2>
             <p>Hi ${name},</p>
-            <p>We received a request to reset your MediChain password. Click the button below to choose a new password.</p>
-            <a href="${link}" style="display: inline-block; background: linear-gradient(135deg, #f6ad55, #e53e3e); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 24px 0;">
-              Reset Password
-            </a>
-            <p style="color: #718096; font-size: 14px; margin-top: 24px;">
-              Or paste this link:<br>
-              <a href="${link}" style="color: #00d4ff;">${link}</a>
-            </p>
+            <p>We received a request to reset your MediChain password. Enter the code below to choose a new password.</p>
+            <div style="background: #08121e; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0; border: 1px solid #e53e3e;">
+              <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #f6ad55;">${otp}</span>
+            </div>
             <p style="color: #718096; font-size: 12px; border-top: 1px solid #2d3748; padding-top: 16px; margin-top: 32px;">
-              This link expires in 1 hour. If you didn't request a password reset, ignore this email — your password will not change.
+              This code expires in 10 minutes. If you didn't request a password reset, ignore this email — your password will not change.
             </p>
           </div>
         </body>

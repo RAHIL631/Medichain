@@ -134,10 +134,19 @@ const UserSchema = new mongoose.Schema({
     select: false,
   },
 
-  // Email verification
+  // Email verification & OTP
   isEmailVerified: {
     type:    Boolean,
     default: false,
+  },
+  otpVerifyAttempts: {
+    type:    Number,
+    default: 0,
+    select:  false,
+  },
+  otpLockUntil: {
+    type:   Date,
+    select: false,
   },
   emailVerifyToken: {
     type:   String,
