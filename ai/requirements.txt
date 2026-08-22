@@ -38,6 +38,3 @@ requests==2.31.0
 
 # ── PDF Report Generation ─────────────────────────────────────────────────────
 reportlab==4.1.0
-lightgbm==4.3.0
-catboost==1.2.5
-
