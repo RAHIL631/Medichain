@@ -26,7 +26,11 @@ const connectDB = async () => {
     return;
   }
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, MONGO_OPTIONS);
+    const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    if (!uri) {
+      throw new Error('MONGO_URI / MONGODB_URI environment variable is not defined. Please add it to your Render Environment Variables.');
+    }
+    const conn = await mongoose.connect(uri, MONGO_OPTIONS);
     console.log(`✅  MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`❌  MongoDB connection error: ${error.message}`);
