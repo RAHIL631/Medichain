@@ -134,6 +134,18 @@ def predict_legacy(patient: dict) -> dict:
     if bp > 140 or chol > 240:
         recommendations.append("Reduce sodium intake and monitor blood pressure weekly.")
 
+    from datetime import datetime
+
+    # Calculate confidence as the maximum probability of the active disease predictions
+    prob_list = [scores[k] / 100.0 for k in scores if isinstance(scores[k], (int, float))]
+    confidence = max(prob_list) if prob_list else 0.0
+
+    # Build a clean explanation string
+    explanation_parts = []
+    for k, v in scores.items():
+        explanation_parts.append(f"{k}: {v}% ({risk_levels.get(k, 'UNKNOWN')} risk)")
+    explanation = "Risk assessment summary: " + ", ".join(explanation_parts) + "."
+
     return {
         "overallRisk": overall,
         "scores": scores,
@@ -145,6 +157,13 @@ def predict_legacy(patient: dict) -> dict:
         "heart_disease": scores.get("heartDisease", 0.0),
         "diabetes": scores.get("diabetes", 0.0),
         "stroke": scores.get("stroke", 0.0),
+        # New standardized fields for decision support
+        "prediction": overall,
+        "confidence": round(confidence, 4),
+        "model_version": registry.get_version_info().get("heart", {}).get("version", "1.0.0"),
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "explanation": explanation,
+        "status": "success",
     }
 
 

@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # ── PRODUCTION DATABASE ─────────────────────────────────────────────
+  mongodb-prod:
+    image: mongo:6.0
+    container_name: medichain-mongodb-production
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_prod_data:/data/db
+    networks:
+      - medichain-production-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ── PRODUCTION CACHE ────────────────────────────────────────────────
+  redis-prod:
+    image: redis:7.0-alpine
+    container_name: medichain-redis-production
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - medichain-production-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ── PRODUCTION SMTP CATCHER (MAILHOG) ───────────────────────────────
+  mailhog-prod:
+    image: mailhog/mailhog:latest
+    container_name: medichain-mailhog-production
+    restart: unless-stopped
+    ports:
+      - "1026:1025" # SMTP server
+      - "8026:8025" # Web UI
+    networks:
+      - medichain-production-net
+
+  # ── PRODUCTION AI MICROSERVICE ──────────────────────────────────────
+  ai-service-prod:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    container_name: medichain-ai-production
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=5001
+      - ENV=production
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+      - MODEL_DIR=models
+    networks:
+      - medichain-production-net
+
+  # ── PRODUCTION NODE.JS BACKEND API ──────────────────────────────────
+  backend-prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medichain-backend-production
+    restart: unless-stopped
+    ports:
+      - "5002:5000"
+    depends_on:
+      mongodb-prod:
+        condition: service_healthy
+      redis-prod:
+        condition: service_healthy
+      ai-service-prod:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env.production
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb-prod:27017/medichain_production
+      - REDIS_URL=redis://redis-prod:6379
+      - SMTP_HOST=mailhog-prod
+    networks:
+      - medichain-production-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  mongodb_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local
+
+networks:
+  medichain-production-net:
+    driver: bridge

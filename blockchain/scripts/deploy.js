@@ -15,7 +15,9 @@ const fs = require("fs");
 const path = require("path");
 
 async function main() {
-  // 1) Get the ContractFactory for "MediChain"
+  // 1) Get deployer signer and ContractFactory for "MediChain"
+  const [deployer] = await ethers.getSigners();
+  const net = await ethers.provider.getNetwork();
   const MediChain = await ethers.getContractFactory("MediChain");
 
   // 2) Deploy the contract
@@ -27,11 +29,13 @@ async function main() {
   // 4) Get deployed contract address
   const address = await medichain.getAddress();
 
-  // 5) Get deployment receipt for block number (best-effort)
+  // 5) Get deployment receipt for block number & tx hash
   const deployedAt = new Date().toISOString();
   let blockNumber = 0;
+  let txHash = "";
   const deploymentTx = medichain.deploymentTransaction();
   if (deploymentTx) {
+    txHash = deploymentTx.hash;
     const receipt = await deploymentTx.wait();
     if (receipt && typeof receipt.blockNumber === "number") blockNumber = receipt.blockNumber;
   }
@@ -40,10 +44,16 @@ async function main() {
   const artifact = await artifacts.readArtifact("MediChain");
 
   const exportData = {
+    contractName: "MediChain",
     address,
-    abi: artifact.abi,
     network: network.name || "unknown",
+    chainId: Number(net.chainId),
+    deployer: deployer.address,
+    txHash,
+    blockNumber,
+    compilerVersion: "0.8.19",
     deployedAt,
+    abi: artifact.abi,
   };
 
   // 7a) Write medichain/blockchain/deployedContract.json
@@ -58,9 +68,13 @@ async function main() {
 
   // 8) Console.log deployment summary
   console.log("===== MediChain Deployed =====");
-  console.log(`Network:  ${exportData.network}`);
+  console.log(`Contract: ${exportData.contractName}`);
+  console.log(`Network:  ${exportData.network} (Chain ID: ${exportData.chainId})`);
   console.log(`Address:  ${exportData.address}`);
-  console.log(`Block:    ${blockNumber}`);
+  console.log(`Deployer: ${exportData.deployer}`);
+  console.log(`Tx Hash:  ${exportData.txHash}`);
+  console.log(`Block:    ${exportData.blockNumber}`);
+  console.log(`Compiler: ${exportData.compilerVersion}`);
   console.log(`Time:     ${exportData.deployedAt}`);
   console.log(
     "ABI exported to: deployedContract.json + frontend/src/contracts/MediChain.json"

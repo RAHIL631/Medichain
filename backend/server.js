@@ -9,8 +9,9 @@ const helmet        = require('helmet');
 const rateLimit     = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp           = require('hpp');
-const xss           = require('xss-clean');
 const morgan        = require('morgan');
+const path          = require('path');
+const fs            = require('fs');
 
 const connectDB = require('./config/db');
 const { connectRedis } = require('./utils/cache');
@@ -111,9 +112,38 @@ app.use((req, res, next) => {
   next();
 });
 
-// 6.5. XSS Clean — sanitize user input coming from POST body, GET queries, and url params
-//      to prevent Cross-Site Scripting attacks.
-app.use(xss());
+// 6.5. XSS Clean — sanitize user input to prevent Cross-Site Scripting attacks.
+// Express 5 compatible (does not attempt to reassign req.query directly).
+const sanitizeXss = (val) => {
+  if (typeof val === 'string') {
+    return val.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  }
+  if (typeof val === 'object' && val !== null) {
+    if (Array.isArray(val)) return val.map(sanitizeXss);
+    const clean = {};
+    for (const key of Object.keys(val)) {
+      clean[key] = sanitizeXss(val[key]);
+    }
+    return clean;
+  }
+  return val;
+};
+
+app.use((req, res, next) => {
+  if (req.body) {
+    req.body = sanitizeXss(req.body);
+  }
+  if (req.params) {
+    try {
+      const cleanParams = {};
+      for (const [k, v] of Object.entries(req.params)) {
+        cleanParams[k] = sanitizeXss(v);
+      }
+      req.params = cleanParams;
+    } catch (e) {}
+  }
+  next();
+});
 
 // 7. HPP — HTTP Parameter Pollution protection.
 //    Prevents duplicate query params by always using the LAST value.
@@ -225,6 +255,18 @@ app.get('/ready', async (req, res) => {
     checks,
   });
 });
+
+// ── Production Frontend SPA Serving ──────────────────────────────────────────
+const frontendBuildPath = path.join(__dirname, '../frontend/build');
+if (fs.existsSync(frontendBuildPath)) {
+  app.use(express.static(frontendBuildPath));
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/health') && !req.path.startsWith('/ready')) {
+      return res.sendFile(path.join(frontendBuildPath, 'index.html'));
+    }
+    next();
+  });
+}
 
 // ── 404 handler — catches any unmatched route ─────────────────────────────────
 app.use((req, res) =>

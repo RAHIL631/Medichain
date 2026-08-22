@@ -31,7 +31,9 @@ MODEL_DIR=models_registry
 
 ### 3. Frontend (`frontend/.env`)
 ```env
-VITE_API_URL=http://localhost:5000/api
+REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_AI_URL=http://localhost:5001
+REACT_APP_TARGET_CHAIN_ID=31337
 ```
 
 ---

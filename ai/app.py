@@ -79,6 +79,7 @@ def create_app(config_overrides: dict = None) -> Flask:
     app.config["DEBUG"] = settings.DEBUG
     app.config["ENV"] = settings.ENV
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "medichain-ai-dev-key")
+    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB limit
 
     if config_overrides:
         app.config.update(config_overrides)

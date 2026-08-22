@@ -356,6 +356,87 @@ router.patch('/record/:recordId/txhash', async (req, res) => {
   }
 });
 
+// ── GET /api/doctor/record/:recordId/download ─────────────────────────────────
+/**
+ * Doctor-facing route to retrieve and decrypt a patient's medical record.
+ * Strict authorization enforced:
+ *   1. Must be authenticated as doctor or hospital
+ *   2. Must have active ConsentRecord from the patient OR be the original uploader
+ *   3. Fetches encrypted ciphertext from IPFS gateway
+ *   4. Decrypts using AES-256-GCM with stored key bundle
+ *   5. Logs audit trail event
+ */
+const { decryptBuffer } = require('../utils/encryption');
+const { auditLog, AuditEvents } = require('../utils/auditLogger');
+
+router.get('/record/:recordId/download', async (req, res) => {
+  try {
+    const record = await MedicalRecord.findOne({
+      _id: req.params.recordId,
+      isActive: true,
+    }).select('+encryptionMeta.encryptedKey +encryptionMeta.authTag');
+
+    if (!record) {
+      return res.status(404).json({ error: 'Record not found' });
+    }
+
+    // Check authorization: doctor must either be the uploader or have active patient consent
+    const isUploader = record.doctorId && record.doctorId.toString() === req.user._id.toString();
+    let isAuthorizedDoctor = isUploader;
+
+    if (!isAuthorizedDoctor) {
+      isAuthorizedDoctor = await ConsentRecord.hasActiveConsent(record.patientId, req.user._id);
+    }
+
+    if (!isAuthorizedDoctor) {
+      auditLog(AuditEvents.UNAUTHORIZED, req, {
+        recordId: req.params.recordId,
+        patientId: record.patientId,
+        reason: 'Missing active patient consent',
+      });
+      return res.status(403).json({
+        error: 'Access denied: You do not have active patient consent to access this medical file',
+      });
+    }
+
+    // Fetch ciphertext from IPFS Gateway
+    const response = await axios.get(record.ipfsURL, { responseType: 'arraybuffer' });
+    let fileBuffer = Buffer.from(response.data);
+
+    // Decrypt if encrypted
+    if (record.isEncrypted && record.encryptionMeta) {
+      try {
+        fileBuffer = decryptBuffer(
+          fileBuffer,
+          record.encryptionMeta.encryptedKey,
+          record.encryptionMeta.iv,
+          record.encryptionMeta.authTag
+        );
+      } catch (decErr) {
+        console.error('[DOCTOR] Decryption failed:', decErr.message);
+        return res.status(500).json({ error: 'Failed to decrypt file content' });
+      }
+    }
+
+    auditLog(AuditEvents.RECORD_ACCESSED, req, {
+      recordId: record._id,
+      patientId: record.patientId,
+      fileName: record.fileName,
+      ipfsCID: record.ipfsCID,
+    });
+
+    res.setHeader('Content-Type', record.fileMimeType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${record.fileName}"`);
+    res.setHeader('Content-Length', fileBuffer.length);
+    return res.send(fileBuffer);
+
+  } catch (err) {
+    console.error('[DOCTOR] Record download error:', err.message);
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Record not found' });
+    return res.status(500).json({ error: 'Failed to retrieve file: ' + err.message });
+  }
+});
+
 // ── GET /api/doctor/patient/:walletAddress ────────────────────────────────────
 /**
  * Called when a doctor scans a patient's QR Health ID.

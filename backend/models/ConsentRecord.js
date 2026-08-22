@@ -41,7 +41,6 @@ const ConsentRecordSchema = new mongoose.Schema({
   },
   expiresAt: {
     type:  Date,
-    index: true,
   },
 
   // ── Blockchain Proof ──────────────────────────────────────────────────────

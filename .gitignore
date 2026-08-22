@@ -8,6 +8,7 @@ node_modules/
 .env.local
 .env.*.local
 backend/.env
+backend/.env.production
 ai/.env
 blockchain/.env
 frontend/.env

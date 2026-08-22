@@ -19,6 +19,12 @@ let mongoServer;
  * Mongoose automatically manages reconnection after the initial connection.
  */
 const connectDB = async () => {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    return;
+  }
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, MONGO_OPTIONS);
     console.log(`✅  MongoDB connected: ${conn.connection.host}`);

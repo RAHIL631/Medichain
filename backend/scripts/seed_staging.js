@@ -61,6 +61,35 @@ const seedStaging = async () => {
       console.log('[SEED] Created Staging Patient');
     }
 
+    // 4. Seed Hospital Representative User
+    const hospPass = await bcrypt.hash('HospitalPass123!', 10);
+    const existingHospUser = await User.findOne({ email: 'hospital.test@staging.medichain.local' });
+    if (!existingHospUser) {
+      await User.create({
+        name: 'Central Hospital Rep',
+        email: 'hospital.test@staging.medichain.local',
+        password: hospPass,
+        role: 'hospital',
+        hospitalName: 'Staging Central Hospital',
+        isEmailVerified: true
+      });
+      console.log('[SEED] Created Staging Hospital User');
+    }
+
+    // 5. Seed Admin User
+    const adminPass = await bcrypt.hash('AdminPass123!', 10);
+    const existingAdmin = await User.findOne({ email: 'admin.test@staging.medichain.local' });
+    if (!existingAdmin) {
+      await User.create({
+        name: 'System Admin',
+        email: 'admin.test@staging.medichain.local',
+        password: adminPass,
+        role: 'admin',
+        isEmailVerified: true
+      });
+      console.log('[SEED] Created Staging Admin User');
+    }
+
     console.log('[SEED] Staging Database Seeding Complete.');
     process.exit(0);
   } catch (err) {
