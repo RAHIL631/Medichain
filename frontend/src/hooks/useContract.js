@@ -1,12 +1,16 @@
 // frontend/src/hooks/useContract.js
 //
-// Re-export shim — canonical implementation in useBlockchain.js.
-// Existing imports from './useContract' continue to work unchanged.
+// Re-export shim — maps the canonical useBlockchain.js interface back
+// to the legacy `{ contract }` object expected by older components.
 //
-//   import useContract from '../hooks/useContract';           // legacy (still works)
-//   import { useContract } from '../hooks/useBlockchain';    // canonical
+// Automatically injects the wallet signer if called with no arguments.
 
-import { useContract } from './useBlockchain';
+import { useContract as useBlockchainContract, useWallet as useBlockchainWallet } from './useBlockchain';
 
-export { useContract };
+export const useContract = (explicitSigner) => {
+  const { signer } = useBlockchainWallet();
+  const contract = useBlockchainContract(explicitSigner || signer);
+  return { contract };
+};
+
 export default useContract;

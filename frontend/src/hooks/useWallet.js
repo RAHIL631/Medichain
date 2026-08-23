@@ -1,13 +1,19 @@
 // frontend/src/hooks/useWallet.js
 //
-// Re-export shim — the canonical implementation now lives in useBlockchain.js.
-// This file exists so existing components that import from './useWallet' continue
-// to work without any changes. Both of these are equivalent:
-//
-//   import useWallet from '../hooks/useWallet';           // legacy import (still works)
-//   import { useWallet } from '../hooks/useBlockchain';  // new canonical import
+// Re-export shim — maps the canonical useBlockchain.js interface back
+// to the legacy `{ account, connected, connect }` properties expected by
+// older components.
 
-import { useWallet } from './useBlockchain';
+import { useWallet as useBlockchainWallet } from './useBlockchain';
 
-export { useWallet };
+export const useWallet = () => {
+  const wallet = useBlockchainWallet();
+  return {
+    ...wallet,
+    account: wallet.address,
+    connected: wallet.isConnected,
+    connect: wallet.connectWallet,
+  };
+};
+
 export default useWallet;
