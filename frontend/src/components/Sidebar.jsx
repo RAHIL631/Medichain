@@ -29,6 +29,13 @@ export default function Sidebar({ navItems = [] }) {
       <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map(({ label, path, icon: Icon }) => {
           const active = location.pathname === path;
+          const renderIcon = () => {
+            if (!Icon) return null;
+            if (React.isValidElement(Icon)) return Icon;
+            const Comp = Icon;
+            return <Comp className="w-5 h-5" />;
+          };
+
           return (
             <Link
               key={path}
@@ -41,7 +48,7 @@ export default function Sidebar({ navItems = [] }) {
               } ${collapsed ? 'justify-center px-2' : ''}`}
               aria-current={active ? 'page' : undefined}
             >
-              {Icon && <span className="w-5 h-5 flex-shrink-0">{typeof Icon === 'function' ? <Icon className="w-5 h-5" /> : Icon}</span>}
+              {Icon && <span className="w-5 h-5 flex-shrink-0">{renderIcon()}</span>}
               {!collapsed && <span className="truncate">{label}</span>}
             </Link>
           );
