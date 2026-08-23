@@ -231,6 +231,15 @@ const mountApi = (prefix) => {
 mountApi('/api');
 mountApi('/api/v1');
 
+// ── Welcome / Root endpoint ─────────────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Welcome to the MediChain API',
+    docs: 'Endpoints are available under /api',
+    healthCheck: '/health'
+  });
+});
+
 // ── Health check endpoint ───────────────────────────────────────────────────
 app.get('/health', (req, res) =>
   res.status(200).json({
