@@ -455,8 +455,8 @@ const NetworkGuard = ({ children }) => {
   // Case 2: MetaMask not installed / wallet not connected — let children handle it
   if (chainId === null) return children;
 
-  // Case 3: supported network — all good, render app
-  if (SUPPORTED_NETWORKS[chainId]) return children;
+  // Case 3: correct network — all good, render app
+  if (chainId === TARGET_CHAIN_ID) return children;
 
   // Case 4: unsupported network — show blocking overlay
   return (

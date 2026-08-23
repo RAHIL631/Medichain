@@ -6,6 +6,7 @@ import useWallet from '../hooks/useWallet';
 import useContract from '../hooks/useContract';
 import api from '../utils/api';
 import { formatAddress } from '../utils/web3';
+import { TARGET_CHAIN_ID, TARGET_NETWORK } from '../hooks/useBlockchain';
 
 /**
  * WalletSetup Component
@@ -179,9 +180,9 @@ const WalletSetup = ({ onComplete }) => {
         )}
 
         {/* Network Hint */}
-        {network && network.chainId !== 31337 && (
+        {network && network.chainId !== TARGET_CHAIN_ID && (
           <p className="mt-4 text-[10px] text-amber-600 font-bold uppercase tracking-widest bg-amber-50 dark:bg-amber-900/20 py-1 rounded-full">
-            ⚠ Please switch to Hardhat Local (Chain 31337)
+            ⚠ Please switch to {TARGET_NETWORK?.name || 'Correct Network'} (Chain {TARGET_CHAIN_ID})
           </p>
         )}
       </div>

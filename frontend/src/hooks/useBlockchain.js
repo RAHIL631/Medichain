@@ -69,7 +69,11 @@ const NETWORKS = {
   },
 };
 
-const TARGET_CHAIN_ID = 31337; // Hardhat for development — change for Sepolia deployment
+export const TARGET_CHAIN_ID =
+  Number(process.env.REACT_APP_TARGET_CHAIN_ID) ||
+  (process.env.NODE_ENV === 'production' ? 11155111 : 31337);
+
+export const TARGET_NETWORK = NETWORKS[TARGET_CHAIN_ID];
 const LS_KEY = 'medichain_wallet_address'; // localStorage key for silent reconnect
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -341,12 +345,25 @@ export const useWallet = () => {
 export const useContract = (signer) => {
   return useMemo(() => {
     if (!signer) return null;
-    if (!MediChainArtifact.address) {
-      console.warn('[useContract] Contract not deployed — MediChain.json has no address.');
+    
+    // In production, prefer environment variable to avoid using local Hardhat address
+    let contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
+    if (!contractAddress) {
+      // If targeting Sepolia but artifact is Hardhat, ignore the Hardhat address
+      if (TARGET_CHAIN_ID === 11155111 && MediChainArtifact.chainId === 31337) {
+        console.warn('[useContract] Production requires a Sepolia contract address via REACT_APP_CONTRACT_ADDRESS. Local Hardhat address ignored.');
+        return null;
+      }
+      contractAddress = MediChainArtifact.address;
+    }
+
+    if (!contractAddress) {
+      console.warn('[useContract] Contract not deployed — no address found.');
       return null;
     }
+    
     return new ethers.Contract(
-      MediChainArtifact.address,
+      contractAddress,
       MediChainArtifact.abi,
       signer
     );
