@@ -65,24 +65,30 @@ app.use(pinoHttp({
 
 // 3. CORS — allow requests from the configured frontend origin, or all in dev
 const allowedOrigins = [
-  process.env.CORS_ORIGIN || 'http://localhost:3000',
+  process.env.FRONTEND_URL,
+  process.env.CORS_ORIGIN,
+  'https://medichain-henna.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
   'http://localhost:3005',
   'http://localhost:3006'
-];
+].filter(Boolean); // Filter out undefined/null if env vars are missing
 
 app.use(cors({
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods:     ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
 }));
 
 // 4. Body parser — JSON with 10kb size limit to prevent large payload attacks
@@ -289,6 +295,11 @@ app.use((req, res) =>
 // Must have exactly 4 parameters (err, req, res, next) to be recognised by Express.
 // ══════════════════════════════════════════════════════════════════════════════
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+  // CORS Error Handling
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ error: 'Origin not allowed by CORS' });
+  }
+
   console.error('[SERVER ERROR]', {
     message: err.message,
     stack: process.env.NODE_ENV !== 'production' ? err.stack : '[hidden in production]',
