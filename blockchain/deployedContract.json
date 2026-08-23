@@ -1,13 +1,13 @@
 {
   "contractName": "MediChain",
-  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "network": "hardhat",
-  "chainId": 31337,
-  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-  "txHash": "0x135cd58d9e466293b86522e29fc658addc380ae6bb8b0f80247a5360af8c6656",
-  "blockNumber": 1,
+  "address": "0x54fb71438b6A79947BE43dFAfB72194619405004",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0x85a0dE44189eb65dfE6689910c40D97203Cc5411",
+  "txHash": "0xec9426f7498a975149bd0a822a11accbc937a62923740c9fdca5fc03b05dd994",
+  "blockNumber": 11551481,
   "compilerVersion": "0.8.19",
-  "deployedAt": "2026-08-22T07:12:54.971Z",
+  "deployedAt": "2026-08-23T17:27:02.268Z",
   "abi": [
     {
       "anonymous": false,

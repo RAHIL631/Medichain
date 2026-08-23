@@ -632,7 +632,7 @@ const DoctorDashboard = () => {
                                                         txHash={txHash}
                                                         blockNumber={blockNumber}
                                                         txStatus={txStatus}
-                                                        networkName="localhost"
+                                                        networkName="sepolia"
                                                     />
                                                 </div>
                                             )}
