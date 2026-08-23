@@ -86,7 +86,6 @@ export const AuthProvider = ({ children }) => {
 
   // ── login ─────────────────────────────────────────────────────────────────
   const login = useCallback(async (email, password) => {
-    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
     const { data } = await api.post('/auth/login', { email, password });
     localStorage.setItem('medichain_token', data.token);
     dispatch({
@@ -98,7 +97,6 @@ export const AuthProvider = ({ children }) => {
 
   // ── register ──────────────────────────────────────────────────────────────
   const register = useCallback(async (formData) => {
-    dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
     const { data } = await api.post('/auth/register', formData);
     localStorage.setItem('medichain_token', data.token);
     dispatch({
