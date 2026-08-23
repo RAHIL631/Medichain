@@ -2,6 +2,10 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  Activity, User, Stethoscope, Building2,
+  ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff
+} from 'lucide-react';
 
 // Password rules — must mirror backend/middleware/validate.js exactly
 const passwordRules = [
@@ -15,6 +19,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState('');
   const [showPasswordHints, setShowPasswordHints] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
   // Common Fields
   const [fullName, setFullName] = useState('');
@@ -139,7 +144,6 @@ const Register = () => {
       }, 2000);
     } catch (err) {
       const data = err.response?.data;
-      // Backend may return { error, errors: [{field, message}] }
       if (data?.errors?.length) {
         setFieldErrors(data.errors);
         setError(data.error || 'Validation failed. Please fix the issues below.');
@@ -152,35 +156,38 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 font-sans text-white relative overflow-hidden">
-      {/* Background glowing effects */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-[150px] pointer-events-none"></div>
-      
-      <div className="w-full max-w-3xl bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-700 p-8 relative z-10 my-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-              Join MediChain
-            </h1>
-            <p className="text-gray-400 text-sm mt-1">Create your secure blockchain identity</p>
+    <div className="min-h-screen bg-hc-bg flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-3xl hc-card p-6 sm:p-10 shadow-hc-card-lg my-8">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-hc-border-light">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-hc-blue rounded-xl flex items-center justify-center text-white shadow-sm">
+              <Activity className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-hc-text">Join MediChain</h1>
+              <p className="text-xs text-hc-text-muted mt-0.5">Create your secure healthcare platform identity</p>
+            </div>
           </div>
-          <span className="text-sm text-blue-300 bg-blue-900/40 border border-blue-800 px-4 py-1.5 rounded-full font-medium shadow-sm">
-            Step {step} of 3
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="hc-badge hc-badge-primary text-xs font-semibold px-3 py-1">
+              Step {step} of 3
+            </span>
+          </div>
         </div>
 
+        {/* Alerts */}
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          <div className="mb-6 p-4 bg-hc-danger-soft border border-hc-danger/20 rounded-xl text-hc-danger text-sm">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
             {fieldErrors.length > 0 && (
-              <ul className="mt-2 ml-8 list-disc space-y-1">
+              <ul className="mt-2 ml-7 list-disc space-y-1 text-xs">
                 {fieldErrors.map((fe, i) => (
-                  <li key={i}><span className="font-medium capitalize">{fe.field}</span>: {fe.message}</li>
+                  <li key={i}><span className="font-semibold capitalize">{fe.field}</span>: {fe.message}</li>
                 ))}
               </ul>
             )}
@@ -188,104 +195,108 @@ const Register = () => {
         )}
 
         {successMsg && (
-          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400 text-sm flex items-start gap-3">
-            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+          <div className="mb-6 p-4 bg-hc-success-soft border border-hc-success/20 rounded-xl text-hc-success text-sm flex items-center gap-2.5">
+            <CheckCircle className="w-4 h-4 flex-shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {/* Step 1: Role Selection */}
         {step === 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-            <button 
-              onClick={() => handleRoleSelect('patient')} 
-              className="flex flex-col items-center p-8 bg-gray-900/50 hover:bg-blue-900/20 border-2 border-gray-700 hover:border-blue-500 rounded-xl transition-all group"
-            >
-              <div className="w-16 h-16 bg-blue-900/50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <span className="font-semibold text-xl text-white">Patient</span>
-              <span className="text-sm text-gray-400 mt-2 text-center">Manage your health records securely on-chain</span>
-            </button>
-            
-            <button 
-              onClick={() => handleRoleSelect('doctor')} 
-              className="flex flex-col items-center p-8 bg-gray-900/50 hover:bg-green-900/20 border-2 border-gray-700 hover:border-green-500 rounded-xl transition-all group"
-            >
-              <div className="w-16 h-16 bg-green-900/50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-              </div>
-              <span className="font-semibold text-xl text-white">Doctor</span>
-              <span className="text-sm text-gray-400 mt-2 text-center">Access patient records and prescribe medication</span>
-            </button>
-            
-            <button 
-              onClick={() => handleRoleSelect('hospital')} 
-              className="flex flex-col items-center p-8 bg-gray-900/50 hover:bg-purple-900/20 border-2 border-gray-700 hover:border-purple-500 rounded-xl transition-all group"
-            >
-              <div className="w-16 h-16 bg-purple-900/50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <span className="font-semibold text-xl text-white">Hospital / Lab</span>
-              <span className="text-sm text-gray-400 mt-2 text-center">Upload authentic test reports and diagnoses</span>
-            </button>
+          <div>
+            <p className="text-sm font-semibold text-hc-text mb-4 text-center">Select your account type to proceed</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-2">
+              <button 
+                onClick={() => handleRoleSelect('patient')} 
+                className="hc-card-hover p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-blue"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-hc-blue-soft text-hc-blue flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <User className="w-7 h-7" />
+                </div>
+                <span className="font-bold text-base text-hc-text">Patient</span>
+                <span className="text-xs text-hc-text-muted mt-2 leading-relaxed">Manage your personal records and sovereign access controls</span>
+              </button>
+              
+              <button 
+                onClick={() => handleRoleSelect('doctor')} 
+                className="hc-card-hover p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-teal"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-hc-teal-soft text-hc-teal flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <Stethoscope className="w-7 h-7" />
+                </div>
+                <span className="font-bold text-base text-hc-text">Doctor</span>
+                <span className="text-xs text-hc-text-muted mt-2 leading-relaxed">Review records, prescribe medications with AI safety checks</span>
+              </button>
+              
+              <button 
+                onClick={() => handleRoleSelect('hospital')} 
+                className="hc-card-hover p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-violet"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-hc-violet-soft text-hc-violet flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <Building2 className="w-7 h-7" />
+                </div>
+                <span className="font-bold text-base text-hc-text">Hospital / Lab</span>
+                <span className="text-xs text-hc-text-muted mt-2 leading-relaxed">Anchor authentic diagnostic test reports on decentralized storage</span>
+              </button>
+            </div>
           </div>
         )}
 
         {/* Step 2: Common Fields */}
         {step === 2 && (
           <form onSubmit={handleNextToStep3} className="space-y-5">
-            <h2 className="text-xl font-medium text-white mb-4 border-b border-gray-700 pb-2">Basic Information</h2>
+            <h2 className="text-base font-bold text-hc-text mb-4 pb-2 border-b border-hc-border-light">Account Credentials</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+                <label className="hc-label">Full Name</label>
                 <input 
                   type="text" 
                   value={fullName} 
                   onChange={(e) => setFullName(e.target.value)} 
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                  placeholder="e.g. John Doe" 
+                  className="hc-input" 
+                  placeholder="e.g. Dr. Jane Doe" 
                   required 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+                <label className="hc-label">Email Address</label>
                 <input 
                   type="email" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                  className="hc-input" 
                   placeholder="name@example.com" 
                   required 
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setShowPasswordHints(true); }}
-                  onFocus={() => setShowPasswordHints(true)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
-                  placeholder="Min 8 chars, uppercase, number, special char"
-                  required
-                  minLength="8"
-                />
+                <label className="hc-label">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setShowPasswordHints(true); }}
+                    onFocus={() => setShowPasswordHints(true)}
+                    className="hc-input pr-10"
+                    placeholder="At least 8 characters with numbers & symbols"
+                    required
+                    minLength="8"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    className="absolute inset-y-0 right-3 flex items-center text-hc-text-light hover:text-hc-text-muted"
+                  >
+                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
                 {showPasswordHints && (
-                  <ul className="mt-2 space-y-1">
+                  <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-3 rounded-xl bg-hc-bg-alt border border-hc-border-light">
                     {passwordChecks.map((rule) => (
-                      <li key={rule.id} className={`flex items-center gap-2 text-xs transition-colors ${rule.passed ? 'text-green-400' : 'text-gray-500'}`}>
+                      <li key={rule.id} className={`flex items-center gap-1.5 text-xs transition-colors ${rule.passed ? 'text-hc-success font-semibold' : 'text-hc-text-muted'}`}>
                         {rule.passed
-                          ? <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
-                          : <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                          ? <CheckCircle className="w-3.5 h-3.5 text-hc-success flex-shrink-0" />
+                          : <div className="w-3.5 h-3.5 rounded-full border border-hc-border flex-shrink-0" />
                         }
                         {rule.label}
                       </li>
@@ -294,39 +305,40 @@ const Register = () => {
                 )}
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
+                <label className="hc-label">Confirm Password</label>
                 <input
-                  type="password"
+                  type={showPass ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full bg-gray-900 border rounded-lg px-4 py-3 text-white focus:outline-none transition-colors ${
+                  className={`hc-input ${
                     confirmPassword && confirmPassword !== password
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-gray-700 focus:border-blue-500'
+                      ? 'border-hc-danger focus:border-hc-danger'
+                      : ''
                   }`}
-                  placeholder="••••••••"
+                  placeholder="Re-enter password"
                   required
                 />
                 {confirmPassword && confirmPassword !== password && (
-                  <p className="mt-1 text-xs text-red-400">Passwords do not match</p>
+                  <p className="mt-1.5 text-xs text-hc-danger font-medium">Passwords do not match</p>
                 )}
               </div>
             </div>
             
-            <div className="flex justify-between mt-8 pt-4 border-t border-gray-700">
+            <div className="flex justify-between mt-8 pt-4 border-t border-hc-border-light">
               <button 
                 type="button" 
                 onClick={() => setStep(1)} 
-                className="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
+                className="hc-btn hc-btn-ghost hc-btn-sm flex items-center gap-2"
               >
+                <ArrowLeft className="w-4 h-4" />
                 Back
               </button>
               <button 
                 type="submit" 
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                className="hc-btn hc-btn-primary hc-btn-sm flex items-center gap-2"
               >
-                Next Step
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                Continue
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </form>
@@ -335,29 +347,29 @@ const Register = () => {
         {/* Step 3: Role Specific Fields */}
         {step === 3 && (
           <form onSubmit={handleRegister} className="space-y-5">
-            <h2 className="text-xl font-medium text-white mb-4 border-b border-gray-700 pb-2 capitalize">
-              {role} Details
+            <h2 className="text-base font-bold text-hc-text mb-4 pb-2 border-b border-hc-border-light capitalize">
+              {role} Information
             </h2>
             
             {/* Patient Fields */}
             {role === 'patient' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Date of Birth</label>
+                  <label className="hc-label">Date of Birth</label>
                   <input 
                     type="date" 
                     value={dob} 
                     onChange={(e) => setDob(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]" 
+                    className="hc-input" 
                     required 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Blood Group</label>
+                  <label className="hc-label">Blood Group</label>
                   <select 
                     value={bloodGroup} 
                     onChange={(e) => setBloodGroup(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors appearance-none" 
+                    className="hc-input" 
                     required
                   >
                     <option value="" disabled>Select Blood Group</option>
@@ -368,13 +380,13 @@ const Register = () => {
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Allergies (Press Enter to add)</label>
-                  <div className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 min-h-[52px] flex flex-wrap gap-2 focus-within:border-blue-500 transition-colors items-center">
+                  <label className="hc-label">Allergies (Press Enter to add)</label>
+                  <div className="hc-input min-h-[52px] flex flex-wrap gap-2 items-center p-2">
                     {allergies.map((allergy, idx) => (
-                      <span key={idx} className="bg-blue-900/60 border border-blue-700 text-blue-100 text-sm px-3 py-1 rounded-full flex items-center gap-2">
+                      <span key={idx} className="hc-badge hc-badge-warning flex items-center gap-1.5">
                         {allergy}
-                        <button type="button" onClick={() => removeAllergy(allergy)} className="text-blue-400 hover:text-white transition-colors focus:outline-none">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        <button type="button" onClick={() => removeAllergy(allergy)} className="text-hc-warning hover:text-hc-danger font-bold">
+                          ×
                         </button>
                       </span>
                     ))}
@@ -383,7 +395,7 @@ const Register = () => {
                       value={allergyInput} 
                       onChange={(e) => setAllergyInput(e.target.value)} 
                       onKeyDown={handleAddAllergy} 
-                      className="bg-transparent outline-none flex-grow text-white py-1 min-w-[150px]" 
+                      className="bg-transparent outline-none flex-grow text-hc-text text-sm py-1 min-w-[150px] placeholder:text-hc-text-light" 
                       placeholder={allergies.length === 0 ? "e.g. Penicillin, Peanuts" : ""} 
                     />
                   </div>
@@ -395,46 +407,46 @@ const Register = () => {
             {role === 'doctor' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Specialization</label>
+                  <label className="hc-label">Medical Specialization</label>
                   <input 
                     type="text" 
                     value={specialization} 
                     onChange={(e) => setSpecialization(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                    className="hc-input" 
                     placeholder="e.g. Cardiologist" 
                     required 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Primary Hospital Name</label>
+                  <label className="hc-label">Primary Hospital / Clinic Name</label>
                   <input 
                     type="text" 
                     value={hospitalNameDoc} 
                     onChange={(e) => setHospitalNameDoc(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                    placeholder="e.g. City General Hospital" 
+                    className="hc-input" 
+                    placeholder="e.g. Apollo Medical Center" 
                     required 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Medical License Number</label>
+                  <label className="hc-label">Medical License Number</label>
                   <input 
                     type="text" 
                     value={licenseNumber} 
                     onChange={(e) => setLicenseNumber(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                    className="hc-input font-mono" 
                     placeholder="e.g. MED-123456" 
                     required 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Years of Experience</label>
+                  <label className="hc-label">Years of Clinical Experience</label>
                   <input 
                     type="number" 
                     value={experience} 
                     onChange={(e) => setExperience(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                    placeholder="e.g. 5" 
+                    className="hc-input" 
+                    placeholder="e.g. 8" 
                     required 
                     min="0" 
                   />
@@ -446,34 +458,34 @@ const Register = () => {
             {role === 'hospital' && (
               <div className="grid grid-cols-1 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Hospital / Lab Name</label>
+                  <label className="hc-label">Hospital / Diagnostic Facility Name</label>
                   <input 
                     type="text" 
                     value={hospitalName} 
                     onChange={(e) => setHospitalName(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                    placeholder="e.g. City General Hospital" 
+                    className="hc-input" 
+                    placeholder="e.g. Metro General Hospital" 
                     required 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Location</label>
+                  <label className="hc-label">Location / Address</label>
                   <input 
                     type="text" 
                     value={location} 
                     onChange={(e) => setLocation(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                    className="hc-input" 
                     placeholder="e.g. New York, NY" 
                     required 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Registration Number</label>
+                  <label className="hc-label">Healthcare Registration Number</label>
                   <input 
                     type="text" 
                     value={registrationNumber} 
                     onChange={(e) => setRegistrationNumber(e.target.value)} 
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                    className="hc-input font-mono" 
                     placeholder="e.g. HOSP-987654" 
                     required 
                   />
@@ -481,36 +493,43 @@ const Register = () => {
               </div>
             )}
 
-            <div className="flex justify-between mt-8 pt-4 border-t border-gray-700">
+            <div className="flex justify-between mt-8 pt-4 border-t border-hc-border-light">
               <button 
                 type="button" 
                 onClick={() => setStep(2)} 
-                className="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
+                className="hc-btn hc-btn-ghost hc-btn-sm flex items-center gap-2"
               >
+                <ArrowLeft className="w-4 h-4" />
                 Back
               </button>
               <button 
                 type="submit" 
                 disabled={loading || successMsg !== ''} 
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20"
+                className="hc-btn hc-btn-primary hc-btn-sm flex items-center justify-center min-w-[140px]"
               >
                 {loading ? (
-                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : 'Create Account'}
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creating Account…
+                  </span>
+                ) : 'Complete Registration'}
               </button>
             </div>
           </form>
         )}
 
-        <p className="mt-8 text-center text-gray-400 text-sm">
-          Already have an account? <Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">Sign in here</Link>
-        </p>
+        <div className="mt-8 pt-6 border-t border-hc-border-light text-center">
+          <p className="text-xs text-hc-text-muted">
+            Already have a MediChain account?{' '}
+            <Link to="/login" className="text-hc-blue hover:text-hc-blue-hover font-semibold transition-colors">
+              Sign in here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
 export default Register;
+

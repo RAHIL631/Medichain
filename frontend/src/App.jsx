@@ -3,6 +3,7 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import NetworkGuard from './components/NetworkGuard';
+import { ToastProvider } from './components/ui/Toast';
 
 // ── Eagerly loaded (critical path) ───────────────────────────────────────────
 import LandingPage     from './pages/LandingPage';
@@ -40,15 +41,15 @@ const HealthTimelinePage          = lazy(() => import('./pages/HealthTimelinePag
 
 // ── Full-screen spinner (Suspense fallback) ───────────────────────────────────
 const PageLoader = () => (
-  <div className="min-h-screen bg-medichain-bg-dark flex items-center justify-center">
+  <div className="min-h-screen bg-hc-bg flex items-center justify-center">
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
-        <div className="w-16 h-16 border-4 border-medichain-border rounded-full" />
-        <div className="absolute inset-0 w-16 h-16 border-4 border-t-accent-cyan border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-hc-border-light rounded-full" />
+        <div className="absolute inset-0 w-12 h-12 border-4 border-t-hc-blue border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
       </div>
       <div className="flex flex-col items-center gap-1">
-        <p className="text-sm font-display font-semibold text-white">MediChain</p>
-        <p className="text-[10px] text-text-secondary uppercase tracking-widest animate-pulse">Loading…</p>
+        <p className="text-sm font-bold text-hc-text">MediChain</p>
+        <p className="text-[10px] text-hc-text-muted uppercase tracking-widest animate-pulse">Loading platform…</p>
       </div>
     </div>
   </div>
@@ -90,151 +91,163 @@ const PublicRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <NetworkGuard>
-        <Router>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* ── Public / Marketing Routes ─────────────────────────── */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
-              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+      <ToastProvider>
+        <NetworkGuard>
+          <Router>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* ── Public / Marketing Routes ─────────────────────────── */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
 
-              {/* ── Patient Routes ─────────────────────────────────────── */}
-              <Route path="/patient-dashboard" element={
-                <ProtectedRoute allowedRoles={['patient']}>
-                  <PatientDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/qr-id" element={
-                <ProtectedRoute allowedRoles={['patient']}>
-                  <QRHealthIDPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/records" element={
-                <ProtectedRoute allowedRoles={['patient']}>
-                  <MedicalRecords />
-                </ProtectedRoute>
-              } />
-              <Route path="/access" element={
-                <ProtectedRoute allowedRoles={['patient']}>
-                  <ManageAccess />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/ai-dashboard" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
-                  <CDSSPage />
-                </ProtectedRoute>
-              } />
+                {/* ── Patient Routes ─────────────────────────────────────── */}
+                <Route path="/patient-dashboard" element={
+                  <ProtectedRoute allowedRoles={['patient']}>
+                    <PatientDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/qr-id" element={
+                  <ProtectedRoute allowedRoles={['patient']}>
+                    <QRHealthIDPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/records" element={
+                  <ProtectedRoute allowedRoles={['patient']}>
+                    <MedicalRecords />
+                  </ProtectedRoute>
+                } />
+                <Route path="/access" element={
+                  <ProtectedRoute allowedRoles={['patient']}>
+                    <ManageAccess />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/ai-dashboard" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <CDSSPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/health-risk" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <HealthRiskDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/ensemble-predict" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <EnsemblePredictorDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/adherence-prediction" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <AdherenceDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/digital-twin" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <DigitalTwinDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/analytics" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <AnalyticsDashboard />
+                  </ProtectedRoute>
+                } />
 
-              {/* ── Doctor Routes ──────────────────────────────────────── */}
-              <Route path="/doctor-dashboard" element={
-                <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
-                  <DoctorDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/upload-prescription" element={
-                <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
-                  <UploadPrescription />
-                </ProtectedRoute>
-              } />
-              <Route path="/prescription-validator" element={
-                <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
-                  <PrescriptionValidator />
-                </ProtectedRoute>
-              } />
-              <Route path="/health-risk" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital']}>
-                  <HealthRiskDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/ensemble-predict" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital']}>
-                  <EnsemblePredictorDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/adherence-prediction" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital']}>
-                  <AdherenceDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/digital-twin" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital']}>
-                  <DigitalTwinDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/analytics" element={
-                <ProtectedRoute allowedRoles={['doctor', 'hospital', 'admin']}>
-                  <AnalyticsDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/scan" element={
-                <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
-                  <QRScannerPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/registry" element={
-                <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
-                  <PatientRegistry />
-                </ProtectedRoute>
-              } />
+                {/* ── Doctor Routes ──────────────────────────────────────── */}
+                <Route path="/doctor-dashboard" element={
+                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                    <DoctorDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/upload-prescription" element={
+                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                    <UploadPrescription />
+                  </ProtectedRoute>
+                } />
+                <Route path="/prescription-validator" element={
+                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                    <PrescriptionValidator />
+                  </ProtectedRoute>
+                } />
+                <Route path="/scan" element={
+                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                    <QRScannerPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/scan-qr" element={
+                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                    <QRScannerPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/registry" element={
+                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                    <PatientRegistry />
+                  </ProtectedRoute>
+                } />
+                <Route path="/patients" element={
+                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                    <PatientRegistry />
+                  </ProtectedRoute>
+                } />
 
-              {/* ── Hospital Routes ────────────────────────────────────── */}
-              <Route path="/hospital-dashboard" element={
-                <ProtectedRoute allowedRoles={['hospital']}>
-                  <HospitalDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/upload-report" element={
-                <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
-                  <UploadReport />
-                </ProtectedRoute>
-              } />
+                {/* ── Hospital Routes ────────────────────────────────────── */}
+                <Route path="/hospital-dashboard" element={
+                  <ProtectedRoute allowedRoles={['hospital']}>
+                    <HospitalDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/upload-report" element={
+                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                    <UploadReport />
+                  </ProtectedRoute>
+                } />
 
-              {/* ── Admin Routes ───────────────────────────────────────── */}
-              <Route path="/admin-dashboard" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
+                {/* ── Admin Routes ───────────────────────────────────────── */}
+                <Route path="/admin-dashboard" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
 
-              {/* ── Enterprise AI Platform Routes (Phase 2–11) ─────────── */}
-              <Route path="/hospital-recommendation" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
-                  <HospitalRecommendationPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/enterprise-dashboard" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
-                  <AIEnterpriseDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/ai-assistant" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
-                  <AIHealthAssistantPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/predictive-analytics" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
-                  <PredictiveAnalyticsPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/health-timeline" element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
-                  <HealthTimelinePage />
-                </ProtectedRoute>
-              } />
+                {/* ── Enterprise AI Platform Routes (Phase 2–11) ─────────── */}
+                <Route path="/hospital-recommendation" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <HospitalRecommendationPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/enterprise-dashboard" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <AIEnterpriseDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/ai-assistant" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <AIHealthAssistantPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/predictive-analytics" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <PredictiveAnalyticsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/health-timeline" element={
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital', 'admin']}>
+                    <HealthTimelinePage />
+                  </ProtectedRoute>
+                } />
 
-              {/* ── Catch-all 404 ─────────────────────────────────────── */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </Router>
-      </NetworkGuard>
+                {/* ── Catch-all 404 ─────────────────────────────────────── */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </Router>
+        </NetworkGuard>
+      </ToastProvider>
     </AuthProvider>
   );
 }

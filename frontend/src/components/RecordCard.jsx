@@ -1,6 +1,10 @@
 // c:\Users\Rahil hassan\OneDrive\Desktop\Major project\MediChain\frontend\src\components\RecordCard.jsx
 import React, { useState } from 'react';
 import { getRecordTypeImage } from '../utils/images';
+import {
+  FileText, ExternalLink, CheckCircle, Copy, Check,
+  Clock, Shield, User, Paperclip
+} from 'lucide-react';
 
 // Icon Map based on Record Type
 const getTypeIcon = (type) => {
@@ -47,84 +51,83 @@ const RecordCard = ({ record }) => {
   };
 
   const isPending = !record.blockchainTxHash;
-  const doctorName = record.doctorId?.name || 'Unknown Doctor';
-  const doctorSpec = record.doctorId?.specialization || 'General';
+  const doctorName = record.doctorId?.name || record.doctor || 'Healthcare Provider';
+  const doctorSpec = record.doctorId?.specialization || 'Clinical';
   const thumbUrl = getRecordTypeImage(record.recordType || record.type || '');
+  const recordTypeLabel = (record.recordType || 'Medical Record').replace(/[_-]/g, ' ');
 
   return (
-    <div className="glass-card overflow-hidden flex flex-col group relative transition-all duration-300 hover:shadow-cyan-900/20 hover:-translate-y-1">
-      {/* Accent Border Left */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-blue-600 z-10"></div>
-
+    <div className="hc-card overflow-hidden flex flex-col group relative transition-all duration-200 hover:shadow-hc-card-md">
       {/* Real thumbnail image banner */}
-      <div className="relative w-full h-32 overflow-hidden flex-shrink-0">
+      <div className="relative w-full h-28 overflow-hidden flex-shrink-0 bg-hc-bg-alt">
         <img
           src={thumbUrl}
-          alt={record.recordType || 'Medical Record'}
+          alt={recordTypeLabel}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80'; }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/40 to-transparent" />
-        <div className="absolute bottom-2 left-6 flex items-center gap-2">
-          <span className="text-xl">{getTypeIcon(record.recordType)}</span>
-          <span className="text-xs font-semibold text-white capitalize">
-            {(record.recordType || 'Medical Record').replace(/[_-]/g, ' ')}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute bottom-2.5 left-4 flex items-center gap-2">
+          <span className="text-lg">{getTypeIcon(record.recordType)}</span>
+          <span className="text-xs font-bold text-white capitalize drop-shadow-sm">
+            {recordTypeLabel}
           </span>
         </div>
-        <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          <span className="text-[9px] text-cyan-300 font-mono">IPFS</span>
+        <div className="absolute top-2.5 right-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-hc-blue" />
+          <span className="text-[10px] text-hc-text font-mono font-semibold">IPFS</span>
         </div>
       </div>
 
-      <div className="p-5 pl-6 flex-grow flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-3">
-            <div>
-              <h3 className="font-display font-semibold text-white capitalize text-lg">
-                {(record.recordType || 'Record').replace(/[_-]/g, ' ')}
-              </h3>
-              <p className="text-xs text-gray-400 flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                {formatDate(record.createdAt)}
-              </p>
-            </div>
+      <div className="p-5 flex-grow flex flex-col">
+        {/* Header & Date */}
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h3 className="font-bold text-hc-text capitalize text-base leading-snug">
+              {record.description || recordTypeLabel}
+            </h3>
+            <p className="text-xs text-hc-text-muted flex items-center gap-1.5 mt-1">
+              <Clock className="w-3.5 h-3.5 text-hc-text-light" />
+              {formatDate(record.createdAt || record.timestamp)}
+            </p>
           </div>
         </div>
 
         {/* Doctor Info */}
-        <div className="bg-gray-900/50 rounded-lg p-3 mb-4 border border-gray-800">
-          <p className="text-sm font-medium text-gray-200">Dr. {doctorName}</p>
-          <p className="text-xs text-cyan-400">{doctorSpec}</p>
+        <div className="bg-hc-bg-alt rounded-xl p-3 mb-3.5 border border-hc-border-light flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-hc-blue-soft text-hc-blue flex items-center justify-center flex-shrink-0">
+            <User className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-hc-text truncate">Dr. {doctorName}</p>
+            <p className="text-[11px] text-hc-text-muted truncate">{doctorSpec}</p>
+          </div>
         </div>
 
         {/* File Details */}
-        <div className="mb-4 text-sm">
-          <div className="flex items-center gap-2 text-gray-300 mb-1">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-            </svg>
-            <span className="truncate" title={record.fileName}>{record.fileName || 'Document'}</span>
+        <div className="mb-3.5 text-xs text-hc-text-muted flex items-center justify-between">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
+            <Paperclip className="w-3.5 h-3.5 text-hc-text-light flex-shrink-0" />
+            <span className="truncate font-medium text-hc-text" title={record.fileName}>{record.fileName || 'Attached Document'}</span>
           </div>
-          <div className="text-xs text-gray-500 ml-6">
-            {formatBytes(record.fileSize)}
-          </div>
+          {record.fileSize && (
+            <span className="text-[11px] text-hc-text-light flex-shrink-0 font-mono">
+              {formatBytes(record.fileSize)}
+            </span>
+          )}
         </div>
 
         {/* Notes */}
         {record.notes && (
-          <div className="mb-6 flex-grow">
-            <p className={`text-sm text-gray-400 leading-relaxed ${!showFullNotes && 'line-clamp-2'}`}>
-              <span className="text-gray-500 font-medium mr-1">Notes:</span>
+          <div className="mb-4 flex-grow text-xs">
+            <p className={`text-hc-text-muted leading-relaxed ${!showFullNotes && 'line-clamp-2'}`}>
+              <span className="font-semibold text-hc-text mr-1">Notes:</span>
               {record.notes}
             </p>
             {record.notes.length > 80 && (
               <button 
                 onClick={() => setShowFullNotes(!showFullNotes)}
-                className="text-xs text-cyan-500 hover:text-cyan-400 mt-1 font-medium"
+                className="text-xs text-hc-blue hover:underline mt-1 font-semibold"
               >
                 {showFullNotes ? 'Show less' : 'Show more'}
               </button>
@@ -133,72 +136,56 @@ const RecordCard = ({ record }) => {
         )}
       </div>
 
-      {/* Action Buttons (Footer) */}
-      <div className="grid grid-cols-3 border-t border-gray-800 bg-gray-900/30">
-        
+      {/* Action Footer */}
+      <div className="grid grid-cols-3 border-t border-hc-border-light bg-hc-bg-alt/50 divide-x divide-hc-border-light text-xs font-semibold">
         {/* View File */}
         <a 
-          href={record.ipfsURL} 
+          href={record.ipfsURL || `https://gateway.pinata.cloud/ipfs/${record.ipfsCID}`} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="py-3 flex flex-col items-center justify-center gap-1 text-xs font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors border-r border-gray-800"
+          className="py-2.5 flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-blue hover:bg-hc-bg-alt transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          View File
+          <ExternalLink className="w-3.5 h-3.5" />
+          View
         </a>
 
         {/* On-Chain Verify */}
         {isPending ? (
-          <button 
-            type="button"
-            className="py-3 flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors border-r border-gray-800 text-yellow-500 hover:bg-gray-800 cursor-not-allowed"
-            onClick={(e) => e.preventDefault()}
-          >
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Pending...
-          </button>
+          <span className="py-2.5 flex items-center justify-center gap-1 text-hc-warning">
+            <span className="w-3 h-3 border-2 border-hc-warning border-t-transparent rounded-full animate-spin" />
+            Pending
+          </span>
         ) : (
           <a 
             href={`https://sepolia.etherscan.io/tx/${record.blockchainTxHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="py-3 flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors border-r border-gray-800 text-green-400 hover:bg-green-900/20 hover:text-green-300"
+            className="py-2.5 flex items-center justify-center gap-1 text-hc-success hover:bg-hc-success-soft transition-colors"
+            title="View Sepolia transaction"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            On-Chain ✓
+            <CheckCircle className="w-3.5 h-3.5" />
+            Verified
           </a>
         )}
 
         {/* Copy CID */}
         <button 
           onClick={handleCopyCID}
-          className="py-3 flex flex-col items-center justify-center gap-1 text-xs font-medium text-cyan-500 hover:bg-cyan-900/20 hover:text-cyan-400 transition-colors"
+          className="py-2.5 flex items-center justify-center gap-1 text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors"
+          title="Copy IPFS CID"
         >
           {copied ? (
             <>
-              <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-green-400">Copied!</span>
+              <Check className="w-3.5 h-3.5 text-hc-success" />
+              <span className="text-hc-success">Copied</span>
             </>
           ) : (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
+              <Copy className="w-3.5 h-3.5" />
               Copy CID
             </>
           )}
         </button>
-
       </div>
     </div>
   );
