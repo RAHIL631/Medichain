@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import useWallet from '../hooks/useWallet';
 import { useAuth } from '../context/AuthContext';
-import { Activity, CheckCircle, AlertCircle, Wallet, Shield } from 'lucide-react';
+import { Activity, CheckCircle, AlertCircle, Shield } from 'lucide-react';
 
 const TARGET = Number(process.env.REACT_APP_TARGET_CHAIN_ID) || 11155111;
 

@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { getRecordTypeImage } from '../utils/images';
 import {
-  FileText, ExternalLink, CheckCircle, Copy, Check,
-  Clock, Shield, User, Paperclip
+  ExternalLink, CheckCircle, Copy, Check,
+  Clock, User, Paperclip
 } from 'lucide-react';
 
 // Icon Map based on Record Type

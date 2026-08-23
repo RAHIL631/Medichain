@@ -6,7 +6,7 @@ import { Activity, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar({ navItems = [] }) {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 

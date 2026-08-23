@@ -1,7 +1,7 @@
 // frontend/src/components/Navbar.jsx
 // Premium healthcare navigation bar — light theme
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Activity, Shield, Bell, LogOut, User, Menu, X,
@@ -30,7 +30,6 @@ const PUBLIC_NAV = [
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const [menuOpen, setMenuOpen]   = useState(false);
   const [scrolled, setScrolled]   = useState(false);
 
