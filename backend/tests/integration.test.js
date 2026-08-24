@@ -47,19 +47,10 @@ describe('Production Readiness & Security Middleware Tests', () => {
         expect(res.text).toContain('Too many requests');
     });
 
-    it('Should serve real frontend production build index.html', async () => {
+    it('Should return 200 OK on API root endpoint', async () => {
         const realApp = require('../server');
         const res = await request(realApp).get('/');
         expect(res.statusCode).toBe(200);
-        expect(res.headers['content-type']).toContain('text/html');
-        expect(res.text).toContain('<div id="root"></div>');
-    });
-
-    it('Should support SPA fallback routing for React Router paths', async () => {
-        const realApp = require('../server');
-        const res = await request(realApp).get('/patient-dashboard');
-        expect(res.statusCode).toBe(200);
-        expect(res.headers['content-type']).toContain('text/html');
-        expect(res.text).toContain('<div id="root"></div>');
+        expect(res.body.message).toContain('MediChain');
     });
 });

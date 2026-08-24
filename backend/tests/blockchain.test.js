@@ -25,9 +25,9 @@ describe('MediChain Stage 5 — Blockchain Integration & Smart Contract Tests', 
     const defaultMnemonic = "test test test test test test test test test test test junk";
     const hdNode = ethers.HDNodeWallet.fromMnemonic(ethers.Mnemonic.fromPhrase(defaultMnemonic));
     
-    // We can use a local provider or Hardhat simulation provider
+    // We can use a local provider or Hardhat simulation provider with staticNetwork to prevent background polling
     const hardhatUrl = process.env.BLOCKCHAIN_RPC_URL || 'http://127.0.0.1:8545';
-    provider = new ethers.JsonRpcProvider(hardhatUrl);
+    provider = new ethers.JsonRpcProvider(hardhatUrl, undefined, { staticNetwork: true });
 
     // If local RPC is running, use it; otherwise test with simulated wallets
     try {
@@ -212,7 +212,7 @@ describe('MediChain Stage 5 — Blockchain Integration & Smart Contract Tests', 
       // Point service to a non-existent port
       const offlineService = new (require('../services/blockchainService').constructor)();
       offlineService.rpcUrl = 'http://127.0.0.1:9999';
-      offlineService.provider = new ethers.JsonRpcProvider('http://127.0.0.1:9999');
+      offlineService.provider = new ethers.JsonRpcProvider('http://127.0.0.1:9999', undefined, { staticNetwork: true });
 
       const health = await offlineService.checkHealth();
       expect(health.status).toBe('DOWN');
