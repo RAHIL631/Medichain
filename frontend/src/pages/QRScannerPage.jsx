@@ -76,24 +76,29 @@ const QRScannerPage = () => {
                                     </div>
                                     <div className="flex-grow text-center md:text-left">
                                         <h3 className="text-2xl font-bold">{patientData?.name}</h3>
-                                        <p className="text-text-secondary font-mono text-sm mt-1">{scannedAddress}</p>
+                                        {patientData?.patientId && (
+                                            <p className="text-accent-cyan font-mono font-bold text-sm mt-0.5">Patient ID: {patientData.patientId}</p>
+                                        )}
+                                        <p className="text-text-secondary font-mono text-xs mt-0.5">{scannedAddress}</p>
                                         <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
                                             <div className="px-3 py-1 bg-medichain-surface rounded-lg border border-medichain-border text-xs">
                                                 <span className="text-text-secondary uppercase mr-2">Blood:</span>
-                                                <span className="text-accent-cyan font-bold">{patientData?.bloodGroup}</span>
+                                                <span className="text-accent-cyan font-bold">{patientData?.bloodGroup || 'O+'}</span>
                                             </div>
-                                            <div className="px-3 py-1 bg-medichain-surface rounded-lg border border-medichain-border text-xs">
-                                                <span className="text-text-secondary uppercase mr-2">DOB:</span>
-                                                <span className="text-white font-bold">{new Date(patientData?.dateOfBirth).toLocaleDateString()}</span>
-                                            </div>
+                                            {patientData?.dateOfBirth && (
+                                                <div className="px-3 py-1 bg-medichain-surface rounded-lg border border-medichain-border text-xs">
+                                                    <span className="text-text-secondary uppercase mr-2">DOB:</span>
+                                                    <span className="text-white font-bold">{new Date(patientData.dateOfBirth).toLocaleDateString()}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-3 w-full md:w-auto">
-                                        <FuturisticButton onClick={() => navigate(`/prescribe?patient=${scannedAddress}`)}>
-                                                Create Rx
+                                        <FuturisticButton onClick={() => navigate(`/upload-prescription?patient=${scannedAddress}`)}>
+                                            Create Prescription
                                         </FuturisticButton>
                                         <FuturisticButton variant="secondary" onClick={() => setScannedAddress(null)}>
-                                                Rescan
+                                            Rescan
                                         </FuturisticButton>
                                     </div>
                                 </div>

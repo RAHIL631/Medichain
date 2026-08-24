@@ -1,24 +1,25 @@
 // frontend/src/components/QRScanner.jsx
-// Production QR Scanner & Manual Patient ID Resolver for MediChain
-// Supports Mobile (iOS Safari, Android Chrome) & Desktop with camera switching,
-// MediChain Patient QR JSON payload validation, Patient ID extraction, and unified backend verification.
+// Production High-Performance QR Code Scanner & Identity Resolver for MediChain
+// Supports Live WebRTC camera with ZXing decodeFromConstraints, front/rear camera toggle,
+// BarcodeDetector hardware acceleration, QR image file upload, and Manual Patient ID lookup.
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserQRCodeReader } from '@zxing/library';
 import api from '../utils/api';
 import {
   QrCode, Camera, RefreshCw, AlertCircle, CheckCircle2,
-  Edit3, X, ShieldCheck
+  Edit3, X, ShieldCheck, Upload, Image as ImageIcon
 } from 'lucide-react';
 
 /**
  * Extracts and validates patient identifier from diverse QR payloads:
  * - Structured JSON: {"type":"MEDICHAIN_PATIENT", "version":1, "patientId":"MC-PAT-..."}
  * - Legacy JSON: {"type":"medichain_health_id", "address":"0x..."}
+ * - URL format: https://.../?patient=MC-PAT-...
  * - Raw Patient ID string: "MC-PAT-2026-000001"
  * - Raw Ethereum address: "0x..."
  */
-function extractPatientIdentity(rawText) {
+export function extractPatientIdentity(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
   const trimmed = rawText.trim();
 
@@ -26,43 +27,68 @@ function extractPatientIdentity(rawText) {
   try {
     const parsed = JSON.parse(trimmed);
     if (parsed && typeof parsed === 'object') {
-      if (parsed.type && parsed.type !== 'MEDICHAIN_PATIENT' && parsed.type !== 'medichain_health_id') {
-        return { error: 'This is not a valid MediChain Patient QR.' };
+      const pid = parsed.patientId || parsed.id || parsed.patient_id;
+      if (pid && typeof pid === 'string') {
+        const cleanPid = pid.trim();
+        if (/^MC-PAT-/i.test(cleanPid) || /^[0-9a-fA-F]{24}$/.test(cleanPid)) {
+          return { patientId: cleanPid, raw: trimmed };
+        }
       }
-      const pid = parsed.patientId || parsed.id;
-      if (pid && /^MC-PAT-\d{4}-[A-Z0-9]{6}$/i.test(pid.trim())) {
-        return { patientId: pid.trim(), raw: trimmed };
-      }
-      const addr = parsed.address || parsed.patientAddress || parsed.walletAddress;
-      if (addr && /^0x[a-fA-F0-9]{40}$/i.test(addr.trim())) {
+
+      const addr = parsed.address || parsed.patientAddress || parsed.walletAddress || parsed.wallet;
+      if (addr && typeof addr === 'string' && /^0x[a-fA-F0-9]{40}$/i.test(addr.trim())) {
         return { walletAddress: addr.trim(), raw: trimmed };
       }
-      if (parsed.patientId) {
-        return { patientId: parsed.patientId.trim(), raw: trimmed };
+
+      if (parsed.type === 'MEDICHAIN_PATIENT' && parsed.patientId) {
+        return { patientId: String(parsed.patientId).trim(), raw: trimmed };
       }
     }
   } catch {
     /* Not JSON */
   }
 
-  // 2. Try raw Patient ID pattern (e.g. MC-PAT-2026-000001)
-  const patMatch = trimmed.match(/MC-PAT-\d{4}-[A-Z0-9]{6}/i);
+  // 2. Try URL query parameter or path extraction
+  try {
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      const url = new URL(trimmed);
+      const urlParam = url.searchParams.get('patient') || url.searchParams.get('patientId') || url.searchParams.get('id') || url.searchParams.get('address');
+      if (urlParam) {
+        if (/^MC-PAT-/i.test(urlParam.trim())) return { patientId: urlParam.trim(), raw: trimmed };
+        if (/^0x[a-fA-F0-9]{40}$/i.test(urlParam.trim())) return { walletAddress: urlParam.trim(), raw: trimmed };
+      }
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      for (const part of pathParts) {
+        if (/^MC-PAT-/i.test(part)) return { patientId: part.trim(), raw: trimmed };
+        if (/^0x[a-fA-F0-9]{40}$/i.test(part)) return { walletAddress: part.trim(), raw: trimmed };
+      }
+    }
+  } catch {
+    /* Not valid URL */
+  }
+
+  // 3. Raw Patient ID match (e.g. MC-PAT-2026-000001)
+  const patMatch = trimmed.match(/MC-PAT-\d{4}-[A-Z0-9]{6}/i) || trimmed.match(/MC-PAT-[A-Z0-9-]+/i);
   if (patMatch) {
     return { patientId: patMatch[0].trim(), raw: trimmed };
   }
 
-  // 3. Try raw 0x Ethereum address match
+  // 4. Raw Ethereum address match
   const addrMatch = trimmed.match(/0x[a-fA-F0-9]{40}/i);
   if (addrMatch) {
     return { walletAddress: addrMatch[0].trim(), raw: trimmed };
   }
 
-  // 4. If arbitrary URL or unrecognized format
-  return { error: 'This is not a valid MediChain Patient QR.' };
+  // 5. Raw MongoDB 24-character ObjectId match
+  if (/^[0-9a-fA-F]{24}$/.test(trimmed)) {
+    return { patientId: trimmed, raw: trimmed };
+  }
+
+  return { error: 'Scanned QR is not a recognized MediChain Patient ID or wallet.' };
 }
 
 const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
-  const [activeTab, setActiveTab]         = useState('scan'); // 'scan' | 'manual'
+  const [activeTab, setActiveTab]         = useState('scan'); // 'scan' | 'upload' | 'manual'
   const [status, setStatus]               = useState('idle'); // 'idle' | 'requesting' | 'active' | 'verifying' | 'success' | 'error'
   const [facingMode, setFacingMode]       = useState('environment'); // 'environment' (rear) | 'user' (front)
   const [errorMessage, setErrorMessage]   = useState('');
@@ -71,36 +97,9 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
 
   const videoRef        = useRef(null);
-  const streamRef       = useRef(null);
   const readerRef       = useRef(null);
-  const animFrameRef    = useRef(null);
-  const timeoutTimerRef = useRef(null);
+  const fileInputRef    = useRef(null);
   const isScanningRef   = useRef(false);
-
-  // --- Stop camera stream and scanning loop ---
-  const stopCamera = useCallback(() => {
-    isScanningRef.current = false;
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-    }
-    if (timeoutTimerRef.current) {
-      clearTimeout(timeoutTimerRef.current);
-      timeoutTimerRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => {
-        try { track.stop(); } catch { /* silent */ }
-      });
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    if (readerRef.current) {
-      try { readerRef.current.reset(); } catch { /* silent */ }
-    }
-  }, []);
 
   // Initialize ZXing Reader instance once
   useEffect(() => {
@@ -115,7 +114,28 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
     return () => {
       stopCamera();
     };
-  }, [stopCamera]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // --- Stop camera stream and scanning loop ---
+  const stopCamera = useCallback(() => {
+    isScanningRef.current = false;
+    if (readerRef.current) {
+      try {
+        readerRef.current.reset();
+      } catch {
+        /* silent */
+      }
+    }
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject;
+      if (stream && stream.getTracks) {
+        stream.getTracks().forEach(t => {
+          try { t.stop(); } catch {}
+        });
+      }
+      videoRef.current.srcObject = null;
+    }
+  }, []);
 
   // --- Perform Patient Verification / Lookup via Unified Backend Resolver ---
   const verifyAndLookup = useCallback(async (identifier, rawPayload = '') => {
@@ -124,7 +144,6 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
     setErrorMessage('');
 
     try {
-      // Unified backend resolver accepts patientId, walletAddress, or structured qrData
       const { data } = await api.post('/doctor/resolve-patient', {
         patientId: identifier,
         qrData: rawPayload
@@ -147,7 +166,7 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
         if (typeof onScanSuccess === 'function') {
           onScanSuccess(primaryKey, patientSummary);
         }
-      }, 1000);
+      }, 800);
 
     } catch (err) {
       console.warn('[QRScanner] Patient lookup error:', err);
@@ -161,7 +180,20 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
     }
   }, [stopCamera, onScan, onScanSuccess, onScanError]);
 
-  // --- Start Camera & Frame Analysis ---
+  // Handle a successfully decoded text string from camera or file
+  const handleDecodedText = useCallback((text) => {
+    if (!text) return;
+    const identity = extractPatientIdentity(text);
+    if (identity && !identity.error) {
+      isScanningRef.current = false;
+      const key = identity.patientId || identity.walletAddress;
+      verifyAndLookup(key, identity.raw || text);
+    } else {
+      setErrorMessage(identity?.error || 'This is not a valid MediChain Patient QR.');
+    }
+  }, [verifyAndLookup]);
+
+  // --- Start Camera & Frame Analysis using decodeFromConstraints ---
   const startCamera = useCallback(async () => {
     stopCamera();
     setStatus('requesting');
@@ -171,19 +203,14 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
     // Guard: MediaDevices supported
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setStatus('error');
-      setErrorMessage('Camera access is not supported by your browser. Please use Manual Entry.');
+      setErrorMessage('Camera access is not supported by your browser. Please use Image Upload or Manual Entry.');
       return;
     }
 
     try {
-      // 6-second black-screen watchdog timer
-      timeoutTimerRef.current = setTimeout(() => {
-        if (videoRef.current && (videoRef.current.videoWidth === 0 || videoRef.current.paused)) {
-          setStatus('error');
-          setErrorMessage('Camera could not be started. Check camera permissions or enter Patient ID manually.');
-          stopCamera();
-        }
-      }, 6000);
+      if (!readerRef.current) {
+        readerRef.current = new BrowserQRCodeReader();
+      }
 
       const constraints = {
         video: {
@@ -191,87 +218,50 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
           width:      { ideal: 1280 },
           height:     { ideal: 720 },
         },
-        audio: false,
       };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-
-      if (!videoRef.current) return;
-
-      videoRef.current.srcObject = stream;
-      videoRef.current.setAttribute('playsinline', 'true');
-      videoRef.current.setAttribute('autoplay', 'true');
-      videoRef.current.setAttribute('muted', 'true');
-
-      // Wait for video to play
-      await videoRef.current.play();
-
-      if (timeoutTimerRef.current) {
-        clearTimeout(timeoutTimerRef.current);
-        timeoutTimerRef.current = null;
-      }
 
       setStatus('active');
       isScanningRef.current = true;
 
-      // Scan frames using ZXing
-      let lastScanTime = 0;
-      const scanLoop = async (time) => {
-        if (!isScanningRef.current) return;
-
-        // Throttle decoding to ~12 FPS (every 80ms)
-        if (time - lastScanTime > 80 && videoRef.current && videoRef.current.readyState >= 2) {
-          lastScanTime = time;
-          try {
-            if (readerRef.current) {
-              const result = await readerRef.current.decodeFromVideoElement(videoRef.current);
-              if (result && result.getText()) {
-                const text = result.getText();
-                const identity = extractPatientIdentity(text);
-
-                if (identity && !identity.error) {
-                  isScanningRef.current = false;
-                  const key = identity.patientId || identity.walletAddress;
-                  verifyAndLookup(key, identity.raw || text);
-                  return;
-                } else {
-                  setErrorMessage(identity?.error || 'This is not a valid MediChain Patient QR.');
-                }
-              }
+      // Start continuous stream decoding via ZXing
+      readerRef.current.decodeFromConstraints(
+        constraints,
+        videoRef.current,
+        (result, err) => {
+          if (result && isScanningRef.current) {
+            const scannedText = result.getText();
+            if (scannedText) {
+              handleDecodedText(scannedText);
             }
-          } catch {
-            // Frame did not contain a readable QR code in this pass — continue loop
           }
         }
+      ).catch((camErr) => {
+        console.error('[QRScanner] ZXing stream error:', camErr);
+        stopCamera();
+        setStatus('error');
 
-        if (isScanningRef.current) {
-          animFrameRef.current = requestAnimationFrame(scanLoop);
+        if (camErr.name === 'NotAllowedError' || camErr.name === 'PermissionDeniedError') {
+          setErrorMessage('Camera permission was denied. Please allow camera permissions in your browser or choose Image Upload.');
+        } else if (camErr.name === 'NotFoundError' || camErr.name === 'DevicesNotFoundError') {
+          setErrorMessage('No camera was detected on this device.');
+        } else if (camErr.name === 'NotReadableError' || camErr.name === 'TrackStartError') {
+          setErrorMessage('The camera is currently being used by another application.');
+        } else {
+          setErrorMessage(`Camera error: ${camErr.message || 'Check browser permissions'}`);
         }
-      };
 
-      animFrameRef.current = requestAnimationFrame(scanLoop);
+        if (typeof onScanError === 'function') {
+          onScanError(camErr);
+        }
+      });
 
     } catch (err) {
-      console.error('[QRScanner] Camera stream error:', err);
+      console.error('[QRScanner] Camera start error:', err);
       stopCamera();
       setStatus('error');
-
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setErrorMessage('Camera permission was denied. Please allow camera access in your browser settings.');
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        setErrorMessage('No camera was detected on this device.');
-      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        setErrorMessage('The camera is currently being used by another application.');
-      } else {
-        setErrorMessage(`Unable to access camera: ${err.message || 'Check browser permissions'}`);
-      }
-
-      if (typeof onScanError === 'function') {
-        onScanError(err);
-      }
+      setErrorMessage(err.message || 'Unable to access camera');
     }
-  }, [facingMode, stopCamera, verifyAndLookup, onScanError]);
+  }, [facingMode, stopCamera, handleDecodedText, onScanError]);
 
   // Handle switching front/rear camera
   const toggleCamera = () => {
@@ -284,6 +274,48 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
       startCamera();
     }
   }, [facingMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // --- QR Code Image Upload Handler (Screenshot / Image File) ---
+  const handleImageFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setStatus('verifying');
+    setErrorMessage('');
+
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const fileUrl = URL.createObjectURL(file);
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = fileUrl;
+      });
+
+      if (!readerRef.current) {
+        readerRef.current = new BrowserQRCodeReader();
+      }
+
+      // Decode directly from the image element
+      const result = await readerRef.current.decodeFromImageElement(img);
+      URL.revokeObjectURL(fileUrl);
+
+      if (result && result.getText()) {
+        handleDecodedText(result.getText());
+      } else {
+        throw new Error('No QR code found in the uploaded image.');
+      }
+
+    } catch (err) {
+      console.warn('[QRScanner] Image decode error:', err);
+      setStatus('error');
+      setErrorMessage('Could not find a valid QR code in this image. Please upload a clear QR photo or use Manual Entry.');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   // Manual lookup handler
   const handleManualSubmit = (e) => {
@@ -303,39 +335,53 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
         <button
           type="button"
           onClick={() => { setActiveTab('scan'); setErrorMessage(''); }}
-          className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'scan'
               ? 'text-hc-blue border-b-2 border-hc-blue bg-hc-surface'
               : 'text-hc-text-muted hover:text-hc-text'
           }`}
         >
-          <Camera className="w-4 h-4" />
-          Scan Patient QR
+          <Camera className="w-3.5 h-3.5" />
+          Camera
+        </button>
+        <button
+          type="button"
+          onClick={() => { setActiveTab('upload'); stopCamera(); setStatus('idle'); setErrorMessage(''); }}
+          className={`flex-1 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+            activeTab === 'upload'
+              ? 'text-hc-blue border-b-2 border-hc-blue bg-hc-surface'
+              : 'text-hc-text-muted hover:text-hc-text'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          Upload Image
         </button>
         <button
           type="button"
           onClick={() => { setActiveTab('manual'); stopCamera(); setStatus('idle'); setErrorMessage(''); }}
-          className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'manual'
               ? 'text-hc-blue border-b-2 border-hc-blue bg-hc-surface'
               : 'text-hc-text-muted hover:text-hc-text'
           }`}
         >
-          <Edit3 className="w-4 h-4" />
-          Manual Entry
+          <Edit3 className="w-3.5 h-3.5" />
+          Manual
         </button>
       </div>
 
       <div className="p-4 sm:p-6 flex flex-col items-center">
-        {activeTab === 'scan' ? (
+        
+        {/* ── 1. LIVE CAMERA TAB ────────────────────────────────────────── */}
+        {activeTab === 'scan' && (
           <div className="w-full flex flex-col items-center">
-            {/* 1. IDLE STATE */}
+            {/* IDLE STATE */}
             {status === 'idle' && (
               <div className="text-center py-6 sm:py-8 w-full">
                 <div className="w-16 h-16 rounded-2xl bg-hc-blue-soft text-hc-blue flex items-center justify-center mx-auto mb-4 shadow-sm">
                   <QrCode className="w-8 h-8" />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-hc-text mb-1">Ready to Scan Patient QR</h3>
+                <h3 className="text-base sm:text-lg font-bold text-hc-text mb-1">Scan Patient QR Health ID</h3>
                 <p className="text-xs text-hc-text-muted max-w-xs mx-auto mb-6">
                   Point your camera at the patient's MediChain Health ID QR badge.
                 </p>
@@ -351,19 +397,18 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
               </div>
             )}
 
-            {/* 2. REQUESTING STATE */}
+            {/* REQUESTING STATE */}
             {status === 'requesting' && (
               <div className="text-center py-10 w-full space-y-3">
                 <div className="w-10 h-10 border-3 border-hc-blue border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-xs font-bold text-hc-text">Requesting Camera Permission...</p>
-                <p className="text-[11px] text-hc-text-muted">Please allow camera access in the browser prompt.</p>
+                <p className="text-xs font-bold text-hc-text">Starting Camera Stream...</p>
+                <p className="text-[11px] text-hc-text-muted">Please allow camera permissions if prompted.</p>
               </div>
             )}
 
-            {/* 3. ACTIVE LIVE CAMERA FEED */}
+            {/* ACTIVE LIVE VIDEO FEED */}
             {(status === 'active' || status === 'verifying') && (
               <div className="relative w-full aspect-square max-w-[320px] rounded-2xl overflow-hidden bg-black shadow-inner border-2 border-hc-border">
-                {/* Real Live Video Feed */}
                 <video
                   ref={videoRef}
                   autoPlay
@@ -372,27 +417,24 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
                   className="w-full h-full object-cover"
                 />
 
-                {/* Targeting Reticle Overlay */}
+                {/* Targeting Reticle */}
                 <div className="absolute inset-0 border-[28px] border-black/40 pointer-events-none" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-hc-success rounded-xl pointer-events-none shadow-[0_0_15px_rgba(34,197,94,0.4)]">
-                  {/* Corner Accent Marks */}
                   <div className="absolute -top-1 -left-1 w-4 h-4 border-t-3 border-l-3 border-hc-success" />
                   <div className="absolute -top-1 -right-1 w-4 h-4 border-t-3 border-r-3 border-hc-success" />
                   <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-3 border-l-3 border-hc-success" />
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-3 border-r-3 border-hc-success" />
-                  
-                  {/* Animated Laser Sweep */}
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-hc-success to-transparent shadow-[0_0_10px_#22c55e] animate-pulse" />
                 </div>
 
-                {/* Top Controls: Switch Camera & Cancel */}
+                {/* Switch Camera & Close */}
                 <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-20">
                   {hasMultipleCameras && (
                     <button
                       type="button"
                       onClick={toggleCamera}
                       className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold flex items-center gap-1 hover:bg-black/80 transition-colors"
-                      title="Switch Front/Rear Camera"
+                      title="Switch Camera"
                     >
                       <RefreshCw className="w-3 h-3" />
                       Switch
@@ -408,16 +450,15 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
                   </button>
                 </div>
 
-                {/* Bottom Instruction Bar */}
                 <div className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-xl bg-black/70 backdrop-blur-md text-center">
                   <p className="text-[11px] font-semibold text-white">
-                    {status === 'verifying' ? 'Verifying patient identity...' : 'Align MediChain Patient QR inside frame'}
+                    {status === 'verifying' ? 'Verifying patient identity...' : 'Align QR code inside frame'}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* 4. SUCCESS SCREEN */}
+            {/* SUCCESS BADGE */}
             {status === 'success' && verifiedPatient && (
               <div className="w-full p-4 rounded-2xl bg-hc-success-soft border border-hc-success/30 flex items-start gap-3 animate-slide-up">
                 <div className="w-10 h-10 rounded-full bg-hc-success flex items-center justify-center text-white flex-shrink-0 shadow-sm mt-0.5">
@@ -448,37 +489,103 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
               </div>
             )}
 
-            {/* 5. ERROR STATE */}
+            {/* ERROR STATE */}
             {status === 'error' && (
               <div className="w-full text-center py-6 space-y-4">
                 <div className="w-12 h-12 rounded-2xl bg-hc-danger-soft text-hc-danger flex items-center justify-center mx-auto">
                   <AlertCircle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-hc-text">Scan / Lookup Issue</h4>
+                  <h4 className="text-sm font-bold text-hc-text">Camera Scan Issue</h4>
                   <p className="text-xs text-hc-danger mt-1 max-w-xs mx-auto leading-relaxed font-medium">{errorMessage}</p>
                 </div>
-                <div className="flex gap-2 justify-center pt-2">
+                <div className="flex flex-wrap gap-2 justify-center pt-2">
                   <button
                     type="button"
                     onClick={startCamera}
                     className="hc-btn hc-btn-primary hc-btn-sm"
                   >
-                    Scan Again
+                    Try Again
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTab('upload'); setStatus('idle'); }}
+                    className="hc-btn hc-btn-secondary hc-btn-sm"
+                  >
+                    Upload QR Image
                   </button>
                   <button
                     type="button"
                     onClick={() => { setActiveTab('manual'); setStatus('idle'); }}
                     className="hc-btn hc-btn-secondary hc-btn-sm"
                   >
-                    Manual Entry
+                    Enter ID
                   </button>
                 </div>
               </div>
             )}
           </div>
-        ) : (
-          /* MANUAL ENTRY TAB */
+        )}
+
+        {/* ── 2. UPLOAD QR IMAGE TAB ───────────────────────────────────── */}
+        {activeTab === 'upload' && (
+          <div className="w-full flex flex-col items-center py-4 space-y-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageFile}
+            />
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full border-2 border-dashed border-hc-border hover:border-hc-blue rounded-2xl p-8 text-center cursor-pointer transition-all bg-hc-bg-alt hover:bg-hc-surface group"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-hc-blue-soft text-hc-blue flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
+                <Upload className="w-7 h-7" />
+              </div>
+              <h4 className="text-sm font-bold text-hc-text mb-1">Select QR Code Image</h4>
+              <p className="text-xs text-hc-text-muted max-w-xs mx-auto">
+                Upload a screenshot, saved badge PNG, or photo of the patient's QR code.
+              </p>
+            </div>
+
+            {status === 'verifying' && (
+              <div className="text-center py-4 space-y-2">
+                <div className="w-8 h-8 border-2 border-hc-blue border-t-transparent rounded-full animate-spin mx-auto" />
+                <p className="text-xs font-bold text-hc-text">Decoding QR & Verifying Patient...</p>
+              </div>
+            )}
+
+            {status === 'success' && verifiedPatient && (
+              <div className="w-full p-4 rounded-2xl bg-hc-success-soft border border-hc-success/30 flex items-start gap-3 animate-slide-up">
+                <div className="w-10 h-10 rounded-full bg-hc-success flex items-center justify-center text-white flex-shrink-0 shadow-sm mt-0.5">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-hc-success text-xs font-bold mb-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>✓ Patient Identified</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-hc-text truncate">{verifiedPatient.name || 'Verified Patient'}</h4>
+                  <p className="text-[11px] font-mono font-bold text-hc-teal mt-0.5">
+                    Patient ID: {verifiedPatient.patientId || 'Verified'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {errorMessage && status !== 'success' && (
+              <p className="text-xs text-hc-danger font-semibold bg-hc-danger-soft p-3 rounded-xl border border-hc-danger/20 text-center w-full">
+                {errorMessage}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ── 3. MANUAL ENTRY TAB ──────────────────────────────────────── */}
+        {activeTab === 'manual' && (
           <form onSubmit={handleManualSubmit} className="w-full space-y-4 py-2">
             <div>
               <label className="block text-[10px] uppercase font-bold text-hc-text-muted tracking-wider mb-1.5">
@@ -496,7 +603,26 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
                 Enter the unique MediChain Patient ID (MC-PAT-YYYY-XXXXXX) or wallet address.
               </span>
             </div>
-            {errorMessage && (
+
+            {status === 'success' && verifiedPatient && (
+              <div className="w-full p-4 rounded-2xl bg-hc-success-soft border border-hc-success/30 flex items-start gap-3 animate-slide-up">
+                <div className="w-10 h-10 rounded-full bg-hc-success flex items-center justify-center text-white flex-shrink-0 shadow-sm mt-0.5">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-hc-success text-xs font-bold mb-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>✓ Patient Identified</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-hc-text truncate">{verifiedPatient.name || 'Verified Patient'}</h4>
+                  <p className="text-[11px] font-mono font-bold text-hc-teal mt-0.5">
+                    Patient ID: {verifiedPatient.patientId || 'Verified'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {errorMessage && status !== 'success' && (
               <p className="text-xs text-hc-danger font-semibold bg-hc-danger-soft p-2.5 rounded-lg border border-hc-danger/20">
                 {errorMessage}
               </p>
@@ -510,6 +636,7 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
             </button>
           </form>
         )}
+
       </div>
     </div>
   );
