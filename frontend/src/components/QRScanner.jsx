@@ -364,6 +364,17 @@ const QRScanner = ({
         timeoutRef.current = null;
       }
 
+      // Safe non-sensitive diagnostics for developer auditing
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[QRScanner Diagnostics]', {
+          cameraSupported: 'YES',
+          https: isSecure ? 'YES' : 'NO',
+          stream: 'CONNECTED',
+          video: videoEl.videoWidth > 0 ? 'READY' : 'PENDING',
+          qrDecoder: 'RUNNING'
+        });
+      }
+
       isInitializingRef.current = false;
       isScanningRef.current = true;
       setStatus('active');
