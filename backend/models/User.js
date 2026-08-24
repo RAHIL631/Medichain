@@ -100,6 +100,20 @@ const UserSchema = new mongoose.Schema({
     trim: true,
   },
 
+  // ── Clinical Context (CDSS & EHR Health Parameters) ─────────────────────────
+  clinicalContext: {
+    age:               { type: Number, min: 0, max: 120 },
+    weightKg:          { type: Number, min: 1, max: 500 },
+    kidneyGfr:         { type: Number, min: 0, max: 200 },
+    liverScore:        { type: Number, default: 0 },
+    liverClass:        { type: String, enum: ['A', 'B', 'C'], default: 'A' },
+    isPregnant:        { type: Boolean, default: false },
+    pregnancyStatus:   { type: String, default: 'not_pregnant' },
+    allergies:         { type: [String], default: [] },
+    chronicConditions: { type: [String], default: [] },
+    lastUpdated:       { type: Date, default: Date.now },
+  },
+
   // ── Doctor-Only Fields ──────────────────────────────────────────────────────
   specialization: {
     type: String,

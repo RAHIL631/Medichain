@@ -25,6 +25,7 @@ const { protect } = require('../middleware/auth');
 const MedicalRecord = require('../models/MedicalRecord');
 const AdherenceLog = require('../models/AdherenceLog');
 const User = require('../models/User');
+const cdssEngine = require('../services/cdssEngine');
 
 const AI_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
 const AI_TIMEOUT_DEFAULT = 15000;
@@ -34,96 +35,141 @@ const AI_TIMEOUT_LONG = 30000; // OCR + SHAP can take longer
 const log = (msg) => console.log(`[AI-PROXY] ${new Date().toISOString()}: ${msg}`);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXISTING ROUTES (PRESERVED — backward compatible)
+// PATIENT CLINICAL CONTEXT MANAGEMENT (CDSS & EHR)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * @route   POST /api/ai/predict
- * @desc    Forward prediction request to AI service with enriched patient data
+ * @route   GET /api/ai/cdss/patient-context
+ * @desc    Get patient clinical parameters for CDSS
  * @access  Private
  */
-router.post('/predict', protect, async (req, res) => {
+router.get('/cdss/patient-context', protect, async (req, res) => {
     try {
-        const patientData = { ...req.body };
+        const userDoc = await User.findById(req.user._id)
+            .select('name dateOfBirth allergies chronicConditions clinicalContext role');
 
-        if (req.user.dateOfBirth) {
-            const birthYear = new Date(req.user.dateOfBirth).getFullYear();
-            patientData.age = new Date().getFullYear() - birthYear;
+        if (!userDoc) {
+            return res.status(404).json({ error: 'User not found' });
         }
 
-        log(`Prediction request for user: ${req.user._id}`);
+        const calculatedAge = userDoc.dateOfBirth
+            ? new Date().getFullYear() - new Date(userDoc.dateOfBirth).getFullYear()
+            : 45;
 
-        const response = await axios.post(`${AI_URL}/predict`, patientData, {
-            timeout: AI_TIMEOUT_DEFAULT,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        const ctx = userDoc.clinicalContext || {};
+        const context = {
+            age:               ctx.age || calculatedAge,
+            weight:            ctx.weightKg || 70,
+            weightKg:          ctx.weightKg || 70,
+            gfr:               ctx.kidneyGfr || 90,
+            kidney_gfr:        ctx.kidneyGfr || 90,
+            liverScore:        ctx.liverScore || 0,
+            liver_score:       ctx.liverScore || 0,
+            liverClass:        ctx.liverClass || 'A',
+            isPregnant:        Boolean(ctx.isPregnant),
+            pregnancy:         ctx.isPregnant ? 'yes' : 'no',
+            pregnancyStatus:   ctx.pregnancyStatus || (ctx.isPregnant ? 'pregnant' : 'not_pregnant'),
+            allergies:         ctx.allergies?.length ? ctx.allergies : (userDoc.allergies || []),
+            chronicConditions: ctx.chronicConditions?.length ? ctx.chronicConditions : (userDoc.chronicConditions || []),
+            lastUpdated:       ctx.lastUpdated || userDoc.updatedAt || new Date()
+        };
 
-        res.json(response.data);
+        return res.json({ success: true, context });
     } catch (err) {
-        handleAiError(err, res);
+        console.error('[CDSS] GET patient-context error:', err.message);
+        return res.status(500).json({ error: 'Failed to retrieve patient clinical context' });
     }
 });
 
 /**
- * @route   POST /api/ai/check-drugs
- * @desc    Check drug interactions enriched with patient's existing medications from DB
+ * @route   POST /api/ai/cdss/patient-context
+ * @desc    Save/update patient clinical parameters with boundary validation
  * @access  Private
  */
-router.post('/check-drugs', protect, async (req, res) => {
+router.post('/cdss/patient-context', protect, async (req, res) => {
     try {
-        const { newDrug, currentMedications: providedMeds = [] } = req.body;
+        const {
+            age,
+            weight,
+            weightKg,
+            gfr,
+            kidney_gfr,
+            liverScore,
+            liver_score,
+            liverClass,
+            isPregnant,
+            pregnant,
+            pregnancyStatus,
+            allergies = [],
+            chronicConditions = []
+        } = req.body;
 
-        if (!newDrug) {
-            return res.status(400).json({ error: 'newDrug name is required' });
-        }
+        // Boundary Validation
+        const validAge = Math.min(120, Math.max(0, parseInt(age) || 45));
+        const validWeight = Math.min(500, Math.max(1, parseFloat(weightKg || weight) || 70));
+        const validGfr = Math.min(200, Math.max(0, parseInt(kidney_gfr || gfr) || 90));
+        const validLiverScore = parseInt(liverScore ?? liver_score ?? 0) || 0;
+        const validLiverClass = ['A', 'B', 'C'].includes((liverClass || '').toUpperCase())
+            ? liverClass.toUpperCase()
+            : (validLiverScore >= 10 ? 'C' : validLiverScore >= 5 ? 'B' : 'A');
+        
+        const validPregnant = Boolean(isPregnant || pregnant === true || pregnant === 'yes' || pregnancyStatus === 'pregnant');
+        const validPregnancyStatus = pregnancyStatus || (validPregnant ? 'pregnant' : 'not_pregnant');
 
-        const records = await MedicalRecord.find({
-            patientId: req.user._id,
-            isActive: true
+        const cleanAllergies = Array.isArray(allergies)
+            ? allergies.map(a => String(a).trim()).filter(Boolean)
+            : [];
+        const cleanConditions = Array.isArray(chronicConditions)
+            ? chronicConditions.map(c => String(c).trim()).filter(Boolean)
+            : [];
+
+        const updatedContext = {
+            age: validAge,
+            weightKg: validWeight,
+            kidneyGfr: validGfr,
+            liverScore: validLiverScore,
+            liverClass: validLiverClass,
+            isPregnant: validPregnant,
+            pregnancyStatus: validPregnancyStatus,
+            allergies: cleanAllergies,
+            chronicConditions: cleanConditions,
+            lastUpdated: new Date()
+        };
+
+        await User.findByIdAndUpdate(req.user._id, {
+            clinicalContext: updatedContext,
+            allergies: cleanAllergies,
+            chronicConditions: cleanConditions
         });
 
-        const dbMeds = records.reduce((acc, record) => {
-            if (record.medications && Array.isArray(record.medications)) {
-                return acc.concat(record.medications);
-            }
-            return acc;
-        }, []);
+        log(`Patient clinical context updated for user ${req.user._id}`);
 
-        const allCurrentMeds = [...new Set([...dbMeds, ...providedMeds])];
+        return res.json({
+            success: true,
+            message: 'Patient clinical context saved successfully',
+            context: {
+                ...updatedContext,
+                weight: validWeight,
+                gfr: validGfr,
+                kidney_gfr: validGfr,
+                pregnancy: validPregnant ? 'yes' : 'no'
+            },
+            lastUpdated: updatedContext.lastUpdated
+        });
 
-        const response = await axios.post(`${AI_URL}/check-drugs`, {
-            newDrug,
-            currentMedications: allCurrentMeds
-        }, { timeout: AI_TIMEOUT_DEFAULT });
-
-        res.json({ ...response.data, checkedAgainstCount: allCurrentMeds.length });
     } catch (err) {
-        handleAiError(err, res);
-    }
-});
-
-/**
- * @route   GET /api/ai/health
- * @access  Public
- */
-router.get('/health', async (req, res) => {
-    try {
-        const response = await axios.get(`${AI_URL}/health`, { timeout: 5000 });
-        res.json({ nodeProxy: 'ok', aiService: response.data });
-    } catch (err) {
-        res.status(503).json({ nodeProxy: 'ok', aiService: 'offline', error: 'AI service unreachable' });
+        console.error('[CDSS] POST patient-context error:', err.message);
+        return res.status(500).json({ error: 'Failed to update patient clinical context' });
     }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NEW CDSS ROUTES
+// CLINICAL DECISION SUPPORT ANALYSIS PIPELINE
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @route   POST /api/ai/cdss/analyze
- * @desc    Full prescription safety pipeline — called automatically on prescription upload.
- *          Enriches the request with patient profile from MongoDB, calls Flask /cdss/analyze,
- *          and optionally saves the analysis result back to the MedicalRecord document.
+ * @desc    Full prescription safety analysis using deterministic rules + live RxNorm
  * @access  Private
  */
 router.post('/cdss/analyze', protect, async (req, res) => {
@@ -137,16 +183,25 @@ router.post('/cdss/analyze', protect, async (req, res) => {
             mime_type
         } = req.body;
 
-        // ── Enrich patient data from MongoDB ───────────────────────────────
+        // Enrich patient context from MongoDB
         let patientProfile = { ...clientPatient };
-
-        // Get patient user record for age, allergies, conditions
         const userDoc = await User.findById(req.user._id)
-            .select('dateOfBirth allergies chronicConditions role');
+            .select('dateOfBirth allergies chronicConditions clinicalContext role');
 
         if (userDoc) {
+            const ctx = userDoc.clinicalContext || {};
             if (userDoc.dateOfBirth && !patientProfile.age) {
                 patientProfile.age = new Date().getFullYear() - new Date(userDoc.dateOfBirth).getFullYear();
+            }
+            if (!patientProfile.age && ctx.age) patientProfile.age = ctx.age;
+            if (!patientProfile.weight && ctx.weightKg) patientProfile.weight = ctx.weightKg;
+            if (!patientProfile.gfr && ctx.kidneyGfr) patientProfile.gfr = ctx.kidneyGfr;
+            if (patientProfile.liverScore === undefined && ctx.liverScore !== undefined) {
+                patientProfile.liverScore = ctx.liverScore;
+                patientProfile.liverClass = ctx.liverClass;
+            }
+            if (patientProfile.pregnant === undefined && ctx.isPregnant !== undefined) {
+                patientProfile.pregnant = ctx.isPregnant;
             }
             if (userDoc.allergies?.length > 0 && !patientProfile.allergies?.length) {
                 patientProfile.allergies = userDoc.allergies;
@@ -156,24 +211,14 @@ router.post('/cdss/analyze', protect, async (req, res) => {
             }
         }
 
-        // ── Forward to Flask CDSS analyze ─────────────────────────────────
-        const payload = {
+        // Execute deterministic CDSS engine with live RxNorm
+        const analysis = await cdssEngine.analyzePrescription({
             medications,
             dosages,
-            patient: patientProfile,
-            ...(file_base64 && { file_base64 }),
-            ...(mime_type && { mime_type }),
-        };
-
-        log(`CDSS analyze: ${medications.length} meds for user ${req.user._id}`);
-
-        const aiResponse = await axios.post(`${AI_URL}/cdss/analyze`, payload, {
-            timeout: AI_TIMEOUT_LONG
+            patient: patientProfile
         });
 
-        const analysis = aiResponse.data;
-
-        // ── Optionally persist analysis to MedicalRecord ───────────────────
+        // Optionally persist analysis to MedicalRecord
         if (recordId && analysis.safety_score !== undefined) {
             try {
                 await MedicalRecord.findByIdAndUpdate(recordId, {
@@ -183,24 +228,34 @@ router.post('/cdss/analyze', protect, async (req, res) => {
                     'aiAnalysis.dosageWarnings':           analysis.dosage_analysis || [],
                     'aiAnalysis.clinicalExplanation':      analysis.clinical_explanation,
                     'aiAnalysis.recommendations':          analysis.recommendations || [],
-                    'aiAnalysis.ocrExtracted':             analysis.ocr_extracted || false,
-                    'aiAnalysis.extractedMedications':     analysis.ocr?.medications || [],
-                    'aiAnalysis.shapValues':               analysis.shap_explanation || null,
-                    'aiAnalysis.scoreBreakdown':           analysis.score_breakdown || null,
-                    'aiAnalysis.combinationAnalysis':      analysis.combination_analysis || [],
-                    'aiAnalysis.alternativeMedicines':     analysis.alternative_medicines || [],
-                    'aiAnalysis.emergencyRecommendations': analysis.emergency_recommendations || [],
                     'aiAnalysis.analyzedAt':               new Date(),
                 }, { new: false });
-                log(`CDSS analysis saved to record ${recordId}`);
             } catch (saveErr) {
                 console.warn('[AI-PROXY] Failed to save CDSS analysis to record:', saveErr.message);
             }
         }
 
         return res.json(analysis);
+
     } catch (err) {
+        console.error('[CDSS] CDSS analyze error:', err.message);
         handleAiError(err, res);
+    }
+});
+
+/**
+ * @route   POST /api/clinical-analysis
+ * @desc    Alias route for CDSS Clinical Analysis
+ * @access  Private
+ */
+router.post('/clinical-analysis', protect, async (req, res) => {
+    try {
+        const { medications = [], dosages = [], patient = {} } = req.body;
+        const analysis = await cdssEngine.analyzePrescription({ medications, dosages, patient });
+        return res.json(analysis);
+    } catch (err) {
+        console.error('[CDSS] clinical-analysis error:', err.message);
+        return res.status(500).json({ error: 'Clinical analysis engine error' });
     }
 });
 
