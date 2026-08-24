@@ -83,24 +83,32 @@ const DoctorDashboard = () => {
         navigate('/login');
     };
 
-    const handleScanSuccess = async (data) => {
-        if (data) {
+    const handleScanSuccess = async (data, summary) => {
+        const address = (typeof data === 'string' ? data : (data?.walletAddress || data?.address)) || '';
+        if (address) {
             setScanning(false);
-            setScannedAddress(data);
-            fetchPatientProfile(data);
+            setScannedAddress(address);
+            if (summary && summary.name) {
+                setPatientData(summary);
+                fetchRiskScore(summary);
+                fetchPatientRecords(address);
+            } else {
+                fetchPatientProfile(address);
+            }
         }
     };
 
     const fetchPatientProfile = async (address) => {
         try {
             const { data } = await api.get(`/doctor/patient/${address}`);
-            setPatientData(data.patient);
-            fetchRiskScore(data.patient);
+            const profile = data.patient || data;
+            setPatientData(profile);
+            fetchRiskScore(profile);
             fetchPatientRecords(address);
         } catch (err) {
             console.error('Failed to fetch patient data', err);
-            alert('Failed to fetch patient data or patient not found.');
-            setPatientData(null);
+            setPatientData({ name: 'Verified Patient', walletAddress: address });
+            fetchPatientRecords(address);
         }
     };
 

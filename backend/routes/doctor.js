@@ -457,9 +457,9 @@ router.get('/patient/:walletAddress', async (req, res) => {
       return res.status(400).json({ error: 'Invalid wallet address format' });
     }
 
-    // Find the patient by their on-chain wallet address
+    // Find the patient by their on-chain wallet address (case-insensitive)
     const patient = await User.findOne({
-      walletAddress,
+      walletAddress: { $regex: new RegExp(`^${walletAddress.trim()}$`, 'i') },
       role: 'patient',
     }).select('name bloodGroup allergies chronicConditions walletAddress');
 
@@ -473,12 +473,19 @@ router.get('/patient/:walletAddress', async (req, res) => {
       isActive:  true,
     });
 
-    return res.status(200).json({
+    const summary = {
+      _id:               patient._id,
       name:              patient.name,
+      walletAddress:     patient.walletAddress,
       bloodGroup:        patient.bloodGroup        || 'Unknown',
       allergies:         patient.allergies         || [],
       chronicConditions: patient.chronicConditions || [],
       recordCount,
+    };
+
+    return res.status(200).json({
+      ...summary,
+      patient: summary,
     });
 
   } catch (err) {
