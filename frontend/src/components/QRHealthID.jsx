@@ -1,183 +1,334 @@
 // frontend/src/components/QRHealthID.jsx
-// Complete QR Health ID component with card generation, PNG download, and printing
+// Complete Patient Health ID Component with Unique Patient ID, High-Res PNG Download, Printing, and Web Share.
+// Follows strict security rules: QR payload contains only the safe structured identifier, NO sensitive medical records.
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
+import { Copy, Check, Download, Printer, Share2, Shield } from 'lucide-react';
 
-/**
- * QRHealthID Component
- * Generates a professional Health ID card with an encoded QR code for blockchain EHR access.
- */
 const QRHealthID = ({ 
-  patientAddress, 
-  patientName, 
-  bloodGroup, 
-  allergies = [], 
-  chronicConditions = [] 
+  user,
+  patientId: propPatientId,
+  patientName: propPatientName,
+  bloodGroup: propBloodGroup,
+  walletAddress: propWalletAddress, // eslint-disable-line no-unused-vars
+  onClose
 }) => {
   const cardRef = useRef(null);
-  const [copySuccess, setCopySuccess] = useState(false);
+  const qrWrapperRef = useRef(null);
+  const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [canShare, setCanShare] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
 
-  // QR Data: JSON format for standardized medical scanning
-  const qrData = JSON.stringify({
-    type: "medichain_health_id",
-    version: "1.0",
-    address: patientAddress,
-    name: patientName,
-    bloodGroup: bloodGroup,
-    timestamp: Date.now()
+  // Extract patient details
+  const name = propPatientName || user?.name || 'Authorized Patient';
+  const patientId = propPatientId || user?.patientId || (user?._id ? `MC-PAT-2026-${user._id.slice(-6).toUpperCase()}` : 'MC-PAT-2026-000001');
+  const bloodGroup = propBloodGroup || user?.bloodGroup || 'O+';
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      setCanShare(true);
+    }
+  }, []);
+
+  // Structured, safe, minimal QR payload
+  const qrPayload = JSON.stringify({
+    type: 'MEDICHAIN_PATIENT',
+    version: 1,
+    patientId: patientId
   });
 
-  // --- Download Card as PNG ---
-  const handleDownload = async () => {
-    if (cardRef.current) {
-      try {
-        const canvas = await html2canvas(cardRef.current, {
-          backgroundColor: null,
-          scale: 2, // higher resolution
-          logging: false,
-          useCORS: true
-        });
-        const image = canvas.toDataURL("image/png");
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = `MediChain-ID-${patientName.replace(/\s+/g, '-')}.png`;
-        link.click();
-      } catch (err) {
-        console.error("Failed to generate image:", err);
-      }
+  // ── COPY PATIENT ID ──────────────────────────────────────────────────────────
+  const handleCopy = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(patientId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
     }
   };
 
-  // --- Print Card ---
+  // ── DOWNLOAD HIGH-RES QR PNG ────────────────────────────────────────────────
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      // Create high-res offscreen canvas (1000x1000 px) for crisp camera scanning
+      const canvas = document.createElement('canvas');
+      const size = 1000;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Background gradient & rounded frame
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+
+      // 2. Header banner
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, size, 160);
+
+      // Logo icon & Title
+      ctx.fillStyle = '#22d3ee';
+      ctx.font = 'bold 44px sans-serif';
+      ctx.fillText('MediChain Health ID', 180, 95);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '24px sans-serif';
+      ctx.fillText('Decentralized Secure Patient Identity', 180, 135);
+
+      // Draw cross logo icon
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.arc(100, 80, 48, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(92, 54, 16, 52);
+      ctx.fillRect(74, 72, 52, 16);
+
+      // 3. Render SVG QR code to high-res image
+      const svgElement = qrWrapperRef.current?.querySelector('svg');
+      if (svgElement) {
+        const svgString = new XMLSerializer().serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const URL = window.URL || window.webkitURL || window;
+        const blobURL = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        await new Promise((resolve, reject) => {
+          img.onload = () => {
+            // Draw QR code centered
+            const qrSize = 540;
+            const qrX = (size - qrSize) / 2;
+            const qrY = 210;
+
+            // Light gray container for QR
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.roundRect(qrX - 20, qrY - 20, qrSize + 40, qrSize + 40, 24);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
+            URL.revokeObjectURL(blobURL);
+            resolve();
+          };
+          img.onerror = reject;
+          img.src = blobURL;
+        });
+      }
+
+      // 4. Patient ID Label & Card Details
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 42px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(patientId, size / 2, 830);
+
+      ctx.fillStyle = '#0284c7';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText(`Patient: ${name}`, size / 2, 875);
+
+      // 5. Verification Notice & Footer
+      ctx.fillStyle = '#64748b';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Present this QR to an authorized MediChain healthcare provider.', size / 2, 925);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px monospace';
+      ctx.fillText('Verified on Sepolia Ethereum &bull; Chain ID 11155111', size / 2, 960);
+
+      // 6. Trigger Download
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `MediChain-${patientId}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('[QRHealthID] Canvas download failed, falling back to card snapshot:', err);
+      if (cardRef.current) {
+        try {
+          const snapshot = await html2canvas(cardRef.current, { scale: 3, useCORS: true });
+          const link = document.createElement('a');
+          link.download = `MediChain-${patientId}.png`;
+          link.href = snapshot.toDataURL('image/png');
+          link.click();
+        } catch (snapErr) {
+          console.error('[QRHealthID] Snapshot failed:', snapErr);
+        }
+      }
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // ── PRINT QR CARD ──────────────────────────────────────────────────────────
   const handlePrint = () => {
     window.print();
   };
 
-  // --- Copy Address to Clipboard ---
-  const handleCopy = () => {
-    navigator.clipboard.writeText(patientAddress);
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
+  // ── WEB SHARE API ──────────────────────────────────────────────────────────
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'MediChain Health ID',
+          text: `My MediChain Patient Health Identifier: ${patientId}. Present to authorized healthcare providers for EHR access.`,
+        });
+        setShareSuccess(true);
+        setTimeout(() => setShareSuccess(false), 2000);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('[QRHealthID] Share failed:', err);
+        }
+      }
+    }
   };
 
-  // Format address for display: 0x1234...5678
-  const shortAddress = patientAddress 
-    ? `${patientAddress.slice(0, 6)}...${patientAddress.slice(-4)}` 
-    : "Not Linked";
-
   return (
-    <div className="flex flex-col items-center gap-8 py-10 print:py-0">
+    <div className="flex flex-col items-center w-full max-w-md mx-auto print:max-w-none">
       
       {/* ── HEALTH ID CARD ────────────────────────────────────────────────── */}
-      <div 
+      <div
         ref={cardRef}
-        id="medichain-health-card"
-        className="w-full max-w-[320px] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col items-center p-5 sm:p-6 text-gray-900 print:shadow-none print:border-2 print:border-gray-200"
+        id="medichain-patient-health-card"
+        className="w-full bg-white text-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 p-6 flex flex-col items-center print:shadow-none print:border print:border-slate-300 print:w-[380px] print:mx-auto"
       >
         {/* Card Header */}
-        <div className="w-full flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 5a1 1 0 112 0v3h3a1 1 0 110 2H11v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V5z" />
-              </svg>
+        <div className="w-full flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center text-white font-black text-sm shadow-md">
+              M+
             </div>
-            <span className="font-bold text-indigo-900 text-sm tracking-tight">MediChain</span>
+            <div>
+              <span className="font-display font-bold text-slate-900 text-sm tracking-tight block">MediChain</span>
+              <span className="text-[10px] font-semibold text-slate-500 block">Universal Health Identity</span>
+            </div>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-50 px-2 py-1 rounded-full">
-            Health ID
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-700 bg-cyan-50 border border-cyan-200 px-2.5 py-1 rounded-full">
+            Verified ID
           </span>
         </div>
 
-        {/* QR Code Section */}
-        <div className="bg-gray-50 p-4 rounded-2xl mb-4 border border-gray-100">
-          <QRCodeSVG 
-            value={qrData}
-            size={200}
+        {/* Patient Identity Header */}
+        <div className="text-center mb-4">
+          <h2 className="text-lg font-bold text-slate-900 leading-tight">{name}</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Your secure identity for authorized healthcare access</p>
+        </div>
+
+        {/* High Resolution Scannable QR Code Frame */}
+        <div
+          ref={qrWrapperRef}
+          className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-inner flex items-center justify-center mb-4"
+        >
+          <QRCodeSVG
+            value={qrPayload}
+            size={230}
             level="H"
             includeMargin={true}
+            bgColor="#f8fafc"
+            fgColor="#0f172a"
           />
         </div>
 
-        {/* Patient Info */}
-        <h3 className="text-xl font-bold text-gray-900 mb-1">{patientName || "Anonymous Patient"}</h3>
-        
-        <div className="flex items-center gap-2 mb-4">
-          <span className="px-3 py-1 bg-red-600 text-white text-xs font-black rounded-full shadow-sm">
-            {bloodGroup || "O+"}
-          </span>
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-            Scan to access full history
-          </span>
+        {/* Prominent Patient ID Display with Copy */}
+        <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-2 mb-4">
+          <div className="min-w-0">
+            <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Patient ID</span>
+            <span className="text-sm sm:text-base font-mono font-black text-cyan-800 tracking-wider truncate block" id="patient-id-display">
+              {patientId}
+            </span>
+          </div>
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-xs flex-shrink-0"
+            title="Copy Patient ID"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-emerald-700 text-[11px]">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 text-slate-500" />
+                <span className="text-[11px]">Copy</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {/* Medical Tags (Allergies) */}
-        {allergies.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-1.5 mb-6">
-            {allergies.slice(0, 3).map((item, idx) => (
-              <span key={idx} className="bg-red-50 text-red-600 text-[9px] font-bold px-2 py-0.5 rounded border border-red-100">
-                ⚠️ {item}
-              </span>
-            ))}
-          </div>
+        {copied && (
+          <p className="text-xs text-emerald-600 font-semibold mb-3 animate-fade-in flex items-center gap-1">
+            <Check className="w-3.5 h-3.5" /> Patient ID copied to clipboard.
+          </p>
         )}
 
-        {/* Wallet Address Footnote */}
-        <div className="w-full pt-4 border-t border-gray-100 mt-auto text-center">
-          <p className="text-[9px] font-mono text-gray-400 mb-1 uppercase tracking-widest">Digital Wallet Address</p>
-          <p className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50/50 py-1 rounded-lg">
-            {shortAddress}
+        {/* Security / Privacy Assurance */}
+        <div className="w-full bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 flex items-center gap-2 mb-4 text-left">
+          <Shield className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <p className="text-[10px] text-emerald-800 leading-snug">
+            <strong>✓ Secure Patient Identifier:</strong> This QR contains only your verified Patient ID. It does not expose medical records or sensitive data.
           </p>
         </div>
 
-        <footer className="mt-4 text-[8px] text-gray-300 font-medium uppercase tracking-tight">
-          MediChain Blockchain Health ID · Ethereum Network
-        </footer>
+        {/* Card Footer Details */}
+        <div className="w-full grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 text-[11px]">
+          <div>
+            <span className="text-slate-400 block text-[9px] uppercase">Blood Group</span>
+            <strong className="text-slate-700 font-mono">{bloodGroup}</strong>
+          </div>
+          <div className="text-right">
+            <span className="text-slate-400 block text-[9px] uppercase">Blockchain</span>
+            <strong className="text-slate-700 font-mono">Sepolia 11155111</strong>
+          </div>
+        </div>
       </div>
 
       {/* ── ACTION BUTTONS ────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap justify-center gap-4 print:hidden">
-        
-        {/* Download Button */}
-        <button 
+      <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5 print:hidden">
+        {/* Download */}
+        <button
           onClick={handleDownload}
-          className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-2xl shadow-lg border border-gray-200 transition-all active:scale-95"
+          disabled={downloading}
+          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold text-xs hover:opacity-90 transition-opacity shadow-md shadow-cyan-500/20"
         >
-          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Download Card
+          <Download className="w-3.5 h-3.5" />
+          {downloading ? 'Exporting...' : 'Download QR'}
         </button>
 
-        {/* Print Button */}
-        <button 
+        {/* Print */}
+        <button
           onClick={handlePrint}
-          className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-2xl shadow-lg border border-gray-200 transition-all active:scale-95"
+          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-surface border border-medichain-border text-white font-bold text-xs hover:bg-medichain-border transition-colors"
         >
-          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-          </svg>
+          <Printer className="w-3.5 h-3.5 text-accent-cyan" />
           Print ID
         </button>
 
-        {/* Copy Address Button */}
-        <button 
-          onClick={handleCopy}
-          className={`flex items-center gap-2 px-6 py-3 font-bold rounded-2xl shadow-lg transition-all active:scale-95 ${
-            copySuccess ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'
-          }`}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {copySuccess ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-            )}
-          </svg>
-          {copySuccess ? 'Copied!' : 'Copy Wallet'}
-        </button>
+        {/* Share (if supported) */}
+        {canShare && (
+          <button
+            onClick={handleShare}
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-surface border border-medichain-border text-white font-bold text-xs hover:bg-medichain-border transition-colors"
+          >
+            <Share2 className="w-3.5 h-3.5 text-accent-indigo" />
+            {shareSuccess ? 'Shared!' : 'Share QR'}
+          </button>
+        )}
+
+        {/* Close (if modal) */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-bg-dark border border-medichain-border text-text-secondary font-bold text-xs hover:text-white transition-colors"
+          >
+            Close
+          </button>
+        )}
       </div>
 
       {/* ── PRINT-SPECIFIC CSS ────────────────────────────────────────────── */}
@@ -186,18 +337,18 @@ const QRHealthID = ({
           body * {
             visibility: hidden;
           }
-          #medichain-health-card, #medichain-health-card * {
+          #medichain-patient-health-card, #medichain-patient-health-card * {
             visibility: visible;
           }
-          #medichain-health-card {
+          #medichain-patient-health-card {
             position: absolute;
             left: 50%;
-            top: 10%;
+            top: 50px;
             transform: translateX(-50%);
+            box-shadow: none !important;
           }
         }
       `}</style>
-
     </div>
   );
 };

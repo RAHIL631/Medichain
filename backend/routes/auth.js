@@ -46,6 +46,7 @@ const safeUser = (user) => ({
   name:                   user.name,
   email:                  user.email,
   role:                   user.role,
+  patientId:              user.patientId       || null,
   isEmailVerified:        user.isEmailVerified || false,
   isActive:               user.isActive !== false,
   walletAddress:          user.walletAddress   || null,
@@ -56,6 +57,7 @@ const safeUser = (user) => ({
   dateOfBirth:            user.dateOfBirth     || null,
   allergies:              user.allergies       || [],
   chronicConditions:      user.chronicConditions || [],
+  clinicalContext:        user.clinicalContext || {},
   // Doctor fields
   specialization:         user.specialization  || null,
   hospitalName:           user.hospitalName    || null,
@@ -292,8 +294,11 @@ router.post('/login', loginValidation, handleValidationErrors, async (req, res) 
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // 5. Successful login — reset lockout counter
+    // 5. Successful login — reset lockout counter & ensure patientId
     await user.resetLoginAttempts();
+    if (user.role === 'patient' && !user.patientId) {
+      await User.ensurePatientId(user);
+    }
 
     // 6. Issue tokens
     const token        = generateAccessToken(user);
@@ -314,7 +319,10 @@ router.post('/login', loginValidation, handleValidationErrors, async (req, res) 
 });
 
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
-router.get('/me', protect, (req, res) => {
+router.get('/me', protect, async (req, res) => {
+  if (req.user.role === 'patient' && !req.user.patientId) {
+    await User.ensurePatientId(req.user);
+  }
   return res.status(200).json({ user: safeUser(req.user) });
 });
 

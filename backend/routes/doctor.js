@@ -439,47 +439,148 @@ router.get('/record/:recordId/download', async (req, res) => {
   }
 });
 
+// ── POST /api/doctor/resolve-patient & /api/doctor/resolve-qr ─────────────────
+/**
+ * Resolves a scanned Patient QR code (JSON or raw ID) or Manual Patient ID / Wallet Address.
+ * Verifies patient identity in MongoDB and returns sanitized authorized profile.
+ */
+const resolvePatientHandler = async (req, res) => {
+  try {
+    const { patientId, qrData, query, identifier } = req.body;
+
+    let targetId = (patientId || query || identifier || '').trim();
+
+    // If qrData is provided, parse structured payload
+    if (qrData && typeof qrData === 'string') {
+      try {
+        const parsed = JSON.parse(qrData.trim());
+        if (parsed && typeof parsed === 'object') {
+          if (parsed.type && parsed.type !== 'MEDICHAIN_PATIENT') {
+            return res.status(400).json({ error: 'This is not a valid MediChain Patient QR.' });
+          }
+          targetId = (parsed.patientId || parsed.walletAddress || parsed.id || '').trim();
+        }
+      } catch {
+        targetId = qrData.trim();
+      }
+    }
+
+    if (!targetId) {
+      return res.status(400).json({ error: 'Patient ID or QR payload is required.' });
+    }
+
+    // Reject arbitrary URLs or non-identifier garbage
+    if (targetId.startsWith('http://') || targetId.startsWith('https://') || targetId.length > 100) {
+      return res.status(400).json({ error: 'This is not a valid MediChain Patient QR.' });
+    }
+
+    const isEthAddress = /^0x[a-fA-F0-9]{40}$/.test(targetId);
+    let patient = null;
+
+    if (isEthAddress) {
+      patient = await User.findOne({
+        walletAddress: { $regex: new RegExp(`^${targetId}$`, 'i') },
+        role: 'patient',
+      });
+    } else {
+      const queryList = [{ patientId: { $regex: new RegExp(`^${targetId}$`, 'i') } }];
+      if (/^[0-9a-fA-F]{24}$/.test(targetId)) {
+        queryList.push({ _id: targetId });
+      }
+      patient = await User.findOne({
+        $or: queryList,
+        role: 'patient',
+      });
+    }
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient ID not found.' });
+    }
+
+    // Ensure older patients have a patientId
+    if (!patient.patientId) {
+      await User.ensurePatientId(patient);
+    }
+
+    const recordCount = await MedicalRecord.countDocuments({
+      patientId: patient._id,
+      isActive:  true,
+    });
+
+    const sanitizedPatient = {
+      _id:                    patient._id,
+      patientId:              patient.patientId,
+      name:                   patient.name,
+      walletAddress:          patient.walletAddress || null,
+      isWalletLinked:         patient.isWalletLinked || false,
+      isBlockchainRegistered: patient.isBlockchainRegistered || false,
+      bloodGroup:             patient.bloodGroup || 'Unknown',
+      allergies:              patient.allergies || [],
+      chronicConditions:      patient.chronicConditions || [],
+      clinicalContext:        patient.clinicalContext || {},
+      recordCount,
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Patient identified successfully',
+      patient: sanitizedPatient,
+      ...sanitizedPatient
+    });
+
+  } catch (err) {
+    console.error('[DOCTOR] Resolve patient error:', err.message);
+    return res.status(500).json({ error: 'Failed to resolve patient identity: ' + err.message });
+  }
+};
+
+router.post('/resolve-patient', resolvePatientHandler);
+router.post('/resolve-qr', resolvePatientHandler);
+
 // ── GET /api/doctor/patient/:walletAddress ────────────────────────────────────
 /**
- * Called when a doctor scans a patient's QR Health ID.
- * The QR code encodes the patient's wallet address.
- * Returns a safe patient summary + their active record count.
- *
- * Note: The actual ACCESS CHECK is performed on the smart contract in the
- * frontend — this route only returns publicly-safe profile data.
+ * Backward-compatible lookup by wallet address or patient ID param
  */
 router.get('/patient/:walletAddress', async (req, res) => {
   try {
     const { walletAddress } = req.params;
+    const isEth = /^0x[a-fA-F0-9]{40}$/.test(walletAddress);
 
-    // Validate Ethereum address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-      return res.status(400).json({ error: 'Invalid wallet address format' });
-    }
+    const query = isEth
+      ? { walletAddress: { $regex: new RegExp(`^${walletAddress.trim()}$`, 'i') }, role: 'patient' }
+      : {
+          $or: [
+            { patientId: { $regex: new RegExp(`^${walletAddress.trim()}$`, 'i') } },
+            ...(walletAddress.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: walletAddress }] : [])
+          ],
+          role: 'patient'
+        };
 
-    // Find the patient by their on-chain wallet address (case-insensitive)
-    const patient = await User.findOne({
-      walletAddress: { $regex: new RegExp(`^${walletAddress.trim()}$`, 'i') },
-      role: 'patient',
-    }).select('name bloodGroup allergies chronicConditions walletAddress');
+    const patient = await User.findOne(query).select('name bloodGroup allergies chronicConditions walletAddress patientId isWalletLinked isBlockchainRegistered');
 
     if (!patient) {
-      return res.status(404).json({ error: 'Patient not found with this wallet address' });
+      return res.status(404).json({ error: 'Patient not found' });
     }
 
-    // Count active medical records for this patient
+    if (!patient.patientId) {
+      await User.ensurePatientId(patient);
+    }
+
     const recordCount = await MedicalRecord.countDocuments({
       patientId: patient._id,
       isActive:  true,
     });
 
     const summary = {
-      _id:               patient._id,
-      name:              patient.name,
-      walletAddress:     patient.walletAddress,
-      bloodGroup:        patient.bloodGroup        || 'Unknown',
-      allergies:         patient.allergies         || [],
-      chronicConditions: patient.chronicConditions || [],
+      _id:                    patient._id,
+      patientId:              patient.patientId,
+      name:                   patient.name,
+      walletAddress:          patient.walletAddress,
+      isWalletLinked:         patient.isWalletLinked || false,
+      isBlockchainRegistered: patient.isBlockchainRegistered || false,
+      bloodGroup:             patient.bloodGroup        || 'Unknown',
+      allergies:              patient.allergies         || [],
+      chronicConditions:      patient.chronicConditions || [],
       recordCount,
     };
 
@@ -507,7 +608,7 @@ router.get('/patients', async (req, res) => {
 
     const [patients, total] = await Promise.all([
       User.find({ role: 'patient' })
-        .select('name email walletAddress bloodGroup isWalletLinked createdAt')
+        .select('name email patientId walletAddress bloodGroup isWalletLinked createdAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),

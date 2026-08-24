@@ -1,45 +1,64 @@
 // frontend/src/components/QRScanner.jsx
-// Complete Robust Production QR Scanner Component for MediChain
-// Supports Mobile (iOS Safari, Android Chrome) & Desktop with rear/front camera switching,
-// black-screen timeout protection, ZXing decoding, MediChain payload extraction, and manual entry fallback.
+// Production QR Scanner & Manual Patient ID Resolver for MediChain
+// Supports Mobile (iOS Safari, Android Chrome) & Desktop with camera switching,
+// MediChain Patient QR JSON payload validation, Patient ID extraction, and unified backend verification.
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserQRCodeReader } from '@zxing/library';
 import api from '../utils/api';
 import {
   QrCode, Camera, RefreshCw, AlertCircle, CheckCircle2,
-  Edit3, X
+  Edit3, X, ShieldCheck
 } from 'lucide-react';
 
 /**
- * Extracts a valid Ethereum address from diverse QR payloads:
- * - JSON: {"type":"medichain_health_id", "address":"0x..."}
- * - JSON: {"address":"0x..."}
- * - Plain string: "0x..."
- * - URL: "https://.../?patient=0x..."
+ * Extracts and validates patient identifier from diverse QR payloads:
+ * - Structured JSON: {"type":"MEDICHAIN_PATIENT", "version":1, "patientId":"MC-PAT-..."}
+ * - Legacy JSON: {"type":"medichain_health_id", "address":"0x..."}
+ * - Raw Patient ID string: "MC-PAT-2026-000001"
+ * - Raw Ethereum address: "0x..."
  */
-function extractPatientAddress(rawText) {
+function extractPatientIdentity(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
   const trimmed = rawText.trim();
 
   // 1. Try parsing JSON
   try {
     const parsed = JSON.parse(trimmed);
-    const addr = parsed.address || parsed.patientAddress || parsed.walletAddress || parsed.wallet;
-    if (addr && /^0x[a-fA-F0-9]{40}$/i.test(addr)) {
-      return addr.trim();
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.type && parsed.type !== 'MEDICHAIN_PATIENT' && parsed.type !== 'medichain_health_id') {
+        return { error: 'This is not a valid MediChain Patient QR.' };
+      }
+      const pid = parsed.patientId || parsed.id;
+      if (pid && /^MC-PAT-\d{4}-[A-Z0-9]{6}$/i.test(pid.trim())) {
+        return { patientId: pid.trim(), raw: trimmed };
+      }
+      const addr = parsed.address || parsed.patientAddress || parsed.walletAddress;
+      if (addr && /^0x[a-fA-F0-9]{40}$/i.test(addr.trim())) {
+        return { walletAddress: addr.trim(), raw: trimmed };
+      }
+      if (parsed.patientId) {
+        return { patientId: parsed.patientId.trim(), raw: trimmed };
+      }
     }
   } catch {
-    /* not JSON */
+    /* Not JSON */
   }
 
-  // 2. Try raw 0x address match
-  const rawMatch = trimmed.match(/0x[a-fA-F0-9]{40}/i);
-  if (rawMatch) {
-    return rawMatch[0].trim();
+  // 2. Try raw Patient ID pattern (e.g. MC-PAT-2026-000001)
+  const patMatch = trimmed.match(/MC-PAT-\d{4}-[A-Z0-9]{6}/i);
+  if (patMatch) {
+    return { patientId: patMatch[0].trim(), raw: trimmed };
   }
 
-  return null;
+  // 3. Try raw 0x Ethereum address match
+  const addrMatch = trimmed.match(/0x[a-fA-F0-9]{40}/i);
+  if (addrMatch) {
+    return { walletAddress: addrMatch[0].trim(), raw: trimmed };
+  }
+
+  // 4. If arbitrary URL or unrecognized format
+  return { error: 'This is not a valid MediChain Patient QR.' };
 }
 
 const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
@@ -47,7 +66,7 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
   const [status, setStatus]               = useState('idle'); // 'idle' | 'requesting' | 'active' | 'verifying' | 'success' | 'error'
   const [facingMode, setFacingMode]       = useState('environment'); // 'environment' (rear) | 'user' (front)
   const [errorMessage, setErrorMessage]   = useState('');
-  const [manualAddress, setManualAddress] = useState('');
+  const [manualInput, setManualInput]     = useState('');
   const [verifiedPatient, setVerifiedPatient] = useState(null);
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
 
@@ -86,7 +105,6 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
   // Initialize ZXing Reader instance once
   useEffect(() => {
     readerRef.current = new BrowserQRCodeReader();
-    // Check if device has multiple video inputs
     if (navigator.mediaDevices?.enumerateDevices) {
       navigator.mediaDevices.enumerateDevices().then((devices) => {
         const videoInputs = devices.filter((d) => d.kind === 'videoinput');
@@ -99,40 +117,49 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
     };
   }, [stopCamera]);
 
-  // --- Perform Patient Verification / Lookup ---
-  const verifyAndLookup = useCallback(async (address) => {
+  // --- Perform Patient Verification / Lookup via Unified Backend Resolver ---
+  const verifyAndLookup = useCallback(async (identifier, rawPayload = '') => {
     stopCamera();
     setStatus('verifying');
     setErrorMessage('');
 
     try {
-      const { data } = await api.get(`/doctor/patient/${address}`);
+      // Unified backend resolver accepts patientId, walletAddress, or structured qrData
+      const { data } = await api.post('/doctor/resolve-patient', {
+        patientId: identifier,
+        qrData: rawPayload
+      });
+
+      if (!data.success && !data.patient) {
+        throw new Error(data.error || 'Patient ID not found.');
+      }
+
       const patientSummary = data.patient || data;
       setVerifiedPatient(patientSummary);
       setStatus('success');
 
-      // Dispatch callbacks to both onScan and onScanSuccess
+      // Dispatch callbacks to parent dashboard
+      const primaryKey = patientSummary.walletAddress || patientSummary.patientId || identifier;
       setTimeout(() => {
         if (typeof onScan === 'function') {
-          onScan(address, patientSummary);
+          onScan(primaryKey, patientSummary);
         }
         if (typeof onScanSuccess === 'function') {
-          onScanSuccess(address, patientSummary);
+          onScanSuccess(primaryKey, patientSummary);
         }
       }, 1000);
 
     } catch (err) {
-      console.warn('[QRScanner] Patient lookup note:', err);
-      // Even if off-chain profile isn't populated yet, pass the valid address
-      setStatus('success');
-      setVerifiedPatient({ name: 'Patient (Verified On-Chain)', walletAddress: address });
+      console.warn('[QRScanner] Patient lookup error:', err);
+      const errMsg = err.response?.data?.error || err.message || 'Patient ID not found.';
+      setStatus('error');
+      setErrorMessage(errMsg);
 
-      setTimeout(() => {
-        if (typeof onScan === 'function') onScan(address);
-        if (typeof onScanSuccess === 'function') onScanSuccess(address);
-      }, 1000);
+      if (typeof onScanError === 'function') {
+        onScanError(err);
+      }
     }
-  }, [stopCamera, onScan, onScanSuccess]);
+  }, [stopCamera, onScan, onScanSuccess, onScanError]);
 
   // --- Start Camera & Frame Analysis ---
   const startCamera = useCallback(async () => {
@@ -149,11 +176,11 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
     }
 
     try {
-      // 5-second black-screen watchdog timer
+      // 6-second black-screen watchdog timer
       timeoutTimerRef.current = setTimeout(() => {
         if (videoRef.current && (videoRef.current.videoWidth === 0 || videoRef.current.paused)) {
           setStatus('error');
-          setErrorMessage('Camera could not be started. Check camera permissions or enter patient address manually.');
+          setErrorMessage('Camera could not be started. Check camera permissions or enter Patient ID manually.');
           stopCamera();
         }
       }, 6000);
@@ -177,7 +204,7 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
       videoRef.current.setAttribute('autoplay', 'true');
       videoRef.current.setAttribute('muted', 'true');
 
-      // Wait for video to be ready and playing
+      // Wait for video to play
       await videoRef.current.play();
 
       if (timeoutTimerRef.current) {
@@ -193,7 +220,7 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
       const scanLoop = async (time) => {
         if (!isScanningRef.current) return;
 
-        // Throttle decoding to ~12 FPS (every 80ms) for high responsiveness without burning CPU
+        // Throttle decoding to ~12 FPS (every 80ms)
         if (time - lastScanTime > 80 && videoRef.current && videoRef.current.readyState >= 2) {
           lastScanTime = time;
           try {
@@ -201,19 +228,20 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
               const result = await readerRef.current.decodeFromVideoElement(videoRef.current);
               if (result && result.getText()) {
                 const text = result.getText();
-                const address = extractPatientAddress(text);
+                const identity = extractPatientIdentity(text);
 
-                if (address) {
+                if (identity && !identity.error) {
                   isScanningRef.current = false;
-                  verifyAndLookup(address);
+                  const key = identity.patientId || identity.walletAddress;
+                  verifyAndLookup(key, identity.raw || text);
                   return;
                 } else {
-                  setErrorMessage('Scanned QR is not a valid MediChain Health ID');
+                  setErrorMessage(identity?.error || 'This is not a valid MediChain Patient QR.');
                 }
               }
             }
           } catch {
-            // Frame did not contain a QR code in this pass — continue loop
+            // Frame did not contain a readable QR code in this pass — continue loop
           }
         }
 
@@ -260,12 +288,12 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
   // Manual lookup handler
   const handleManualSubmit = (e) => {
     e.preventDefault();
-    const cleanAddr = manualAddress.trim();
-    if (!/^0x[a-fA-F0-9]{40}$/i.test(cleanAddr)) {
-      setErrorMessage('Please enter a valid Ethereum address (0x + 40 hex chars)');
+    const clean = manualInput.trim();
+    if (!clean) {
+      setErrorMessage('Please enter a valid Patient ID (e.g. MC-PAT-2026-000001) or Ethereum address.');
       return;
     }
-    verifyAndLookup(cleanAddr);
+    verifyAndLookup(clean);
   };
 
   return (
@@ -282,7 +310,7 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
           }`}
         >
           <Camera className="w-4 h-4" />
-          Scan QR Code
+          Scan Patient QR
         </button>
         <button
           type="button"
@@ -309,12 +337,12 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-hc-text mb-1">Ready to Scan Patient QR</h3>
                 <p className="text-xs text-hc-text-muted max-w-xs mx-auto mb-6">
-                  Point your camera at the patient's digital or printed MediChain Health ID badge.
+                  Point your camera at the patient's MediChain Health ID QR badge.
                 </p>
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="hc-btn hc-btn-primary w-full justify-center min-h-[44px] shadow-hc-card"
+                  className="hc-btn hc-btn-primary w-full justify-center min-h-[44px] shadow-hc-card font-bold text-xs"
                   id="start-qr-scanner-btn"
                 >
                   <Camera className="w-4 h-4" />
@@ -383,22 +411,39 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
                 {/* Bottom Instruction Bar */}
                 <div className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-xl bg-black/70 backdrop-blur-md text-center">
                   <p className="text-[11px] font-semibold text-white">
-                    {status === 'verifying' ? 'Verifying patient on blockchain...' : 'Align QR inside frame'}
+                    {status === 'verifying' ? 'Verifying patient identity...' : 'Align MediChain Patient QR inside frame'}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* 4. SUCCESS BADGE */}
+            {/* 4. SUCCESS SCREEN */}
             {status === 'success' && verifiedPatient && (
-              <div className="w-full p-4 rounded-xl bg-hc-success-soft border border-hc-success/30 flex items-center gap-3 animate-slide-up">
-                <div className="w-10 h-10 rounded-full bg-hc-success flex items-center justify-center text-white flex-shrink-0 shadow-sm">
+              <div className="w-full p-4 rounded-2xl bg-hc-success-soft border border-hc-success/30 flex items-start gap-3 animate-slide-up">
+                <div className="w-10 h-10 rounded-full bg-hc-success flex items-center justify-center text-white flex-shrink-0 shadow-sm mt-0.5">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-hc-success">Patient Verified</p>
-                  <p className="text-sm font-bold text-hc-text truncate">{verifiedPatient.name || 'Patient Verified'}</p>
-                  <p className="text-[10px] font-mono text-hc-text-muted truncate">{verifiedPatient.walletAddress}</p>
+                  <div className="flex items-center gap-1.5 text-hc-success text-xs font-bold mb-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>✓ Patient Identified</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-hc-text truncate">{verifiedPatient.name || 'Verified Patient'}</h4>
+                  <div className="mt-1 space-y-0.5">
+                    <p className="text-[11px] font-mono font-bold text-hc-teal">
+                      Patient ID: {verifiedPatient.patientId || 'Verified'}
+                    </p>
+                    {verifiedPatient.walletAddress && (
+                      <p className="text-[10px] font-mono text-hc-text-muted truncate">
+                        Wallet: {verifiedPatient.walletAddress}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-hc-success/20 text-[10px] text-hc-text-muted">
+                    <span>Blood: <strong className="text-hc-text">{verifiedPatient.bloodGroup || 'O+'}</strong></span>
+                    <span>&bull;</span>
+                    <span>Records: <strong className="text-hc-text">{verifiedPatient.recordCount ?? 0} active</strong></span>
+                  </div>
                 </div>
               </div>
             )}
@@ -410,8 +455,8 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
                   <AlertCircle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-hc-text">Camera Access Issue</h4>
-                  <p className="text-xs text-hc-danger mt-1 max-w-xs mx-auto leading-relaxed">{errorMessage}</p>
+                  <h4 className="text-sm font-bold text-hc-text">Scan / Lookup Issue</h4>
+                  <p className="text-xs text-hc-danger mt-1 max-w-xs mx-auto leading-relaxed font-medium">{errorMessage}</p>
                 </div>
                 <div className="flex gap-2 justify-center pt-2">
                   <button
@@ -419,14 +464,14 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
                     onClick={startCamera}
                     className="hc-btn hc-btn-primary hc-btn-sm"
                   >
-                    Try Again
+                    Scan Again
                   </button>
                   <button
                     type="button"
                     onClick={() => { setActiveTab('manual'); setStatus('idle'); }}
                     className="hc-btn hc-btn-secondary hc-btn-sm"
                   >
-                    Enter Manually
+                    Manual Entry
                   </button>
                 </div>
               </div>
@@ -437,16 +482,19 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
           <form onSubmit={handleManualSubmit} className="w-full space-y-4 py-2">
             <div>
               <label className="block text-[10px] uppercase font-bold text-hc-text-muted tracking-wider mb-1.5">
-                Patient Ethereum Address
+                Patient ID or Ethereum Wallet Address
               </label>
               <input
                 type="text"
-                value={manualAddress}
-                onChange={(e) => setManualAddress(e.target.value)}
-                placeholder="0x..."
+                value={manualInput}
+                onChange={(e) => setManualInput(e.target.value)}
+                placeholder="e.g. MC-PAT-2026-000001 or 0x..."
                 className="hc-input font-mono text-xs min-h-[44px]"
                 required
               />
+              <span className="text-[10px] text-hc-text-muted mt-1 block">
+                Enter the unique MediChain Patient ID (MC-PAT-YYYY-XXXXXX) or wallet address.
+              </span>
             </div>
             {errorMessage && (
               <p className="text-xs text-hc-danger font-semibold bg-hc-danger-soft p-2.5 rounded-lg border border-hc-danger/20">
@@ -455,10 +503,10 @@ const QRScanner = ({ onScan, onScanSuccess, onScanError }) => {
             )}
             <button
               type="submit"
-              disabled={!manualAddress || status === 'verifying'}
-              className="hc-btn hc-btn-primary w-full justify-center min-h-[44px]"
+              disabled={!manualInput.trim() || status === 'verifying'}
+              className="hc-btn hc-btn-primary w-full justify-center min-h-[44px] font-bold text-xs"
             >
-              {status === 'verifying' ? 'Verifying...' : 'Look Up Patient'}
+              {status === 'verifying' ? 'Verifying...' : 'Find Patient'}
             </button>
           </form>
         )}

@@ -9,6 +9,7 @@ import { formatAddress }     from '../utils/web3';
 import { getRecordTypeImage, DOCTOR_IMAGES, MEDICINE_IMAGES } from '../utils/images';
 import DashboardLayout       from '../components/DashboardLayout';
 import WalletConnectionModal from '../components/WalletConnectionModal';
+import QRHealthID            from '../components/QRHealthID';
 import {
   FileText, Lock, Brain, Activity, QrCode,
   ChevronRight, Home, User, BarChart3,
@@ -167,6 +168,8 @@ export default function PatientDashboard() {
   const { isConnected, address } = useWalletContext();
 
   const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [showQRModal, setShowQRModal]         = useState(false);
+  const [copiedId, setCopiedId]               = useState(false);
   const [cardDismissed, setCardDismissed]     = useState(
     () => localStorage.getItem(DISMISS_KEY) === 'true'
   );
@@ -307,6 +310,57 @@ export default function PatientDashboard() {
             </Link>
           ))}
 
+          {/* 🪪 PATIENT HEALTH ID WIDGET */}
+          <div className="hc-card p-4 bg-gradient-to-br from-hc-surface to-hc-bg-alt border border-hc-border space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <QrCode className="w-4 h-4 text-hc-teal" />
+                <span className="text-xs font-bold text-hc-text uppercase tracking-wider">MediChain Health ID</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-hc-teal bg-hc-teal-soft px-2 py-0.5 rounded-full">
+                Universal ID
+              </span>
+            </div>
+
+            <div className="bg-hc-bg-dark/50 border border-hc-border rounded-xl p-3 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[9px] uppercase font-bold text-hc-text-muted block">Patient ID</span>
+                <span className="text-xs sm:text-sm font-mono font-bold text-hc-text truncate block">
+                  {user?.patientId || 'MC-PAT-2026-000001'}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(user?.patientId || 'MC-PAT-2026-000001');
+                  setCopiedId(true);
+                  setTimeout(() => setCopiedId(false), 2500);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-hc-surface border border-hc-border text-[11px] font-bold text-hc-text hover:text-hc-teal transition-colors flex-shrink-0"
+              >
+                {copiedId ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+
+            <p className="text-[11px] text-hc-text-muted leading-relaxed">
+              Your secure identity for authorized healthcare access.
+            </p>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setShowQRModal(true)}
+                className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-hc-blue to-hc-teal text-white font-bold text-xs shadow-xs hover:opacity-95 text-center"
+              >
+                Generate Patient QR
+              </button>
+              <Link
+                to="/qr-id"
+                className="py-2 px-3 rounded-xl bg-hc-surface border border-hc-border text-hc-text text-xs font-bold hover:bg-hc-bg-alt text-center"
+              >
+                View Card
+              </Link>
+            </div>
+          </div>
+
           {/* Real Clinical Care Preview Card */}
           <div className="hc-card p-4 bg-gradient-to-br from-hc-surface to-hc-bg-alt border border-hc-border space-y-3">
             <div className="flex items-center gap-2">
@@ -411,6 +465,28 @@ export default function PatientDashboard() {
           View
         </Link>
       </div>
+
+      {/* ── Wallet Connection Modal ─────────────────────────────────── */}
+      <WalletConnectionModal
+        isOpen={walletModalOpen}
+        onClose={() => setWalletModalOpen(false)}
+      />
+
+      {/* ── Patient Health QR Modal ─────────────────────────────────── */}
+      {showQRModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in print:p-0 print:bg-white">
+          <div className="relative w-full max-w-md bg-medichain-bg-dark border border-medichain-border rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto print:max-w-none print:border-none print:p-0 print:bg-transparent">
+            <button
+              onClick={() => setShowQRModal(false)}
+              className="absolute top-4 right-4 text-text-secondary hover:text-white p-2 rounded-xl bg-medichain-surface border border-medichain-border transition-colors print:hidden"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <QRHealthID user={user} onClose={() => setShowQRModal(false)} />
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

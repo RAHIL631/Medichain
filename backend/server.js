@@ -209,6 +209,7 @@ const mountApi = (prefix) => {
   app.use(`${prefix}/auth`,         authRoutes);
   app.use(`${prefix}/account`,      accountRoutes);
   app.use(`${prefix}/patient`,      patientRoutes);
+  app.use(`${prefix}/patients`,     doctorRoutes);
   app.use(`${prefix}/doctor`,       doctorRoutes);
   // /api/ai proxies to the Python Flask microservice on port 5001
   app.use(`${prefix}/ai`,           aiRoutes);

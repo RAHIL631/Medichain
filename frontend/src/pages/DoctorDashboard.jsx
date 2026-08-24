@@ -436,6 +436,14 @@ const DoctorDashboard = () => {
                                 </div>
 
                                 <div className="divide-y divide-hc-border-light pt-2 border-t border-hc-border-light text-xs">
+                                    {patientData.patientId && (
+                                        <div className="flex justify-between py-2">
+                                            <span className="text-hc-text-muted">Patient ID</span>
+                                            <span className="font-mono font-bold text-hc-teal text-xs">
+                                                {patientData.patientId}
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between py-2">
                                         <span className="text-hc-text-muted">Blood Group</span>
                                         <span className={`font-bold px-2 py-0.5 rounded ${isNonOBlood ? 'bg-hc-danger-soft text-hc-danger' : 'bg-hc-blue-soft text-hc-blue'}`}>

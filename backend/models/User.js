@@ -91,6 +91,19 @@ const UserSchema = new mongoose.Schema({
     default: [],
   },
 
+  // ── Unique Patient Identifier (MC-PAT-YYYY-XXXXXX) ─────────────────────────
+  patientId: {
+    type:   String,
+    unique: true,
+    sparse: true,
+    trim:   true,
+    index:  true,
+    validate: {
+      validator: (v) => !v || /^MC-PAT-\d{4}-[A-Z0-9]{6}$/i.test(v),
+      message:   'Patient ID must follow format MC-PAT-YYYY-XXXXXX (e.g. MC-PAT-2026-000001)',
+    },
+  },
+
   dateOfBirth: {
     type: Date,
   },
@@ -206,6 +219,25 @@ const UserSchema = new mongoose.Schema({
 // Mongoose duplicate-index warnings — so only define the extras here.
 UserSchema.index({ role: 1 });
 
+// ── Pre-save Hook: auto-generate unique Patient ID for patients ───────────────
+function createPatientIdString() {
+  const year = new Date().getFullYear();
+  const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+  return `MC-PAT-${year}-${randomSuffix}`;
+}
+
+UserSchema.pre('save', async function () {
+  if (this.role === 'patient' && !this.patientId) {
+    let candidate = createPatientIdString();
+    let isTaken = await mongoose.models.User?.findOne({ patientId: candidate });
+    while (isTaken) {
+      candidate = createPatientIdString();
+      isTaken = await mongoose.models.User?.findOne({ patientId: candidate });
+    }
+    this.patientId = candidate;
+  }
+});
+
 // ── Pre-save Hook: hash password when it is new or modified ───────────────────
 UserSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
@@ -275,6 +307,32 @@ UserSchema.methods.toJSON = function () {
 // Usage:  const user = await User.findByWallet('0xAbC...');
 UserSchema.statics.findByWallet = function (walletAddress) {
   return this.findOne({ walletAddress: walletAddress.toLowerCase() });
+};
+
+// ── Static Method: findByPatientId ───────────────────────────────────────────
+// Usage:  const user = await User.findByPatientId('MC-PAT-2026-000001');
+UserSchema.statics.findByPatientId = function (patientId) {
+  if (!patientId || typeof patientId !== 'string') return null;
+  return this.findOne({
+    patientId: { $regex: new RegExp(`^${patientId.trim()}$`, 'i') },
+    role: 'patient',
+  });
+};
+
+// ── Static Method: ensurePatientId (Migration helper for older users) ─────────
+UserSchema.statics.ensurePatientId = async function (user) {
+  if (!user || user.role !== 'patient' || user.patientId) return user?.patientId;
+  
+  let candidate = createPatientIdString();
+  let isTaken = await this.findOne({ patientId: candidate });
+  while (isTaken) {
+    candidate = createPatientIdString();
+    isTaken = await this.findOne({ patientId: candidate });
+  }
+  
+  await this.findByIdAndUpdate(user._id, { patientId: candidate });
+  user.patientId = candidate;
+  return candidate;
 };
 
 module.exports = mongoose.model('User', UserSchema);
