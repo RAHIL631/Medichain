@@ -446,15 +446,12 @@ const DoctorDashboard = () => {
                         {scanning && (
                             <div className="relative rounded-xl overflow-hidden border-2 border-hc-blue">
                                 <QRScanner 
+                                    autoStart={true}
                                     onScan={handleScanSuccess} 
+                                    onScanSuccess={handleScanSuccess}
                                     onError={(err) => console.error(err)} 
+                                    onClose={() => setScanning(false)}
                                 />
-                                <button 
-                                    onClick={() => setScanning(false)} 
-                                    className="absolute top-2 right-2 px-3 py-1 bg-black/70 text-white rounded-full text-xs font-semibold hover:bg-black"
-                                >
-                                    Cancel
-                                </button>
                             </div>
                         )}
 

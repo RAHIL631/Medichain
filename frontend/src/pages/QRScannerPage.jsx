@@ -55,7 +55,12 @@ const QRScannerPage = () => {
                 </div>
 
                 {!scannedAddress ? (
-                    <QRScanner onScanSuccess={handleScanSuccess} onScanError={(err) => setError('Camera error: ' + err.message)} />
+                    <QRScanner 
+                        onScan={handleScanSuccess}
+                        onScanSuccess={handleScanSuccess} 
+                        onScanError={(err) => setError('Camera error: ' + (err.message || err))} 
+                        onError={(err) => setError('Camera error: ' + (err.message || err))}
+                    />
                 ) : (
                     <div className="space-y-6 animate-fadeIn">
                         <GlassCard glowBorder={true} className="border-accent-cyan/30">
