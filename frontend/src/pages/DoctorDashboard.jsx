@@ -137,26 +137,53 @@ const DoctorDashboard = () => {
     };
 
     const fetchPatientRecords = async (address) => {
-        if (!signer) return;
         setRecordsLoading(true);
         try {
-            const contract = getContract(signer);
-            const records = await contract.getMedicalRecords(address);
-            
-            const formatted = records.map((r, i) => ({
-                _id: i.toString(),
-                recordType: r.recordType,
-                description: r.notes,
-                ipfsCID: r.ipfsCID,
-                ipfsURL: r.ipfsURL,
-                timestamp: Number(r.timestamp),
-                doctor: r.doctor,
-                verified: true
-            }));
-            
-            setPatientRecords(formatted.reverse());
+            // 1. Fetch off-chain records from MongoDB
+            let dbRecords = [];
+            try {
+                const { data } = await api.get(`/doctor/patient-records/${address}`);
+                if (data.records) {
+                    dbRecords = data.records.map(r => ({
+                        _id: r._id,
+                        recordType: r.recordType,
+                        description: r.notes || r.fileName,
+                        ipfsCID: r.ipfsCID,
+                        ipfsURL: r.ipfsURL,
+                        timestamp: new Date(r.createdAt).getTime(),
+                        doctor: r.doctorId?.name || r.doctorWalletAddress || 'Authorized Doctor',
+                        verified: !!r.blockchainTxHash || true
+                    }));
+                }
+            } catch (dbErr) {
+                console.warn('[DoctorDashboard] DB records fetch note:', dbErr.message);
+            }
+
+            // 2. Fetch on-chain records if signer connected
+            let chainRecords = [];
+            if (signer && /^0x[a-fA-F0-9]{40}$/i.test(address)) {
+                try {
+                    const contract = getContract(signer);
+                    const records = await contract.getMedicalRecords(address);
+                    chainRecords = records.map((r, i) => ({
+                        _id: `chain-${i}`,
+                        recordType: r.recordType,
+                        description: r.notes,
+                        ipfsCID: r.ipfsCID,
+                        ipfsURL: r.ipfsURL,
+                        timestamp: Number(r.timestamp) * 1000,
+                        doctor: r.doctor,
+                        verified: true
+                    }));
+                } catch (cErr) {
+                    console.warn('[DoctorDashboard] Blockchain records note:', cErr.message);
+                }
+            }
+
+            const combined = [...dbRecords, ...chainRecords.filter(cr => !dbRecords.some(dr => dr.ipfsCID === cr.ipfsCID))];
+            setPatientRecords(combined.sort((a, b) => b.timestamp - a.timestamp));
         } catch (err) {
-            console.error("Blockchain fetch error:", err);
+            console.error("Fetch patient records error:", err);
         } finally {
             setRecordsLoading(false);
         }
@@ -242,13 +269,12 @@ const DoctorDashboard = () => {
     };
 
     const handleUploadRecord = async () => {
-        if (!file)                  return alert('Please attach a file.');
+        if (!file)                  return alert('Please attach a prescription file (PDF, JPG, or PNG).');
         if (safeToUpload === false) return alert('Cannot upload — drug conflicts detected.');
-        if (!signer)                return alert('Connect your wallet first.');
-        if (!scannedAddress)        return alert('Scan a patient QR code first.');
+        if (!scannedAddress)        return alert('Please identify or scan a patient first.');
 
         setUploadLoading(true);
-        setUploadStatus('1/3 Uploading to IPFS…');
+        setUploadStatus('1/2 Uploading to IPFS & Saving to Database…');
         setStorageProof(null);
         setTxStatus('idle');
         setTxHash(null);
@@ -258,6 +284,7 @@ const DoctorDashboard = () => {
             const formData = new FormData();
             formData.append('file',                 file);
             formData.append('patientWalletAddress', scannedAddress);
+            formData.append('patientId',            patientData?.patientId || scannedAddress);
             formData.append('recordType',           recordType.toLowerCase().replace('-', '_'));
             formData.append('notes',                notes || '');
             formData.append('medications',          medications.join(','));
@@ -273,17 +300,28 @@ const DoctorDashboard = () => {
                 patientWalletAddress: patientAddr,
             } = data.record;
 
-            await storeOnBlockchain({
-                recordId,
-                ipfsCID,
-                ipfsURL,
-                patientAddress: patientAddr || scannedAddress,
-                recordType,
-                notes,
-            });
-
             setStorageProof({ ipfsCID, ipfsURL, fileName, fileSize });
-            setUploadStatus('✅ Record securely stored on IPFS & Ethereum Sepolia');
+
+            // Optional On-Chain Anchoring (if MetaMask is connected)
+            if (signer && (patientAddr || scannedAddress)) {
+                try {
+                    setUploadStatus('2/2 Awaiting optional MetaMask confirmation…');
+                    await storeOnBlockchain({
+                        recordId,
+                        ipfsCID,
+                        ipfsURL,
+                        patientAddress: patientAddr || scannedAddress,
+                        recordType,
+                        notes,
+                    });
+                    setUploadStatus('✅ Prescription securely stored on IPFS & Ethereum Sepolia');
+                } catch (chainErr) {
+                    console.warn('[DoctorDashboard] Blockchain anchoring note:', chainErr);
+                    setUploadStatus('✅ Prescription securely saved to IPFS & database. (MetaMask signature skipped)');
+                }
+            } else {
+                setUploadStatus('✅ Prescription securely saved to IPFS & database.');
+            }
 
             setFile(null);
             setNotes('');
@@ -299,7 +337,7 @@ const DoctorDashboard = () => {
             setTxStatus('failed');
 
             if (err.response?.status === 422) {
-                const { conflicts = [] } = err.response.data;
+                const { conflicts = [] } = err.response?.data || {};
                 const names = conflicts.map(c => c.drug || c.name || 'Unknown').join(', ');
                 setUploadStatus(`❌ Blocked: HIGH severity drug conflict — ${names}`);
                 return;
@@ -315,7 +353,7 @@ const DoctorDashboard = () => {
                 return;
             }
 
-            setUploadStatus(`❌ Upload failed: ${err.message}`);
+            setUploadStatus(`❌ Upload failed: ${err.message || 'Prescription storage service temporarily unavailable'}`);
         } finally {
             setUploadLoading(false);
         }

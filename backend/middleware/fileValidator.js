@@ -78,9 +78,12 @@ const validateFileMagicBytes = (req, res, next) => {
   }
 
   // Verify that the magic bytes match the declared MIME type
-  // (e.g. reject a JPEG disguised as application/pdf)
-  const normalised = mimetype.toLowerCase().trim();
-  if (match.mime !== normalised && !(normalised === 'image/jpg' && match.mime === 'image/jpeg')) {
+  // (e.g. reject an executable disguised as application/pdf)
+  const normalised = (mimetype || '').toLowerCase().trim();
+  const isJpegMatch = (normalised === 'image/jpeg' || normalised === 'image/jpg' || normalised === 'image/pjpeg') && 
+                      (match.mime === 'image/jpeg' || match.mime === 'image/jpg');
+
+  if (match.mime !== normalised && !isJpegMatch) {
     return res.status(400).json({
       error: `File content mismatch: declared MIME type "${mimetype}" does not match actual file content.`,
     });

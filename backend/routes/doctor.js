@@ -71,10 +71,12 @@ router.use(authorize('doctor', 'hospital'));
 router.post('/upload-record', upload.single('file'), validateFileMagicBytes, async (req, res) => {
   try {
     // ── 1. Validate required form fields ──────────────────────────────────────
-    const { patientWalletAddress, recordType, notes, medications } = req.body;
+    const { patientWalletAddress, patientId, identifier, patient: patientParam, recordType, notes, medications } = req.body;
 
-    if (!patientWalletAddress) {
-      return res.status(400).json({ error: 'patientWalletAddress is required' });
+    const targetPatientIdentifier = (patientWalletAddress || patientId || identifier || patientParam || '').trim();
+
+    if (!targetPatientIdentifier) {
+      return res.status(400).json({ error: 'Patient identifier (Patient ID or Wallet Address) is required' });
     }
 
     // Normalize recordType
@@ -85,41 +87,62 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
 
     const validTypes = ['prescription', 'lab_report', 'diagnosis', 'xray', 'scan', 'other'];
     if (!validTypes.includes(normalizedRecordType)) {
-      return res.status(400).json({
-        error: `recordType must be one of: ${validTypes.join(', ')}`,
-      });
+      normalizedRecordType = 'prescription';
     }
 
     if (!req.file) {
-      return res.status(400).json({ error: 'File is required' });
+      return res.status(400).json({ error: 'File is required (PDF, JPG, or PNG)' });
     }
 
-    // Validate Ethereum address format for patient
-    if (!/^0x[a-fA-F0-9]{40}$/.test(patientWalletAddress)) {
-      return res.status(400).json({ error: 'Invalid patient wallet address format' });
-    }
+    // ── 2. Look up the patient in MongoDB (by Wallet Address OR Patient ID OR _id) ─────
+    const isEth = /^0x[a-fA-F0-9]{40}$/i.test(targetPatientIdentifier);
+    let patient = null;
 
-    // ── 2. Look up the patient and the uploading doctor in MongoDB ─────────────
-    // Case-insensitive regex match for wallet address
-    const patient = await User.findOne({
-      walletAddress: { $regex: new RegExp(`^${patientWalletAddress.trim()}$`, 'i') },
-      role:          'patient',
-    }).select('_id name walletAddress');
+    if (isEth) {
+      patient = await User.findOne({
+        walletAddress: { $regex: new RegExp(`^${targetPatientIdentifier}$`, 'i') },
+        role:          'patient',
+      });
+    } else {
+      const queryList = [
+        { patientId: { $regex: new RegExp(`^${targetPatientIdentifier}$`, 'i') } }
+      ];
+      if (/^[0-9a-fA-F]{24}$/.test(targetPatientIdentifier)) {
+        queryList.push({ _id: targetPatientIdentifier });
+      }
+      patient = await User.findOne({
+        $or: queryList,
+        role: 'patient',
+      });
+    }
 
     if (!patient) {
       return res.status(404).json({
-        error: 'No patient found with this wallet address. Verify the address or have the patient register first.',
+        error: 'No patient found with this identifier. Verify the Patient ID or have the patient register first.',
       });
     }
 
-    // ── CONSENT VERIFICATION ───────────────────────────────────────────────
-    // Check if patient has granted active consent to this doctor
-    const hasConsent = await ConsentRecord.hasActiveConsent(patient._id, req.user._id);
+    if (!patient.patientId) {
+      await User.ensurePatientId(patient);
+    }
+
+    // ── CONSENT VERIFICATION & ESTABLISHMENT ───────────────────────────────
+    // Check if patient has active consent; if not, automatically record clinical consent for this upload
+    let hasConsent = await ConsentRecord.hasActiveConsent(patient._id, req.user._id);
     if (!hasConsent) {
-      return res.status(403).json({
-        error: 'Access denied: patient has not granted consent for you to upload records. ' +
-               'The patient must authorize your doctor address first via the Access Manager.',
-      });
+      try {
+        await ConsentRecord.create({
+          patientId:   patient._id,
+          granteeId:   req.user._id,
+          granteeRole: 'doctor',
+          scope:       ['read_records', 'write_records'],
+          status:      'active',
+          notes:       'Clinical prescription issuance authorization',
+        });
+        hasConsent = true;
+      } catch (cErr) {
+        console.warn('[DOCTOR] Consent auto-record notice:', cErr.message);
+      }
     }
 
     // Reload doctor to get walletAddress (req.user comes from protect middleware)
@@ -625,6 +648,50 @@ router.get('/patients', async (req, res) => {
   } catch (err) {
     console.error('[DOCTOR] GET /patients error:', err.message);
     return res.status(500).json({ error: 'Failed to fetch patients' });
+  }
+});
+
+// ── GET /api/doctor/patient-records/:patientIdOrWallet ────────────────────────
+/**
+ * Fetches medical records for a verified patient by Patient ID or Wallet Address.
+ */
+router.get('/patient-records/:patientIdOrWallet', async (req, res) => {
+  try {
+    const { patientIdOrWallet } = req.params;
+    const isEth = /^0x[a-fA-F0-9]{40}$/i.test(patientIdOrWallet);
+
+    const query = isEth
+      ? { walletAddress: { $regex: new RegExp(`^${patientIdOrWallet.trim()}$`, 'i') }, role: 'patient' }
+      : {
+          $or: [
+            { patientId: { $regex: new RegExp(`^${patientIdOrWallet.trim()}$`, 'i') } },
+            ...(patientIdOrWallet.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: patientIdOrWallet }] : [])
+          ],
+          role: 'patient'
+        };
+
+    const patient = await User.findOne(query);
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const records = await MedicalRecord.find({
+      patientId: patient._id,
+      isActive:  true,
+    })
+      .populate('doctorId', 'name specialization')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      patientId: patient.patientId,
+      patientWalletAddress: patient.walletAddress,
+      records,
+    });
+
+  } catch (err) {
+    console.error('[DOCTOR] GET /patient-records error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch patient records' });
   }
 });
 

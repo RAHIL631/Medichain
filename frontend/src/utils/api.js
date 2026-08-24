@@ -62,7 +62,11 @@ const handleResponseError = (error) => {
     error.message ||
     'An unexpected error occurred';
 
-  return Promise.reject(new Error(message));
+  const customError = new Error(message);
+  customError.response = error.response;
+  customError.status = error.response?.status;
+  customError.code = error.code;
+  return Promise.reject(customError);
 };
 
 api.interceptors.response.use((r) => r, handleResponseError);

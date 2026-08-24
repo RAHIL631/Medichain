@@ -49,7 +49,7 @@ const UploadPrescription = () => {
         setCdssAnalysis(null);
 
         if (isDoctorOrHospital && !patientAddress) {
-            return setError('Patient wallet address is required for doctor uploads');
+            return setError('Patient ID or wallet address is required for doctor uploads');
         }
         if (!file) {
             return setError('Please choose a prescription file (PDF, JPG, or PNG)');
@@ -70,6 +70,7 @@ const UploadPrescription = () => {
             let endpoint = '/doctor/upload-record';
             if (isDoctorOrHospital) {
                 formData.append('patientWalletAddress', patientAddress.trim());
+                formData.append('patientId', patientAddress.trim());
             } else {
                 endpoint = '/patient/upload-record';
             }
