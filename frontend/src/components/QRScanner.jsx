@@ -12,113 +12,114 @@ import {
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// validateMediChainPatientQR — canonical unified QR payload validator
+// extractPatientIdFromQR — single canonical QR extractor & normalizer
 //
-// Supported QR payload formats (in priority order):
-//   1. Plain Patient ID string:   "MC-PAT-2026-AB12CD"           ← PRIMARY (new)
-//   2. JSON structured payload:   {"type":"MEDICHAIN_PATIENT","patientId":"MC-PAT-..."}
-//   3. URL with query param:      https://.../...?patient=MC-PAT-...
-//   4. Raw Ethereum wallet:       "0x1234...abcd"
-//   5. MongoDB ObjectId:          "507f1f77bcf86cd799439011"
+// Extracts the exact Patient ID / identifier from any supported MediChain QR format:
+//   1. Plain string:       "MC-PAT-2026-000001", "MC-123456", "MC-..."
+//   2. Delimited string:   "MEDICHAIN|1|MC-PAT-2026-000001"
+//   3. JSON structured:    {"type":"MEDICHAIN_PATIENT","patientId":"MC-PAT-..."}
+//   4. URL parameter:      https://.../?patient=MC-PAT-... or /patient/MC-PAT-...
+//   5. Raw Ethereum addr:  "0x1234...abcd"
+//   6. MongoDB ObjectId:   "507f1f77bcf86cd799439011"
 //
-// Returns:
-//   { valid: true,  patientId: "MC-PAT-..." }
-//   { valid: true,  walletAddress: "0x..." }
-//   { valid: false, reason: "<human readable reason>" }
+// Cleans whitespace, \r, \n, and invisible characters.
+// Returns the exact string to be queried against the database, or null if invalid.
 // ─────────────────────────────────────────────────────────────────────────────
-export function validateMediChainPatientQR(rawText) {
-  if (!rawText || typeof rawText !== 'string') {
-    return { valid: false, reason: 'Empty QR payload received.' };
+export function extractPatientIdFromQR(decodedText) {
+  if (!decodedText || typeof decodedText !== 'string') return null;
+
+  // Step 5: Clean whitespace, carriage returns, newlines, and non-printable characters
+  const trimmed = decodedText.replace(/[\r\n\t]/g, '').trim();
+  if (!trimmed) return null;
+
+  // Format 1: Plain Patient ID string (e.g. "MC-PAT-2026-000001", "MC-123456", "MC-TEST-001")
+  if (/^MC-/i.test(trimmed)) {
+    const match = trimmed.match(/MC-PAT-\d{4}-[A-Z0-9]{6}/i) || trimmed.match(/MC-[A-Z0-9_-]+/i);
+    return match ? match[0].toUpperCase() : trimmed.toUpperCase();
   }
 
-  const trimmed = rawText.trim();
-
-  if (!trimmed) {
-    return { valid: false, reason: 'QR payload is blank.' };
-  }
-
-  // ── FORMAT 1: Plain Patient ID string (primary format) ───────────────────
-  // e.g. "MC-PAT-2026-AB12CD"
-  if (/^MC-PAT-/i.test(trimmed)) {
-    const match = trimmed.match(/MC-PAT-\d{4}-[A-Z0-9]{6}/i);
-    if (match) return { valid: true, patientId: match[0].toUpperCase() };
-    // MC-PAT- prefix but doesn't fully match — still try it
-    return { valid: true, patientId: trimmed.toUpperCase() };
-  }
-
-  // ── FORMAT 2: JSON payload ────────────────────────────────────────────────
-  if (trimmed.startsWith('{')) {
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (!parsed || typeof parsed !== 'object') {
-        return { valid: false, reason: 'QR contains invalid JSON.' };
-      }
-
-      // Must be a MEDICHAIN_PATIENT type (or no type field for legacy payloads)
-      if (parsed.type && parsed.type !== 'MEDICHAIN_PATIENT') {
-        return { valid: false, reason: `QR type "${parsed.type}" is not a MediChain Patient QR.` };
-      }
-
-      const pid = (parsed.patientId || parsed.id || parsed.patient_id || '').toString().trim();
-      if (pid && /^MC-PAT-/i.test(pid)) {
-        return { valid: true, patientId: pid.toUpperCase() };
-      }
-
-      const addr = (parsed.address || parsed.walletAddress || parsed.wallet || '').toString().trim();
-      if (addr && /^0x[a-fA-F0-9]{40}$/.test(addr)) {
-        return { valid: true, walletAddress: addr };
-      }
-
-      // ObjectId fallback
-      const oid = (parsed.patientId || parsed.id || '').toString().trim();
-      if (/^[0-9a-fA-F]{24}$/.test(oid)) {
-        return { valid: true, patientId: oid };
-      }
-
-      return { valid: false, reason: 'JSON QR payload does not contain a recognizable Patient ID.' };
-    } catch {
-      return { valid: false, reason: 'QR payload looks like JSON but failed to parse.' };
+  // Format 2: Delimited string (e.g. "MEDICHAIN|1|MC-PAT-2026-000001")
+  if (trimmed.includes('|')) {
+    const parts = trimmed.split('|').map(p => p.trim());
+    for (const part of parts) {
+      if (/^MC-/i.test(part)) return part.toUpperCase();
+      if (/^0x[a-fA-F0-9]{40}$/i.test(part)) return part;
     }
   }
 
-  // ── FORMAT 3: URL with query parameters ──────────────────────────────────
+  // Format 3: JSON payload
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      const data = JSON.parse(trimmed);
+      if (data && typeof data === 'object') {
+        const pid = (data.patientId || data.id || data.patient_id || '').toString().trim();
+        if (pid) {
+          const match = pid.match(/MC-PAT-\d{4}-[A-Z0-9]{6}/i) || pid.match(/MC-[A-Z0-9_-]+/i);
+          if (match) return match[0].toUpperCase();
+          if (/^[0-9a-fA-F]{24}$/.test(pid)) return pid;
+          return pid.toUpperCase();
+        }
+        const addr = (data.address || data.walletAddress || data.wallet || '').toString().trim();
+        if (addr && /^0x[a-fA-F0-9]{40}$/i.test(addr)) {
+          return addr;
+        }
+      }
+    } catch {
+      // Not valid JSON, continue
+    }
+  }
+
+  // Format 4: URL containing Patient ID
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     try {
       const url = new URL(trimmed);
       const param = url.searchParams.get('patient') ||
                     url.searchParams.get('patientId') ||
-                    url.searchParams.get('id');
+                    url.searchParams.get('id') ||
+                    url.searchParams.get('address');
       if (param) {
-        if (/^MC-PAT-/i.test(param)) return { valid: true, patientId: param.trim().toUpperCase() };
-        if (/^0x[a-fA-F0-9]{40}$/i.test(param)) return { valid: true, walletAddress: param.trim() };
+        const cleanParam = param.trim();
+        if (/^MC-/i.test(cleanParam)) return cleanParam.toUpperCase();
+        if (/^0x[a-fA-F0-9]{40}$/i.test(cleanParam)) return cleanParam;
       }
       const pathParts = url.pathname.split('/').filter(Boolean);
       for (const part of pathParts) {
-        if (/^MC-PAT-/i.test(part)) return { valid: true, patientId: part.trim().toUpperCase() };
-        if (/^0x[a-fA-F0-9]{40}$/i.test(part)) return { valid: true, walletAddress: part.trim() };
+        if (/^MC-/i.test(part)) return part.toUpperCase();
+        if (/^0x[a-fA-F0-9]{40}$/i.test(part)) return part;
       }
-    } catch { /* invalid URL */ }
-    return { valid: false, reason: 'URL QR does not contain a recognizable Patient ID parameter.' };
+    } catch {
+      // Not a valid URL, continue
+    }
   }
 
-  // ── FORMAT 4: Raw Ethereum wallet address ─────────────────────────────────
+  // Format 5: Raw Ethereum wallet address
   if (/^0x[a-fA-F0-9]{40}$/i.test(trimmed)) {
-    return { valid: true, walletAddress: trimmed };
+    return trimmed;
   }
 
-  // ── FORMAT 5: MongoDB ObjectId (24-hex) ───────────────────────────────────
+  // Format 6: MongoDB ObjectId (24-hex)
   if (/^[0-9a-fA-F]{24}$/.test(trimmed)) {
-    return { valid: true, patientId: trimmed };
+    return trimmed;
   }
 
-  return { valid: false, reason: 'This QR does not contain a recognized MediChain Patient ID.' };
+  return null;
 }
 
-// Keep old name as alias for backward compatibility with any callers
+// Backward-compatible validators
+export function validateMediChainPatientQR(rawText) {
+  const patientId = extractPatientIdFromQR(rawText);
+  if (patientId) {
+    return { valid: true, patientId };
+  }
+  return { valid: false, reason: 'Invalid MediChain Patient QR' };
+}
+
 export const extractPatientIdentity = (rawText) => {
-  const r = validateMediChainPatientQR(rawText);
-  if (r.valid) return { patientId: r.patientId, walletAddress: r.walletAddress, raw: rawText };
-  return { error: r.reason };
+  const patientId = extractPatientIdFromQR(rawText);
+  if (patientId) {
+    return { patientId, raw: rawText };
+  }
+  return { error: 'Invalid MediChain Patient QR' };
 };
 
 
@@ -223,21 +224,30 @@ const QRScanner = ({
     };
   }, [stopCamera]);
 
-  // ── Patient Verification / Lookup ────────────────────────────────────────
-  const verifyAndLookup = useCallback(async (identifier, rawPayload = '') => {
+  // ── Patient Verification / Lookup (Single Canonical Function for Manual & QR) ──
+  const verifyAndLookup = useCallback(async (identifier) => {
     stopCamera();
     if (!mountedRef.current) return;
     setStatus('verifying');
     setErrorMessage('');
 
+    const targetPatientId = String(identifier || '').trim();
+    if (!targetPatientId) {
+      setStatus('error');
+      setErrorMessage('Patient ID is required');
+      return;
+    }
+
+    console.log('[QRScanner] Resolving Patient ID:', targetPatientId);
+
     try {
+      // Call EXACT SAME endpoint and payload format as Manual Entry
       const { data } = await api.post('/doctor/resolve-patient', {
-        patientId: identifier,
-        qrData: rawPayload
+        patientId: targetPatientId
       });
 
       if (!data.success && !data.patient) {
-        throw new Error(data.error || 'Patient ID not found.');
+        throw new Error(data.error || 'Patient not found');
       }
 
       const patientSummary = data.patient || data;
@@ -245,7 +255,7 @@ const QRScanner = ({
       setVerifiedPatient(patientSummary);
       setStatus('success');
 
-      const primaryKey = patientSummary.walletAddress || patientSummary.patientId || identifier;
+      const primaryKey = patientSummary.walletAddress || patientSummary.patientId || targetPatientId;
       setTimeout(() => {
         if (typeof onScan === 'function') onScan(primaryKey, patientSummary);
         if (typeof onScanSuccess === 'function') onScanSuccess(primaryKey, patientSummary);
@@ -254,7 +264,7 @@ const QRScanner = ({
     } catch (err) {
       console.warn('[QRScanner] Patient lookup error:', err);
       if (!mountedRef.current) return;
-      const errMsg = err.response?.data?.error || err.message || 'Patient ID not found.';
+      const errMsg = err.response?.data?.error || err.message || 'Patient not found';
       setStatus('error');
       setErrorMessage(errMsg);
       if (typeof onScanError === 'function') onScanError(err);
@@ -263,25 +273,25 @@ const QRScanner = ({
   }, [stopCamera, onScan, onScanSuccess, onScanError, onError]);
 
   // ── Handle decoded QR text ────────────────────────────────────────────────
-  const handleDecodedText = useCallback((text) => {
-    if (!text || !isScanningRef.current) return;
+  const handleDecodedText = useCallback((decodedText) => {
+    if (!decodedText || !isScanningRef.current) return;
 
-    const result = validateMediChainPatientQR(text);
+    // STEP 1: Log RAW decoded QR value
+    console.log("RAW QR VALUE:", decodedText);
 
-    if (IS_DEV) {
-      console.group('[QRScanner] QR Decoded');
-      console.log('Raw decoded text:', text);
-      console.log('Validation result:', result);
-      console.groupEnd();
-    }
+    // STEP 3: Normalize and extract patientId
+    const patientId = extractPatientIdFromQR(decodedText);
 
-    if (result.valid) {
+    if (patientId) {
+      console.log("EXTRACTED PATIENT ID:", patientId);
       isScanningRef.current = false;
-      const key = result.patientId || result.walletAddress;
-      verifyAndLookup(key, text);
+      // STEP 8: Call the exact same patient lookup used by Manual Entry
+      verifyAndLookup(patientId);
     } else {
+      console.warn("QR EXTRACTION FAILED for raw value:", decodedText);
       if (mountedRef.current) {
-        setErrorMessage(result.reason || 'This is not a valid MediChain Patient QR.');
+        setStatus('error');
+        setErrorMessage('Invalid MediChain Patient QR');
       }
     }
   }, [verifyAndLookup]);
