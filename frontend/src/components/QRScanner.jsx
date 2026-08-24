@@ -1,7 +1,7 @@
 // frontend/src/components/QRScanner.jsx
 // Production High-Performance QR Code Scanner & Identity Resolver for MediChain
-// Supports Live WebRTC camera with ZXing decodeFromVideoElementContinuously, front/rear camera toggle,
-// robust error handling, camera permission diagnostics, QR image file upload, and Manual Patient ID lookup.
+// Robust camera initialization with StrictMode-safe guard, dual-constraint fallback,
+// video readiness verification, 8-second watchdog, and clean teardown on every exit path.
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserQRCodeReader } from '@zxing/library';
@@ -87,6 +87,11 @@ export function extractPatientIdentity(rawText) {
   return { error: 'Scanned QR is not a recognized MediChain Patient ID or wallet.' };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Diagnostic panel (dev-only) — never shown in production
+// ─────────────────────────────────────────────────────────────────────────────
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
 const QRScanner = ({ 
   onScan, 
   onScanSuccess, 
@@ -96,12 +101,24 @@ const QRScanner = ({
   autoStart = false 
 }) => {
   const [activeTab, setActiveTab]             = useState('scan'); // 'scan' | 'upload' | 'manual'
-  const [status, setStatus]                   = useState(autoStart ? 'requesting' : 'idle'); // 'idle' | 'requesting' | 'active' | 'verifying' | 'success' | 'error'
+  const [status, setStatus]                   = useState('idle'); // always start idle — autoStart handled by effect
   const [facingMode, setFacingMode]           = useState('environment'); // 'environment' (rear) | 'user' (front)
   const [errorMessage, setErrorMessage]       = useState('');
   const [manualInput, setManualInput]         = useState('');
   const [verifiedPatient, setVerifiedPatient] = useState(null);
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+
+  // Dev diagnostic state
+  const [diag, setDiag] = useState({
+    secureContext: '—',
+    cameraAPI: '—',
+    permission: '—',
+    stream: 'NOT CONNECTED',
+    videoReady: 'NO',
+    videoWidth: 0,
+    videoHeight: 0,
+    qrDecoder: 'STOPPED',
+  });
 
   const videoRef          = useRef(null);
   const readerRef         = useRef(null);
@@ -110,8 +127,10 @@ const QRScanner = ({
   const isScanningRef     = useRef(false);
   const isInitializingRef = useRef(false);
   const timeoutRef        = useRef(null);
+  // Tracks whether this component instance is still mounted
+  const mountedRef        = useRef(true);
 
-  // --- Stop camera stream and scanning loop cleanly ---
+  // ── Stop camera stream and scanning loop cleanly ─────────────────────────
   const stopCamera = useCallback(() => {
     isScanningRef.current = false;
     isInitializingRef.current = false;
@@ -124,10 +143,10 @@ const QRScanner = ({
     if (readerRef.current) {
       try {
         readerRef.current.reset();
+      } catch { /* silent */ }
+      try {
         readerRef.current.stopContinuousDecode();
-      } catch {
-        /* silent */
-      }
+      } catch { /* silent */ }
     }
 
     if (streamRef.current) {
@@ -140,29 +159,39 @@ const QRScanner = ({
     }
 
     if (videoRef.current) {
-      videoRef.current.srcObject = null;
+      try {
+        videoRef.current.pause();
+        videoRef.current.srcObject = null;
+      } catch {}
+    }
+
+    if (mountedRef.current) {
+      setDiag(d => ({ ...d, stream: 'NOT CONNECTED', videoReady: 'NO', videoWidth: 0, videoHeight: 0, qrDecoder: 'STOPPED' }));
     }
   }, []);
 
-  // Initialize ZXing Reader instance and enumerate devices
+  // ── Initialize ZXing Reader instance once + enumerate cameras ────────────
   useEffect(() => {
+    mountedRef.current = true;
     readerRef.current = new BrowserQRCodeReader();
 
     if (navigator.mediaDevices?.enumerateDevices) {
       navigator.mediaDevices.enumerateDevices().then((devices) => {
         const videoInputs = devices.filter((d) => d.kind === 'videoinput');
-        setHasMultipleCameras(videoInputs.length > 1);
+        if (mountedRef.current) setHasMultipleCameras(videoInputs.length > 1);
       }).catch(() => {});
     }
 
     return () => {
+      mountedRef.current = false;
       stopCamera();
     };
   }, [stopCamera]);
 
-  // --- Perform Patient Verification / Lookup via Unified Backend Resolver ---
+  // ── Patient Verification / Lookup ────────────────────────────────────────
   const verifyAndLookup = useCallback(async (identifier, rawPayload = '') => {
     stopCamera();
+    if (!mountedRef.current) return;
     setStatus('verifying');
     setErrorMessage('');
 
@@ -177,35 +206,28 @@ const QRScanner = ({
       }
 
       const patientSummary = data.patient || data;
+      if (!mountedRef.current) return;
       setVerifiedPatient(patientSummary);
       setStatus('success');
 
-      // Dispatch callbacks to parent dashboard
       const primaryKey = patientSummary.walletAddress || patientSummary.patientId || identifier;
       setTimeout(() => {
-        if (typeof onScan === 'function') {
-          onScan(primaryKey, patientSummary);
-        }
-        if (typeof onScanSuccess === 'function') {
-          onScanSuccess(primaryKey, patientSummary);
-        }
+        if (typeof onScan === 'function') onScan(primaryKey, patientSummary);
+        if (typeof onScanSuccess === 'function') onScanSuccess(primaryKey, patientSummary);
       }, 700);
 
     } catch (err) {
       console.warn('[QRScanner] Patient lookup error:', err);
+      if (!mountedRef.current) return;
       const errMsg = err.response?.data?.error || err.message || 'Patient ID not found.';
       setStatus('error');
       setErrorMessage(errMsg);
-
-      if (typeof onScanError === 'function') {
-        onScanError(err);
-      } else if (typeof onError === 'function') {
-        onError(err);
-      }
+      if (typeof onScanError === 'function') onScanError(err);
+      else if (typeof onError === 'function') onError(err);
     }
   }, [stopCamera, onScan, onScanSuccess, onScanError, onError]);
 
-  // Handle a successfully decoded text string from camera or file
+  // ── Handle decoded QR text ────────────────────────────────────────────────
   const handleDecodedText = useCallback((text) => {
     if (!text || !isScanningRef.current) return;
     const identity = extractPatientIdentity(text);
@@ -214,55 +236,90 @@ const QRScanner = ({
       const key = identity.patientId || identity.walletAddress;
       verifyAndLookup(key, identity.raw || text);
     } else {
-      setErrorMessage(identity?.error || 'This is not a valid MediChain Patient QR.');
+      if (mountedRef.current) {
+        setErrorMessage(identity?.error || 'This is not a valid MediChain Patient QR.');
+      }
     }
   }, [verifyAndLookup]);
 
-  // --- Start Camera & Frame Analysis ---
-  const startCamera = useCallback(async () => {
-    if (isInitializingRef.current) return;
+  // ══════════════════════════════════════════════════════════════════════════
+  // initializeCamera — the fully robust camera startup function
+  // ══════════════════════════════════════════════════════════════════════════
+  const initializeCamera = useCallback(async () => {
+    // Prevent duplicate concurrent initialization attempts
+    if (isInitializingRef.current) {
+      return;
+    }
+    if (!mountedRef.current) return;
+
     isInitializingRef.current = true;
 
-    stopCamera();
+    // Reset state for a fresh attempt
+    stopCamera();                   // kills any prior stream immediately
+    isInitializingRef.current = true; // re-set because stopCamera() resets it
+
+    if (!mountedRef.current) { isInitializingRef.current = false; return; }
     setStatus('requesting');
     setErrorMessage('');
     setVerifiedPatient(null);
 
-    // Guard 1: Secure context check
-    const isSecure = window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    // ── Guard 1: Secure context ───────────────────────────────────────────
+    const isSecure =
+      window.isSecureContext ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
+    if (IS_DEV) {
+      setDiag(d => ({
+        ...d,
+        secureContext: isSecure ? 'YES' : 'NO',
+        cameraAPI: (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') ? 'YES' : 'NO',
+      }));
+    }
+
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
       isInitializingRef.current = false;
+      if (!mountedRef.current) return;
       setStatus('error');
       setErrorMessage(
         !isSecure
-          ? 'Camera access requires a secure HTTPS connection (https://).'
-          : 'Camera access is not supported by your browser. Please use Image Upload or Manual Entry.'
+          ? 'Camera access requires a secure HTTPS connection (https://). Please visit the production URL.'
+          : 'Camera API is not supported by your browser. Please use Image Upload or Manual Entry.'
       );
       return;
     }
 
-    // Guard 2: Permissions query check if supported
+    // ── Guard 2: Permissions query (non-blocking — Firefox/Safari may not support) ──
     if (navigator.permissions && navigator.permissions.query) {
       try {
         const perm = await navigator.permissions.query({ name: 'camera' });
+        if (IS_DEV && mountedRef.current) {
+          setDiag(d => ({ ...d, permission: perm.state.toUpperCase() }));
+        }
         if (perm.state === 'denied') {
           isInitializingRef.current = false;
+          if (!mountedRef.current) return;
           setStatus('error');
-          setErrorMessage('Camera access is blocked for MediChain. Please allow camera access in your browser site settings and try again.');
+          setErrorMessage(
+            'Camera access is blocked for MediChain.\n\n' +
+            'To fix:\n1. Click the camera icon in your browser address bar.\n2. Select "Allow".\n3. Press Try Again.'
+          );
           return;
         }
       } catch {
-        // Permissions query for 'camera' may not be supported by some browsers (e.g. Firefox/Safari)
+        // Permissions API not supported — proceed and let getUserMedia show the prompt
       }
     }
 
-    // Guard 3: 8-second initialization timeout
+    // ── Guard 3: 8-second total initialization watchdog ───────────────────
     timeoutRef.current = setTimeout(() => {
-      if (isScanningRef.current === false) {
+      if (!isScanningRef.current && mountedRef.current) {
         console.warn('[QRScanner] Camera stream initialization timed out after 8s');
         stopCamera();
-        setStatus('error');
-        setErrorMessage('Unable to start camera. Request timed out after 8 seconds.');
+        if (mountedRef.current) {
+          setStatus('error');
+          setErrorMessage('Unable to start camera. The request timed out after 8 seconds. Check permissions and try again.');
+        }
         if (typeof onScanError === 'function') onScanError(new Error('Camera timeout'));
         else if (typeof onError === 'function') onError(new Error('Camera timeout'));
       }
@@ -271,180 +328,277 @@ const QRScanner = ({
     let stream = null;
 
     try {
-      // 1. First try preferred constraints (mobile rear / selected facingMode)
+      // ── Step 1: Acquire MediaStream (primary constraint, then fallback) ──
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: facingMode },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            width:  { ideal: 1280 },
+            height: { ideal: 720 },
           },
-          audio: false
+          audio: false,
         });
       } catch (firstErr) {
-        console.warn('[QRScanner] Primary camera constraint failed, trying fallback:', firstErr);
-        // If user denied permission explicitly, rethrow immediately
+        console.warn('[QRScanner] Primary camera constraint failed, trying generic fallback:', firstErr.name, firstErr.message);
+        // If user explicitly denied permission, rethrow — don't try fallback
         if (firstErr.name === 'NotAllowedError' || firstErr.name === 'PermissionDeniedError') {
           throw firstErr;
         }
-        // 2. Fallback for desktop / webcams without facingMode
+        // Generic fallback — works for all desktop webcams
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: false
+          audio: false,
         });
       }
 
-      if (!stream) {
-        throw new Error('No video stream received from camera device.');
+      if (!stream || stream.getVideoTracks().length === 0) {
+        throw new Error('No video track was received from the camera device.');
+      }
+
+      if (!mountedRef.current) {
+        // Component unmounted while we awaited stream — release immediately
+        stream.getTracks().forEach(t => t.stop());
+        isInitializingRef.current = false;
+        return;
       }
 
       streamRef.current = stream;
+      if (IS_DEV) setDiag(d => ({ ...d, stream: 'CONNECTED', permission: 'GRANTED' }));
 
-      // Update multiple camera detection
+      // Update multi-camera flag now that permission is granted
       if (navigator.mediaDevices.enumerateDevices) {
         navigator.mediaDevices.enumerateDevices().then((devices) => {
           const videoInputs = devices.filter((d) => d.kind === 'videoinput');
-          setHasMultipleCameras(videoInputs.length > 1);
+          if (mountedRef.current) setHasMultipleCameras(videoInputs.length > 1);
         }).catch(() => {});
       }
 
-      // 3. Attach stream to <video> element
-      const videoEl = videoRef.current;
-      if (!videoEl) {
-        throw new Error('Video preview element is not ready in DOM.');
-      }
+      // ── Step 2: Attach stream to <video> element ──────────────────────
+      // The video element renders whenever status is 'requesting' | 'active' | 'verifying'.
+      // We set status='requesting' above, so React has already rendered <video>.
+      // Use requestAnimationFrame + a retry loop to handle the React commit timing.
+      const getVideoEl = () => new Promise((resolve, reject) => {
+        // Immediate check
+        if (videoRef.current) { resolve(videoRef.current); return; }
 
-      videoEl.srcObject = stream;
-      videoEl.setAttribute('playsinline', 'true');
-      videoEl.setAttribute('autoplay', 'true');
-      videoEl.muted = true;
+        let attempts = 0;
+        const maxAttempts = 30; // 30 × 50ms = 1500ms max wait for DOM commit
 
-      try {
-        await videoEl.play();
-      } catch (playErr) {
-        console.warn('[QRScanner] Video play warning:', playErr);
-      }
-
-      // 4. Verify video dimensions
-      await new Promise((resolve) => {
-        if (videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
-          resolve();
-          return;
-        }
-
-        let resolved = false;
-        const markReady = () => {
-          if (!resolved) {
-            resolved = true;
-            videoEl.removeEventListener('loadedmetadata', markReady);
-            videoEl.removeEventListener('canplay', markReady);
-            resolve();
+        const poll = () => {
+          attempts++;
+          if (videoRef.current) {
+            resolve(videoRef.current);
+          } else if (attempts >= maxAttempts) {
+            reject(new Error('Video preview element did not appear in DOM after 1.5s. Try again.'));
+          } else {
+            setTimeout(poll, 50);
           }
         };
 
-        videoEl.addEventListener('loadedmetadata', markReady);
-        videoEl.addEventListener('canplay', markReady);
+        // Let React flush the DOM first, then start polling
+        requestAnimationFrame(() => setTimeout(poll, 50));
+      });
 
-        const checkInterval = setInterval(() => {
+      const videoEl = await getVideoEl();
+
+      if (!mountedRef.current) {
+        stream.getTracks().forEach(t => t.stop());
+        isInitializingRef.current = false;
+        return;
+      }
+
+      // Ensure required attributes for mobile Safari / iOS
+      videoEl.setAttribute('autoplay',    'true');
+      videoEl.setAttribute('playsinline', 'true');
+      videoEl.setAttribute('muted',       'true');
+      videoEl.muted      = true;
+      videoEl.srcObject  = stream;
+
+      // ── Step 3: Call play() ───────────────────────────────────────────
+      try {
+        await videoEl.play();
+      } catch (playErr) {
+        // play() can reject if the element is paused by browser policy.
+        // This is usually recoverable — video will play as soon as it loads.
+        console.warn('[QRScanner] video.play() warning (non-fatal):', playErr.name, playErr.message);
+      }
+
+      // ── Step 4: Wait for actual video frame data (dimensions > 0) ────
+      await new Promise((resolve) => {
+        // Already has data?
+        if (videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+          resolve(); return;
+        }
+
+        let resolved = false;
+        const finish = () => {
+          if (resolved) return;
+          resolved = true;
+          videoEl.removeEventListener('loadedmetadata', finish);
+          videoEl.removeEventListener('canplay', finish);
+          videoEl.removeEventListener('playing', finish);
+          clearInterval(dimPoll);
+          clearTimeout(dimTimeout);
+          resolve();
+        };
+
+        videoEl.addEventListener('loadedmetadata', finish);
+        videoEl.addEventListener('canplay',        finish);
+        videoEl.addEventListener('playing',        finish);
+
+        // Polling fallback (covers browsers that skip the above events)
+        const dimPoll = setInterval(() => {
           if (videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
-            clearInterval(checkInterval);
-            markReady();
+            clearInterval(dimPoll);
+            finish();
           }
         }, 100);
 
-        setTimeout(() => {
-          clearInterval(checkInterval);
-          markReady();
+        // Give up waiting for dimensions after 3s — stream may still work
+        const dimTimeout = setTimeout(() => {
+          clearInterval(dimPoll);
+          finish();
         }, 3000);
       });
 
-      // Clear timeout on successful start
+      // ── Step 5: Cancel the 8s watchdog — we made it ──────────────────
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
 
-      // Safe non-sensitive diagnostics for developer auditing
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[QRScanner Diagnostics]', {
-          cameraSupported: 'YES',
-          https: isSecure ? 'YES' : 'NO',
+      if (!mountedRef.current) {
+        stream.getTracks().forEach(t => t.stop());
+        isInitializingRef.current = false;
+        return;
+      }
+
+      if (IS_DEV) {
+        const w = videoEl.videoWidth;
+        const h = videoEl.videoHeight;
+        setDiag(d => ({
+          ...d,
+          videoReady: w > 0 && h > 0 ? 'YES' : 'PENDING',
+          videoWidth:  w,
+          videoHeight: h,
+        }));
+        console.log('[QRScanner] Camera ready:', {
+          secureContext: isSecure ? 'YES' : 'NO',
+          protocol: window.location.protocol,
           stream: 'CONNECTED',
-          video: videoEl.videoWidth > 0 ? 'READY' : 'PENDING',
-          qrDecoder: 'RUNNING'
+          videoWidth: w,
+          videoHeight: h,
         });
       }
 
+      // ── Step 6: Mark as scanning-active and transition UI ────────────
       isInitializingRef.current = false;
-      isScanningRef.current = true;
+      isScanningRef.current     = true;
       setStatus('active');
 
-      // 5. Start continuous QR decoding
+      // ── Step 7: Start ZXing continuous QR decode ──────────────────────
       if (!readerRef.current) {
         readerRef.current = new BrowserQRCodeReader();
       }
 
+      if (IS_DEV) setDiag(d => ({ ...d, qrDecoder: 'RUNNING' }));
+
       readerRef.current.decodeFromVideoElementContinuously(
         videoEl,
-        (result, err) => {
+        (result, _err) => {
           if (result && isScanningRef.current) {
             const text = result.getText();
-            if (text) {
-              handleDecodedText(text);
-            }
+            if (text) handleDecodedText(text);
           }
         }
       );
 
     } catch (camErr) {
-      console.error('[QRScanner] Camera stream error:', camErr);
+      console.error('[QRScanner] Camera initialization error:', camErr.name, camErr.message);
       isInitializingRef.current = false;
-      stopCamera();
-      setStatus('error');
+
+      // Clean up any partially acquired stream
+      if (stream) {
+        try { stream.getTracks().forEach(t => t.stop()); } catch {}
+      }
+      streamRef.current = null;
+
+      // Cancel the watchdog
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+
+      if (!mountedRef.current) return;
 
       let userMsg = 'Unable to start camera.';
-      const name = camErr.name || '';
+      const name  = camErr.name || '';
+
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-        userMsg = 'Camera permission was denied. Allow camera access for this website and try again.';
+        userMsg =
+          'Camera permission was denied.\n\nTo fix:\n' +
+          '1. Click the camera icon in your browser address bar.\n' +
+          '2. Set Camera to "Allow".\n' +
+          '3. Press Try Again.';
       } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-        userMsg = 'No camera was detected.';
+        userMsg = 'No camera device was found. Please connect a camera and try again.';
       } else if (name === 'NotReadableError' || name === 'TrackStartError') {
-        userMsg = 'The camera is being used by another application.';
+        userMsg = 'The camera is in use by another app. Close other camera apps and try again.';
       } else if (name === 'OverconstrainedError') {
-        userMsg = 'Preferred camera unavailable. Trying another camera.';
+        userMsg = 'Preferred camera unavailable. Please try again and a different camera will be used.';
       } else if (name === 'SecurityError') {
         userMsg = 'Camera access requires a secure HTTPS connection.';
       } else if (name === 'AbortError') {
-        userMsg = 'Camera access was aborted.';
+        userMsg = 'Camera access was aborted. Please try again.';
       } else {
-        userMsg = camErr.message || 'Unable to start camera. Check permissions and try again.';
+        userMsg = camErr.message || 'Unable to start camera. Check browser permissions and try again.';
       }
 
+      setStatus('error');
       setErrorMessage(userMsg);
+      if (IS_DEV) setDiag(d => ({ ...d, stream: 'NOT CONNECTED', permission: name === 'NotAllowedError' ? 'DENIED' : d.permission }));
 
-      if (typeof onScanError === 'function') {
-        onScanError(camErr);
-      } else if (typeof onError === 'function') {
-        onError(camErr);
-      }
+      if (typeof onScanError === 'function') onScanError(camErr);
+      else if (typeof onError === 'function') onError(camErr);
     }
   }, [facingMode, stopCamera, handleDecodedText, onScanError, onError]);
 
-  // Handle autoStart or facingMode changes
+  // ── autoStart: launch camera when component mounts with autoStart=true ──
+  // Using a ref to track if we've already auto-started this mount cycle,
+  // which prevents React StrictMode double-invocation from double-starting.
+  const autoStartedRef = useRef(false);
   useEffect(() => {
-    if (activeTab === 'scan') {
-      if (autoStart || status === 'active' || status === 'requesting') {
-        startCamera();
-      }
+    if (autoStart && activeTab === 'scan' && !autoStartedRef.current) {
+      autoStartedRef.current = true;
+      // Give React one frame to flush the initial render before we try to
+      // get the video element (critical for StrictMode and slow renders).
+      const raf = requestAnimationFrame(() => {
+        if (mountedRef.current) {
+          initializeCamera();
+        }
+      });
+      return () => cancelAnimationFrame(raf);
     }
-  }, [facingMode, autoStart, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, activeTab]);
 
-  // Handle switching front/rear camera
+  // ── facingMode changes: restart camera with new mode ────────────────────
+  const facingModeRef = useRef(facingMode);
+  useEffect(() => {
+    if (facingMode === facingModeRef.current) return; // skip initial render
+    facingModeRef.current = facingMode;
+    if (status === 'active' || status === 'requesting') {
+      initializeCamera();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facingMode]);
+
+  // ── Toggle front/rear camera ────────────────────────────────────────────
   const toggleCamera = () => {
     setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
   };
 
-  // --- QR Code Image Upload Handler (Screenshot / Image File) ---
+  // ── QR Code Image Upload Handler ─────────────────────────────────────────
   const handleImageFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -467,7 +621,6 @@ const QRScanner = ({
         readerRef.current = new BrowserQRCodeReader();
       }
 
-      // Decode directly from the image element
       const result = await readerRef.current.decodeFromImageElement(img);
       URL.revokeObjectURL(fileUrl);
 
@@ -487,7 +640,7 @@ const QRScanner = ({
     }
   };
 
-  // Manual lookup handler
+  // ── Manual lookup handler ────────────────────────────────────────────────
   const handleManualSubmit = (e) => {
     e.preventDefault();
     const clean = manualInput.trim();
@@ -501,11 +654,25 @@ const QRScanner = ({
   const handleClose = () => {
     stopCamera();
     setStatus('idle');
-    if (typeof onClose === 'function') {
-      onClose();
-    }
+    autoStartedRef.current = false;
+    if (typeof onClose === 'function') onClose();
   };
 
+  // ── Handle "Launch Camera Scanner" button click ──────────────────────────
+  const handleStartClick = () => {
+    autoStartedRef.current = false; // allow re-init from user action
+    initializeCamera();
+  };
+
+  // ── Handle "Try Again" button ────────────────────────────────────────────
+  const handleTryAgain = () => {
+    autoStartedRef.current = false;
+    initializeCamera();
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="w-full max-w-md mx-auto hc-card overflow-hidden border border-hc-border shadow-xl">
       {/* Header Tabs */}
@@ -550,7 +717,7 @@ const QRScanner = ({
 
       <div className="p-4 sm:p-6 flex flex-col items-center">
         
-        {/* ── 1. LIVE CAMERA TAB ────────────────────────────────────────── */}
+        {/* ── 1. LIVE CAMERA TAB ──────────────────────────────────────────── */}
         {activeTab === 'scan' && (
           <div className="w-full flex flex-col items-center">
             
@@ -566,7 +733,7 @@ const QRScanner = ({
                 </p>
                 <button
                   type="button"
-                  onClick={startCamera}
+                  onClick={handleStartClick}
                   className="hc-btn hc-btn-primary w-full justify-center min-h-[44px] shadow-hc-card font-bold text-xs"
                   id="start-qr-scanner-btn"
                 >
@@ -576,22 +743,27 @@ const QRScanner = ({
               </div>
             )}
 
-            {/* LIVE CAMERA PREVIEW CONTAINER (Shown during requesting, active, and verifying) */}
+            {/* LIVE CAMERA PREVIEW CONTAINER
+                Rendered for requesting, active, and verifying states.
+                The <video> element MUST exist in the DOM before we attach srcObject.
+                It is always rendered (not conditionally) within this block so the ref
+                is stable throughout the requesting → active transition. */}
             {(status === 'requesting' || status === 'active' || status === 'verifying') && (
               <div className="relative w-full aspect-square max-w-[320px] rounded-2xl overflow-hidden bg-black shadow-inner border-2 border-hc-border">
-                {/* Real video element always rendered */}
+                {/* ↓ ALWAYS RENDERED — ref must be stable before stream is attached */}
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
                   className="w-full h-full object-cover"
+                  style={{ display: 'block' }}
                 />
 
-                {/* Requesting Overlay */}
+                {/* Requesting overlay — shows spinner while stream is being acquired */}
                 {status === 'requesting' && (
                   <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center p-4 text-center z-10 space-y-3">
-                    <div className="w-10 h-10 border-3 border-hc-blue border-t-transparent rounded-full animate-spin mx-auto" />
+                    <div className="w-10 h-10 border-[3px] border-hc-blue border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-xs font-bold text-white">Requesting camera permission...</p>
                     <p className="text-[11px] text-gray-300 max-w-[200px]">
                       Please click &quot;Allow&quot; if your browser prompts for camera access.
@@ -604,10 +776,10 @@ const QRScanner = ({
                   <>
                     <div className="absolute inset-0 border-[28px] border-black/40 pointer-events-none" />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-hc-success rounded-xl pointer-events-none shadow-[0_0_15px_rgba(34,197,94,0.4)]">
-                      <div className="absolute -top-1 -left-1 w-4 h-4 border-t-3 border-l-3 border-hc-success" />
-                      <div className="absolute -top-1 -right-1 w-4 h-4 border-t-3 border-r-3 border-hc-success" />
-                      <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-3 border-l-3 border-hc-success" />
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-3 border-r-3 border-hc-success" />
+                      <div className="absolute -top-1 -left-1 w-4 h-4 border-t-[3px] border-l-[3px] border-hc-success" />
+                      <div className="absolute -top-1 -right-1 w-4 h-4 border-t-[3px] border-r-[3px] border-hc-success" />
+                      <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-[3px] border-l-[3px] border-hc-success" />
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-[3px] border-r-[3px] border-hc-success" />
                       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-hc-success to-transparent shadow-[0_0_10px_#22c55e] animate-pulse" />
                     </div>
                   </>
@@ -688,12 +860,12 @@ const QRScanner = ({
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-hc-text">Camera Scan Issue</h4>
-                  <p className="text-xs text-hc-danger mt-1 max-w-xs mx-auto leading-relaxed font-medium">{errorMessage}</p>
+                  <p className="text-xs text-hc-danger mt-1 max-w-xs mx-auto leading-relaxed font-medium whitespace-pre-line">{errorMessage}</p>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center pt-2">
                   <button
                     type="button"
-                    onClick={startCamera}
+                    onClick={handleTryAgain}
                     className="hc-btn hc-btn-primary hc-btn-sm"
                   >
                     Try Again
@@ -715,10 +887,26 @@ const QRScanner = ({
                 </div>
               </div>
             )}
+
+            {/* DEV-ONLY DIAGNOSTIC PANEL */}
+            {IS_DEV && (status === 'active' || status === 'requesting' || status === 'error') && (
+              <details className="w-full mt-3 text-[10px] font-mono bg-black/80 text-green-400 rounded-lg p-2 border border-green-900 cursor-pointer" open={status === 'error'}>
+                <summary className="text-green-300 font-bold text-[10px] cursor-pointer">🔧 Dev Diagnostics</summary>
+                <div className="mt-1 space-y-0.5">
+                  <div>Secure Context: <span className={diag.secureContext === 'YES' ? 'text-green-400' : 'text-red-400'}>{diag.secureContext}</span></div>
+                  <div>Camera API: <span className={diag.cameraAPI === 'YES' ? 'text-green-400' : 'text-red-400'}>{diag.cameraAPI}</span></div>
+                  <div>Permission: <span className={diag.permission === 'GRANTED' ? 'text-green-400' : diag.permission === 'DENIED' ? 'text-red-400' : 'text-yellow-400'}>{diag.permission}</span></div>
+                  <div>Stream: <span className={diag.stream === 'CONNECTED' ? 'text-green-400' : 'text-red-400'}>{diag.stream}</span></div>
+                  <div>Video Ready: <span className={diag.videoReady === 'YES' ? 'text-green-400' : 'text-yellow-400'}>{diag.videoReady}</span></div>
+                  <div>Video: {diag.videoWidth}×{diag.videoHeight}</div>
+                  <div>QR Decoder: <span className={diag.qrDecoder === 'RUNNING' ? 'text-green-400' : 'text-gray-400'}>{diag.qrDecoder}</span></div>
+                </div>
+              </details>
+            )}
           </div>
         )}
 
-        {/* ── 2. UPLOAD QR IMAGE TAB ───────────────────────────────────── */}
+        {/* ── 2. UPLOAD QR IMAGE TAB ──────────────────────────────────────── */}
         {activeTab === 'upload' && (
           <div className="w-full flex flex-col items-center py-4 space-y-4">
             <input
@@ -745,7 +933,7 @@ const QRScanner = ({
             {status === 'verifying' && (
               <div className="text-center py-4 space-y-2">
                 <div className="w-8 h-8 border-2 border-hc-blue border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-xs font-bold text-hc-text">Decoding QR & Verifying Patient...</p>
+                <p className="text-xs font-bold text-hc-text">Decoding QR &amp; Verifying Patient...</p>
               </div>
             )}
 
@@ -775,7 +963,7 @@ const QRScanner = ({
           </div>
         )}
 
-        {/* ── 3. MANUAL ENTRY TAB ──────────────────────────────────────── */}
+        {/* ── 3. MANUAL ENTRY TAB ────────────────────────────────────────── */}
         {activeTab === 'manual' && (
           <form onSubmit={handleManualSubmit} className="w-full space-y-4 py-2">
             <div>
