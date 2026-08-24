@@ -1,26 +1,32 @@
 // frontend/src/utils/api.js
 // Pre-configured Axios instances for the MediChain backend and AI microservice.
+// Handles Render.com free-tier cold-start (up to 50s) with extended timeout and
+// user-friendly error messages for network failures.
 
 import axios from 'axios';
 
 // ── Backend API Base URL ───────────────────────────────────────────────────────
-// Default: http://localhost:5000/api (backend runs on port 5000)
-const rawUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Production: https://medichain-1-sjnc.onrender.com/api
+// Default fallback: http://localhost:5000
+const rawUrl  = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const baseURL = rawUrl.replace(/\/$/, '') + (rawUrl.endsWith('/api') ? '' : '/api');
 
 const api = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 20000,
+  // 60 seconds — covers Render.com free-tier cold-start (~50s worst case)
+  timeout: 60000,
   withCredentials: false,
 });
 
 // ── AI Service Base URL ────────────────────────────────────────────────────────
-// Default: http://localhost:5001 (Python Flask microservice)
+// Production: https://medichain-ai.onrender.com
+// Default fallback: http://localhost:5001
 export const aiApi = axios.create({
   baseURL: process.env.REACT_APP_AI_URL || 'http://localhost:5001',
   headers: { 'Content-Type': 'application/json' },
-  timeout: 30000, // AI inference can be slow
+  // 60 seconds — AI inference + cold-start
+  timeout: 60000,
 });
 
 // ── Request Interceptor ───────────────────────────────────────────────────────
@@ -41,10 +47,9 @@ api.interceptors.request.use(
 );
 
 // ── Response Interceptor ──────────────────────────────────────────────────────
-// On 401: token expired / invalid — clear storage and redirect to login
 const handleResponseError = (error) => {
+  // On 401: token expired / invalid — clear storage and redirect to login
   if (error.response?.status === 401) {
-    // Only redirect if the failed request wasn't itself to /auth/login or /auth/register
     const url = error.config?.url || '';
     if (!url.includes('/auth/login') && !url.includes('/auth/register')) {
       localStorage.removeItem('medichain_token');
@@ -52,20 +57,39 @@ const handleResponseError = (error) => {
     }
   }
 
-  // Normalise error to a single { message } shape for consistent UI handling
-  const message =
-    error.response?.data?.error ||
-    error.response?.data?.message ||
-    error.response?.data?.errors?.[0]?.message ||
-    error.response?.data?.errors?.[0]?.msg ||
-    (error.code === 'ECONNABORTED' ? 'Request timed out — server may be offline' : null) ||
-    error.message ||
-    'An unexpected error occurred';
+  // Detect true network failure (no response received at all)
+  // This covers: Render cold-start timeout, ERR_NETWORK, offline, CORS block
+  const isNetworkFailure = !error.response && (
+    error.code === 'ERR_NETWORK' ||
+    error.code === 'ECONNABORTED' ||
+    error.code === 'ERR_INTERNET_DISCONNECTED' ||
+    error.message === 'Network Error'
+  );
 
-  const customError = new Error(message);
+  const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+
+  // Human-readable message for each failure category
+  let message;
+  if (isTimeout) {
+    message = 'The server is taking too long to respond. The backend may be waking up — please wait a moment and try again.';
+  } else if (isNetworkFailure) {
+    message = 'Unable to reach the MediChain server. Please check your internet connection. If the problem persists, the server may be temporarily offline — try again in 30 seconds.';
+  } else {
+    message =
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.response?.data?.errors?.[0]?.message ||
+      error.response?.data?.errors?.[0]?.msg ||
+      error.message ||
+      'An unexpected error occurred';
+  }
+
+  const customError    = new Error(message);
   customError.response = error.response;
-  customError.status = error.response?.status;
-  customError.code = error.code;
+  customError.status   = error.response?.status;
+  customError.code     = error.code;
+  customError.isNetworkError = isNetworkFailure || isTimeout;
+
   return Promise.reject(customError);
 };
 
@@ -73,4 +97,3 @@ api.interceptors.response.use((r) => r, handleResponseError);
 aiApi.interceptors.response.use((r) => r, handleResponseError);
 
 export default api;
-

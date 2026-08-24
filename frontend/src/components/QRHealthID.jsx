@@ -22,10 +22,14 @@ const QRHealthID = ({
   const [canShare, setCanShare] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
 
-  // Extract patient details
-  const name = propPatientName || user?.name || 'Authorized Patient';
-  const patientId = propPatientId || user?.patientId || (user?._id ? `MC-PAT-2026-${user._id.slice(-6).toUpperCase()}` : 'MC-PAT-2026-000001');
+  // Extract patient details — patientId MUST come from the backend (user.patientId)
+  // Never fabricate a local ID that doesn't exist in MongoDB.
+  const name      = propPatientName || user?.name      || 'Authorized Patient';
+  const patientId = propPatientId   || user?.patientId || null;
   const bloodGroup = propBloodGroup || user?.bloodGroup || 'O+';
+
+  // True if the patientId is a real DB-assigned MC-PAT-YYYY-XXXXXX identifier
+  const isRealPatientId = patientId && /^MC-PAT-\d{4}-[A-Z0-9]{6}$/i.test(patientId);
 
   useEffect(() => {
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -33,12 +37,9 @@ const QRHealthID = ({
     }
   }, []);
 
-  // Structured, safe, minimal QR payload
-  const qrPayload = JSON.stringify({
-    type: 'MEDICHAIN_PATIENT',
-    version: 1,
-    patientId: patientId
-  });
+  // QR payload — plain Patient ID string only (smallest possible, most reliable decode)
+  // Scanner's extractPatientIdentity() handles this via the raw MC-PAT-... regex path.
+  const qrPayload = isRealPatientId ? patientId : '';
 
   // ── COPY PATIENT ID ──────────────────────────────────────────────────────────
   const handleCopy = () => {
@@ -220,19 +221,29 @@ const QRHealthID = ({
         </div>
 
         {/* High Resolution Scannable QR Code Frame */}
-        <div
-          ref={qrWrapperRef}
-          className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-inner flex items-center justify-center mb-4"
-        >
-          <QRCodeSVG
-            value={qrPayload}
-            size={230}
-            level="H"
-            includeMargin={true}
-            bgColor="#f8fafc"
-            fgColor="#0f172a"
-          />
-        </div>
+        {!isRealPatientId ? (
+          <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center mb-4">
+            <p className="text-xs font-bold text-amber-800">⚠ Patient ID not yet assigned</p>
+            <p className="text-[11px] text-amber-700 mt-1">
+              Your Patient ID is being generated. Please log out and log back in, then try again.
+            </p>
+          </div>
+        ) : (
+          <div
+            ref={qrWrapperRef}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-inner flex items-center justify-center mb-4"
+          >
+            {/* error correction M — cleaner, less dense, reliably scannable */}
+            <QRCodeSVG
+              value={qrPayload}
+              size={240}
+              level="M"
+              includeMargin={true}
+              bgColor="#ffffff"
+              fgColor="#000000"
+            />
+          </div>
+        )}
 
         {/* Prominent Patient ID Display with Copy */}
         <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-2 mb-4">
