@@ -1,6 +1,6 @@
 // frontend/src/components/Navbar.jsx
 // Premium healthcare navigation bar — light theme
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useWalletContext } from '../context/WalletContext';
@@ -42,7 +42,28 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => setMenuOpen(false), [location.pathname]);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
+  useEffect(() => {
+    closeMenu();
+  }, [location.pathname, closeMenu]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') closeMenu();
+    };
+    if (menuOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen, closeMenu]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -63,11 +84,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0 group">
+          <Link to="/" className="flex items-center flex-shrink-0 group" onClick={closeMenu}>
             <img
               src={mediChainLogo}
               alt="MediChain"
-              className="h-10 w-auto object-contain transition-opacity group-hover:opacity-90"
+              className="h-9 sm:h-10 w-auto object-contain transition-opacity group-hover:opacity-90"
             />
           </Link>
 
@@ -117,7 +138,7 @@ export default function Navbar() {
                 ) : (
                   <button
                     onClick={connectWallet}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-hc-border text-xs font-medium text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-hc-border text-xs font-medium text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors min-h-[36px]"
                     aria-label="Connect wallet"
                     id="navbar-connect-wallet-btn"
                   >
@@ -126,9 +147,9 @@ export default function Navbar() {
                   </button>
                 )}
 
-                <button className="relative p-2 rounded-lg text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors" aria-label="Notifications">
+                <button className="relative p-2 rounded-lg text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Notifications">
                   <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-hc-danger rounded-full" aria-hidden="true" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-hc-danger rounded-full" aria-hidden="true" />
                 </button>
 
                 <Link to="/profile" className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-hc-bg-alt transition-colors group">
@@ -143,7 +164,7 @@ export default function Navbar() {
 
                 <button
                   onClick={logout}
-                  className="p-2 rounded-lg text-hc-text-muted hover:text-hc-danger hover:bg-hc-danger-soft transition-all duration-150"
+                  className="p-2 rounded-lg text-hc-text-muted hover:text-hc-danger hover:bg-hc-danger-soft transition-all duration-150 min-w-[40px] min-h-[40px] flex items-center justify-center"
                   title="Sign out"
                   aria-label="Sign out"
                 >
@@ -152,70 +173,116 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link to="/login" className="hc-btn hc-btn-ghost hc-btn-sm">Sign In</Link>
-                <Link to="/register" className="hc-btn hc-btn-primary hc-btn-sm">Get Started</Link>
+                <Link to="/login" className="hc-btn hc-btn-ghost hc-btn-sm min-h-[40px]">Sign In</Link>
+                <Link to="/register" className="hc-btn hc-btn-primary hc-btn-sm min-h-[40px]">Get Started</Link>
               </>
             )}
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile hamburger button - min 44x44 */}
           <button
-            className="md:hidden p-2 rounded-lg text-hc-text-muted hover:bg-hc-bg-alt transition-colors"
+            className="md:hidden w-11 h-11 flex items-center justify-center rounded-xl text-hc-text-muted hover:bg-hc-bg-alt active:bg-hc-border-light transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
           >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
+      {/* Mobile Backdrop Overlay */}
+      {menuOpen && (
+        <div
+          className="md:hidden fixed inset-0 top-16 z-40 bg-hc-navy/40 backdrop-blur-xs animate-fade-in"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Mobile drawer */}
       {menuOpen && (
-        <div className="md:hidden border-t border-hc-border bg-hc-surface px-4 py-4 space-y-1 animate-slide-down">
+        <div 
+          className="md:hidden fixed inset-x-0 top-16 z-50 max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-hc-border bg-hc-surface px-4 py-5 shadow-hc-card-lg animate-slide-down"
+          style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+        >
           {isAuthenticated ? (
             <>
               {/* User info */}
-              <div className="flex items-center gap-3 px-3 py-3 mb-2 bg-hc-bg-alt rounded-xl">
-                <div className="w-9 h-9 rounded-full bg-hc-blue flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+              <div className="flex items-center gap-3 px-3.5 py-3 mb-3 bg-hc-bg-alt rounded-xl border border-hc-border-light">
+                <div className="w-10 h-10 rounded-full bg-hc-blue flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                   {initials}
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-hc-text">{user?.name}</p>
-                  <p className="text-xs text-hc-text-muted capitalize">{user?.email}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-hc-text truncate">{user?.name}</p>
+                  <p className="text-xs text-hc-text-muted truncate">{user?.email}</p>
                 </div>
+                <span className="hc-badge hc-badge-primary capitalize text-[10px]">{user?.role}</span>
               </div>
 
-              {navLinks.map(({ label, path, Icon }) => (
-                <Link
-                  key={path}
-                  to={path}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(path) ? 'bg-hc-blue-soft text-hc-blue font-semibold' : 'text-hc-text-muted hover:text-hc-text'
-                  }`}
-                >
-                  {Icon && <Icon className="w-4 h-4" />}
-                  {label}
-                </Link>
-              ))}
+              <div className="space-y-1">
+                {navLinks.map(({ label, path, Icon }) => (
+                  <Link
+                    key={path}
+                    to={path}
+                    onClick={closeMenu}
+                    className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-colors min-h-[44px] ${
+                      isActive(path) ? 'bg-hc-blue-soft text-hc-blue font-bold' : 'text-hc-text hover:bg-hc-bg-alt'
+                    }`}
+                  >
+                    {Icon && <Icon className="w-5 h-5 flex-shrink-0" />}
+                    <span>{label}</span>
+                  </Link>
+                ))}
+              </div>
 
-              <div className="pt-2 mt-2 border-t border-hc-border-light">
-                <Link to="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-hc-text hover:bg-hc-bg-alt">
-                  <User className="w-4 h-4" /> Profile
+              <div className="pt-3 mt-3 border-t border-hc-border-light space-y-1">
+                <Link 
+                  to="/profile" 
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-hc-text hover:bg-hc-bg-alt min-h-[44px]"
+                >
+                  <User className="w-5 h-5 flex-shrink-0 text-hc-text-muted" /> 
+                  <span>Profile & Wallet</span>
                 </Link>
-                <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-hc-danger hover:bg-hc-danger-soft transition-colors">
-                  <LogOut className="w-4 h-4" /> Sign out
+                <button 
+                  onClick={() => { logout(); closeMenu(); }} 
+                  className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-hc-danger hover:bg-hc-danger-soft transition-colors min-h-[44px]"
+                >
+                  <LogOut className="w-5 h-5 flex-shrink-0" /> 
+                  <span>Sign out</span>
                 </button>
               </div>
             </>
           ) : (
             <>
-              {PUBLIC_NAV.map(({ label, href }) => (
-                <a key={href} href={href} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-hc-text hover:bg-hc-bg-alt transition-colors">{label}</a>
-              ))}
-              <div className="flex gap-2 pt-3 border-t border-hc-border-light mt-2">
-                <Link to="/login" className="hc-btn hc-btn-ghost flex-1 justify-center">Sign In</Link>
-                <Link to="/register" className="hc-btn hc-btn-primary flex-1 justify-center">Get Started</Link>
+              <div className="space-y-1 mb-4">
+                <a
+                  href="/"
+                  onClick={closeMenu}
+                  className="block px-3.5 py-3 rounded-xl text-sm font-semibold text-hc-text hover:bg-hc-bg-alt transition-colors min-h-[44px] flex items-center"
+                >
+                  Home
+                </a>
+                {PUBLIC_NAV.map(({ label, href }) => (
+                  <a 
+                    key={href} 
+                    href={href} 
+                    onClick={closeMenu} 
+                    className="block px-3.5 py-3 rounded-xl text-sm font-semibold text-hc-text hover:bg-hc-bg-alt transition-colors min-h-[44px] flex items-center"
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-2.5 pt-3 border-t border-hc-border-light">
+                <Link to="/login" onClick={closeMenu} className="hc-btn hc-btn-ghost w-full justify-center min-h-[48px] text-base">
+                  Sign In
+                </Link>
+                <Link to="/register" onClick={closeMenu} className="hc-btn hc-btn-primary w-full justify-center min-h-[48px] text-base">
+                  Get Started
+                </Link>
               </div>
             </>
           )}

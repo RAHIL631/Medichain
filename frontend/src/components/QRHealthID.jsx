@@ -74,7 +74,7 @@ const QRHealthID = ({
       <div 
         ref={cardRef}
         id="medichain-health-card"
-        className="w-80 bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col items-center p-6 text-gray-900 print:shadow-none print:border-2 print:border-gray-200"
+        className="w-full max-w-[320px] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col items-center p-5 sm:p-6 text-gray-900 print:shadow-none print:border-2 print:border-gray-200"
       >
         {/* Card Header */}
         <div className="w-full flex items-center justify-between mb-6">

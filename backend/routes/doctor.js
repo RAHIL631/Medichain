@@ -77,12 +77,14 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
       return res.status(400).json({ error: 'patientWalletAddress is required' });
     }
 
-    if (!recordType) {
-      return res.status(400).json({ error: 'recordType is required' });
-    }
+    // Normalize recordType
+    let normalizedRecordType = (recordType || 'prescription').toLowerCase().trim();
+    if (normalizedRecordType === 'lab-report') normalizedRecordType = 'lab_report';
+    if (normalizedRecordType === 'imaging')    normalizedRecordType = 'xray';
+    if (normalizedRecordType === 'vaccination') normalizedRecordType = 'other';
 
     const validTypes = ['prescription', 'lab_report', 'diagnosis', 'xray', 'scan', 'other'];
-    if (!validTypes.includes(recordType)) {
+    if (!validTypes.includes(normalizedRecordType)) {
       return res.status(400).json({
         error: `recordType must be one of: ${validTypes.join(', ')}`,
       });
@@ -98,25 +100,25 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
     }
 
     // ── 2. Look up the patient and the uploading doctor in MongoDB ─────────────
+    // Case-insensitive regex match for wallet address
     const patient = await User.findOne({
-      walletAddress: patientWalletAddress,
+      walletAddress: { $regex: new RegExp(`^${patientWalletAddress.trim()}$`, 'i') },
       role:          'patient',
     }).select('_id name walletAddress');
 
     if (!patient) {
       return res.status(404).json({
-        error: 'No patient found with this wallet address',
+        error: 'No patient found with this wallet address. Verify the address or have the patient register first.',
       });
     }
 
     // ── CONSENT VERIFICATION ───────────────────────────────────────────────
-    // Doctors must have an active ConsentRecord from the patient.
-    // This is in addition to the blockchain access grant.
+    // Check if patient has granted active consent to this doctor
     const hasConsent = await ConsentRecord.hasActiveConsent(patient._id, req.user._id);
     if (!hasConsent) {
       return res.status(403).json({
         error: 'Access denied: patient has not granted consent for you to upload records. ' +
-               'The patient must grant you access first.',
+               'The patient must authorize your doctor address first via the Access Manager.',
       });
     }
 

@@ -1,34 +1,43 @@
 // frontend/src/components/DashboardLayout.jsx
-// Premium healthcare dashboard layout — light theme
+// MediChain — Premium healthcare dashboard layout
+//
+// Mobile:  MobileHeader (sticky top) + main content + BottomNav (fixed bottom)
+// Desktop: Sidebar (left) + main content (right)
+//
+// Main content gets bottom padding on mobile to prevent content hiding behind bottom nav.
+
 import React from 'react';
 import Sidebar from './Sidebar';
-import Navbar from './Navbar';
+import MobileHeader from './MobileHeader';
+import BottomNav from './BottomNav';
 
 export default function DashboardLayout({ children, navItems = [] }) {
-  // Map navItems to use Lucide icons if they come in as SVG elements
-  const mappedNav = navItems.map(item => ({
-    ...item,
-    icon: item.icon,
-  }));
+  const mappedNav = navItems.map(item => ({ ...item, icon: item.icon }));
 
   return (
     <div className="flex min-h-screen bg-hc-bg">
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — hidden on mobile */}
       <div className="hidden lg:flex">
         <Sidebar navItems={mappedNav} />
       </div>
 
-      {/* Main content */}
+      {/* Main content column */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile navbar */}
-        <div className="lg:hidden">
-          <Navbar />
-        </div>
+        {/* Mobile header — hidden on desktop */}
+        <MobileHeader />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {children}
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto">
+          {/* Mobile: add bottom padding so content isn't hidden behind BottomNav
+              Desktop: standard padding, no bottom nav adjustment needed */}
+          <div className="p-4 sm:p-5 lg:p-8 pb-24 lg:pb-8">
+            {children}
+          </div>
         </main>
       </div>
+
+      {/* Mobile bottom navigation — fixed, hidden on desktop */}
+      <BottomNav />
     </div>
   );
 }

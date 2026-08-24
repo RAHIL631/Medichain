@@ -1,25 +1,6 @@
 // frontend/src/components/WalletConnectionModal.jsx
-//
-// Reusable modal that appears when a blockchain operation is attempted
-// without a connected MetaMask wallet.
-//
-// Usage:
-//   const [walletModalOpen, setWalletModalOpen] = useState(false);
-//   const [walletModalAction, setWalletModalAction] = useState(null);
-//
-//   // Before a blockchain op:
-//   if (!isConnected) {
-//     setWalletModalAction(() => () => handleGrantAccess(addr));
-//     setWalletModalOpen(true);
-//     return;
-//   }
-//
-//   <WalletConnectionModal
-//     isOpen={walletModalOpen}
-//     onClose={() => setWalletModalOpen(false)}
-//     onConnected={walletModalAction}
-//     operationLabel="grant doctor access"   // optional, shown in description
-//   />
+// Reusable modal that appears when a blockchain operation is attempted without a connected MetaMask wallet.
+// Mobile-first responsive: bottom sheet on small screens, centered modal on tablet/desktop.
 
 import React, { useState, useCallback } from 'react';
 import { useWalletContext } from '../context/WalletContext';
@@ -46,7 +27,6 @@ export default function WalletConnectionModal({
     setConnecting(true);
     try {
       await connectWallet();
-      // After connecting, check network
     } catch (err) {
       setLocalError(
         err.message?.includes('rejected') || err.code === 4001
@@ -81,48 +61,50 @@ export default function WalletConnectionModal({
 
   if (!isOpen) return null;
 
-  // ── Determine which step we are on ───────────────────────────────────────
-  // Step 1: not connected
-  // Step 2: connected but wrong network
-  // Step 3: connected + correct network → ready
   const step = !isConnected ? 1 : !onCorrectNetwork ? 2 : 3;
 
   return (
     // Backdrop
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{ background: 'rgba(2, 6, 23, 0.55)', backdropFilter: 'blur(6px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-label="Wallet connection required"
     >
-      {/* Modal card */}
-      <div className="hc-card w-full max-w-md p-6 relative animate-slide-up shadow-hc-card-lg">
+      {/* Modal card - Bottom sheet on mobile, rounded card on desktop */}
+      <div 
+        className="hc-card w-full max-w-md p-5 sm:p-6 relative animate-slide-up shadow-hc-card-lg rounded-b-none sm:rounded-2xl max-h-[90vh] overflow-y-auto"
+        style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        {/* Handle bar on mobile */}
+        <div className="sm:hidden w-10 h-1 rounded-full bg-hc-border mx-auto mb-4" />
+
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-hc-text-muted hover:bg-hc-bg-alt transition-colors"
+          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-xl text-hc-text-muted hover:bg-hc-bg-alt transition-colors"
           aria-label="Close"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Icon + header */}
-        <div className="flex items-start gap-4 mb-5">
-          <div className="w-11 h-11 rounded-xl bg-hc-blue-soft flex items-center justify-center flex-shrink-0">
+        <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-5 pr-8">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-hc-blue-soft flex items-center justify-center flex-shrink-0">
             <Wallet className="w-5 h-5 text-hc-blue" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-hc-text">Wallet connection required</h2>
-            <p className="text-xs text-hc-text-muted mt-1 leading-relaxed">
+            <h2 className="text-sm sm:text-base font-bold text-hc-text leading-tight">Wallet connection required</h2>
+            <p className="text-[11px] sm:text-xs text-hc-text-muted mt-1 leading-relaxed">
               Connect your MetaMask wallet to securely {operationLabel}.
             </p>
           </div>
         </div>
 
         {/* Step indicators */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-5 sm:mb-6">
           {[
             { n: 1, label: 'Connect',    done: step > 1 },
             { n: 2, label: 'Sepolia',    done: step > 2 },
@@ -130,12 +112,12 @@ export default function WalletConnectionModal({
           ].map(({ n, label, done }, i, arr) => (
             <React.Fragment key={n}>
               <div className="flex items-center gap-1.5">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-colors ${
                   done ? 'bg-hc-success text-white' : step === n ? 'bg-hc-blue text-white' : 'bg-hc-border text-hc-text-muted'
                 }`}>
                   {done ? '✓' : n}
                 </div>
-                <span className={`text-xs font-medium ${done ? 'text-hc-success' : step === n ? 'text-hc-blue' : 'text-hc-text-muted'}`}>
+                <span className={`text-[11px] sm:text-xs font-medium ${done ? 'text-hc-success' : step === n ? 'text-hc-blue' : 'text-hc-text-muted'}`}>
                   {label}
                 </span>
               </div>
@@ -148,7 +130,7 @@ export default function WalletConnectionModal({
         {localError && (
           <div className="mb-4 p-3 rounded-xl bg-hc-danger-soft border border-hc-danger/20 flex items-start gap-2 text-xs text-hc-danger">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            {localError}
+            <span>{localError}</span>
           </div>
         )}
 
@@ -172,7 +154,7 @@ export default function WalletConnectionModal({
           <button
             onClick={handleConnect}
             disabled={connecting || isLoading || !window.ethereum}
-            className="hc-btn hc-btn-primary w-full"
+            className="hc-btn hc-btn-primary w-full min-h-[48px] text-sm"
             id="wallet-modal-connect-btn"
           >
             {connecting || isLoading ? (
@@ -182,7 +164,7 @@ export default function WalletConnectionModal({
                 <img
                   src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
                   alt="MetaMask"
-                  className="w-5 h-5"
+                  className="w-5 h-5 flex-shrink-0"
                 />
                 Connect MetaMask
               </>
@@ -201,7 +183,7 @@ export default function WalletConnectionModal({
             <button
               onClick={handleSwitchNetwork}
               disabled={switching}
-              className="hc-btn hc-btn-primary w-full"
+              className="hc-btn hc-btn-primary w-full min-h-[48px]"
               id="wallet-modal-switch-btn"
             >
               {switching ? (
@@ -221,7 +203,7 @@ export default function WalletConnectionModal({
             </div>
             <button
               onClick={handleProceed}
-              className="hc-btn hc-btn-primary w-full"
+              className="hc-btn hc-btn-primary w-full min-h-[48px]"
               id="wallet-modal-proceed-btn"
             >
               Continue <ChevronRight className="w-4 h-4" />
@@ -232,7 +214,7 @@ export default function WalletConnectionModal({
         {/* Cancel */}
         <button
           onClick={onClose}
-          className="hc-btn hc-btn-ghost w-full mt-3"
+          className="hc-btn hc-btn-ghost w-full mt-2.5 min-h-[44px]"
           id="wallet-modal-cancel-btn"
         >
           Cancel

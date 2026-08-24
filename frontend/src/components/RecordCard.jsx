@@ -1,4 +1,5 @@
-// c:\Users\Rahil hassan\OneDrive\Desktop\Major project\MediChain\frontend\src\components\RecordCard.jsx
+// frontend/src/components/RecordCard.jsx
+// MediChain — Record Card Component (Mobile-First Responsive)
 import React, { useState } from 'react';
 import { getRecordTypeImage } from '../utils/images';
 import {
@@ -59,7 +60,7 @@ const RecordCard = ({ record }) => {
   return (
     <div className="hc-card overflow-hidden flex flex-col group relative transition-all duration-200 hover:shadow-hc-card-md">
       {/* Real thumbnail image banner */}
-      <div className="relative w-full h-28 overflow-hidden flex-shrink-0 bg-hc-bg-alt">
+      <div className="relative w-full h-24 sm:h-28 overflow-hidden flex-shrink-0 bg-hc-bg-alt">
         <img
           src={thumbUrl}
           alt={recordTypeLabel}
@@ -67,9 +68,9 @@ const RecordCard = ({ record }) => {
           onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80'; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        <div className="absolute bottom-2.5 left-4 flex items-center gap-2">
-          <span className="text-lg">{getTypeIcon(record.recordType)}</span>
-          <span className="text-xs font-bold text-white capitalize drop-shadow-sm">
+        <div className="absolute bottom-2.5 left-3.5 sm:left-4 flex items-center gap-2">
+          <span className="text-base sm:text-lg">{getTypeIcon(record.recordType)}</span>
+          <span className="text-xs font-bold text-white capitalize drop-shadow-sm truncate max-w-[180px]">
             {recordTypeLabel}
           </span>
         </div>
@@ -79,34 +80,34 @@ const RecordCard = ({ record }) => {
         </div>
       </div>
 
-      <div className="p-5 flex-grow flex flex-col">
+      <div className="p-4 sm:p-5 flex-grow flex flex-col min-w-0">
         {/* Header & Date */}
         <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="font-bold text-hc-text capitalize text-base leading-snug">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-hc-text capitalize text-sm sm:text-base leading-snug truncate">
               {record.description || recordTypeLabel}
             </h3>
             <p className="text-xs text-hc-text-muted flex items-center gap-1.5 mt-1">
-              <Clock className="w-3.5 h-3.5 text-hc-text-light" />
-              {formatDate(record.createdAt || record.timestamp)}
+              <Clock className="w-3.5 h-3.5 text-hc-text-light flex-shrink-0" />
+              <span>{formatDate(record.createdAt || record.timestamp)}</span>
             </p>
           </div>
         </div>
 
         {/* Doctor Info */}
-        <div className="bg-hc-bg-alt rounded-xl p-3 mb-3.5 border border-hc-border-light flex items-center gap-2.5">
+        <div className="bg-hc-bg-alt rounded-xl p-2.5 sm:p-3 mb-3 border border-hc-border-light flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-hc-blue-soft text-hc-blue flex items-center justify-center flex-shrink-0">
             <User className="w-4 h-4" />
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-hc-text truncate">Dr. {doctorName}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-hc-text truncate">Dr. {doctorName}</p>
             <p className="text-[11px] text-hc-text-muted truncate">{doctorSpec}</p>
           </div>
         </div>
 
         {/* File Details */}
-        <div className="mb-3.5 text-xs text-hc-text-muted flex items-center justify-between">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
+        <div className="mb-3 text-xs text-hc-text-muted flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <Paperclip className="w-3.5 h-3.5 text-hc-text-light flex-shrink-0" />
             <span className="truncate font-medium text-hc-text" title={record.fileName}>{record.fileName || 'Attached Document'}</span>
           </div>
@@ -119,15 +120,15 @@ const RecordCard = ({ record }) => {
 
         {/* Notes */}
         {record.notes && (
-          <div className="mb-4 flex-grow text-xs">
+          <div className="mb-3 flex-grow text-xs min-w-0">
             <p className={`text-hc-text-muted leading-relaxed ${!showFullNotes && 'line-clamp-2'}`}>
-              <span className="font-semibold text-hc-text mr-1">Notes:</span>
+              <span className="font-bold text-hc-text mr-1">Notes:</span>
               {record.notes}
             </p>
             {record.notes.length > 80 && (
               <button 
                 onClick={() => setShowFullNotes(!showFullNotes)}
-                className="text-xs text-hc-blue hover:underline mt-1 font-semibold"
+                className="text-xs text-hc-blue hover:underline mt-1 font-bold inline-block"
               >
                 {showFullNotes ? 'Show less' : 'Show more'}
               </button>
@@ -143,35 +144,35 @@ const RecordCard = ({ record }) => {
           href={record.ipfsURL || `https://gateway.pinata.cloud/ipfs/${record.ipfsCID}`} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="py-2.5 flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-blue hover:bg-hc-bg-alt transition-colors"
+          className="min-h-[44px] flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-blue hover:bg-hc-bg-alt transition-colors"
         >
           <ExternalLink className="w-3.5 h-3.5" />
-          View
+          <span>View</span>
         </a>
 
         {/* On-Chain Verify */}
         {isPending ? (
-          <span className="py-2.5 flex items-center justify-center gap-1 text-hc-warning">
+          <span className="min-h-[44px] flex items-center justify-center gap-1 text-hc-warning">
             <span className="w-3 h-3 border-2 border-hc-warning border-t-transparent rounded-full animate-spin" />
-            Pending
+            <span>Pending</span>
           </span>
         ) : (
           <a 
             href={`https://sepolia.etherscan.io/tx/${record.blockchainTxHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="py-2.5 flex items-center justify-center gap-1 text-hc-success hover:bg-hc-success-soft transition-colors"
+            className="min-h-[44px] flex items-center justify-center gap-1 text-hc-success hover:bg-hc-success-soft transition-colors"
             title="View Sepolia transaction"
           >
             <CheckCircle className="w-3.5 h-3.5" />
-            Verified
+            <span>Verified</span>
           </a>
         )}
 
         {/* Copy CID */}
         <button 
           onClick={handleCopyCID}
-          className="py-2.5 flex items-center justify-center gap-1 text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors"
+          className="min-h-[44px] flex items-center justify-center gap-1 text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors"
           title="Copy IPFS CID"
         >
           {copied ? (
@@ -182,7 +183,7 @@ const RecordCard = ({ record }) => {
           ) : (
             <>
               <Copy className="w-3.5 h-3.5" />
-              Copy CID
+              <span>Copy CID</span>
             </>
           )}
         </button>

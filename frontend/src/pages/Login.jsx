@@ -1,5 +1,5 @@
 // frontend/src/pages/Login.jsx
-// MediChain — Premium healthcare login page
+// MediChain — Premium healthcare login page (Mobile-first responsive)
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -46,7 +46,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex bg-hc-bg">
-      {/* Left — healthcare photo */}
+      {/* Left — healthcare photo (Desktop only) */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative overflow-hidden">
         <img
           src={SIDE_IMG}
@@ -63,39 +63,43 @@ export default function Login() {
             Secure, patient-controlled<br />healthcare records
           </h2>
           <div className="flex items-center gap-2 text-sm text-white/70">
-            <Shield className="w-4 h-4 text-hc-teal" />
-            Blockchain-verified · Patient-owned · Private by design
+            <Shield className="w-4 h-4 text-hc-teal flex-shrink-0" />
+            <span>Blockchain-verified · Patient-owned · Private by design</span>
           </div>
         </div>
       </div>
 
       {/* Right — auth card */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:px-6 lg:p-12">
+        <div className="w-full max-w-md mx-auto">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 mb-8">
-            <img
-              src={mediChainLogo}
-              alt="MediChain"
-              className="h-12 w-auto object-contain"
-            />
+          <div className="flex items-center justify-center sm:justify-start gap-2.5 mb-6 sm:mb-8">
+            <Link to="/">
+              <img
+                src={mediChainLogo}
+                alt="MediChain"
+                className="h-10 sm:h-12 w-auto object-contain"
+              />
+            </Link>
           </div>
 
-          <h1 className="text-2xl font-bold text-hc-text mb-1">Welcome back</h1>
-          <p className="text-sm text-hc-text-muted mb-8">Sign in to access your health records and dashboard.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-hc-text mb-1 text-center sm:text-left">Welcome back</h1>
+          <p className="text-xs sm:text-sm text-hc-text-muted mb-6 sm:mb-8 text-center sm:text-left">
+            Sign in to access your health records and dashboard.
+          </p>
 
           {/* Error alert */}
           {error && (
-            <div role="alert" className="flex items-start gap-2.5 p-3.5 mb-5 rounded-xl bg-hc-danger-soft border border-hc-danger/20 text-sm text-hc-danger">
+            <div role="alert" className="flex items-start gap-2.5 p-3.5 mb-5 rounded-xl bg-hc-danger-soft border border-hc-danger/20 text-xs sm:text-sm text-hc-danger">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5" noValidate>
+          <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5" noValidate>
             {/* Email */}
             <div>
-              <label htmlFor="email" className="hc-label">Email address</label>
+              <label htmlFor="email" className="hc-label text-xs sm:text-sm">Email address</label>
               <input
                 id="email"
                 type="email"
@@ -104,20 +108,23 @@ export default function Login() {
                 className="hc-input"
                 placeholder="name@example.com"
                 autoComplete="email"
+                inputMode="email"
                 required
               />
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="hc-label">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="password" className="text-xs sm:text-sm font-semibold text-hc-text">Password</label>
+              </div>
               <div className="relative">
                 <input
                   id="password"
                   type={showPass ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="hc-input pr-10"
+                  className="hc-input pr-11"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
@@ -125,7 +132,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute inset-y-0 right-3 flex items-center text-hc-text-light hover:text-hc-text-muted transition-colors"
+                  className="absolute inset-y-0 right-0 w-11 flex items-center justify-center text-hc-text-light hover:text-hc-text-muted transition-colors"
                   aria-label={showPass ? 'Hide password' : 'Show password'}
                 >
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -137,7 +144,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="hc-btn-primary w-full mt-2 py-3"
+              className="hc-btn hc-btn-primary w-full py-3 min-h-[48px] text-sm sm:text-base font-semibold"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -152,7 +159,7 @@ export default function Login() {
           </form>
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-5 sm:my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-hc-border-light" />
             </div>
@@ -161,32 +168,32 @@ export default function Login() {
             </div>
           </div>
 
-          {/* MetaMask */}
+          {/* MetaMask Optional note button */}
           <button
             type="button"
-            onClick={() => alert('MetaMask wallet login — coming soon!')}
-            className="hc-btn hc-btn-ghost w-full"
+            onClick={() => alert('MetaMask wallet login is optional and can be linked inside your profile/dashboard.')}
+            className="hc-btn hc-btn-ghost w-full min-h-[48px] text-xs sm:text-sm"
           >
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
               alt="MetaMask"
-              className="w-5 h-5"
+              className="w-5 h-5 flex-shrink-0"
             />
-            Connect MetaMask Wallet
+            <span>Connect MetaMask Wallet</span>
           </button>
 
           {/* Register link */}
-          <p className="mt-8 text-center text-sm text-hc-text-muted">
+          <p className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-hc-text-muted">
             Don't have an account?{' '}
-            <Link to="/register" className="text-hc-blue hover:text-hc-blue-hover font-semibold transition-colors">
+            <Link to="/register" className="text-hc-blue hover:text-hc-blue-hover font-bold transition-colors">
               Create account
             </Link>
           </p>
 
           {/* Trust note */}
-          <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-hc-text-light">
-            <Shield className="w-3 h-3" />
-            Your data is encrypted and private
+          <div className="mt-5 flex items-center justify-center gap-1.5 text-[11px] sm:text-xs text-hc-text-light">
+            <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>Your healthcare data is encrypted and private</span>
           </div>
         </div>
       </div>

@@ -5,9 +5,36 @@
 
 const express       = require('express');
 const router        = express.Router();
+const multer        = require('multer');
+const axios         = require('axios');
 const { protect, authorize } = require('../middleware/auth');
 const User          = require('../models/User');
 const MedicalRecord = require('../models/MedicalRecord');
+const { uploadToIPFS } = require('../utils/ipfs');
+const { validateFileMagicBytes } = require('../middleware/fileValidator');
+const { encryptBuffer, decryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
+
+// ── Multer config for patient uploads ─────────────────────────────────────────
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+];
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 MB hard cap
+  },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type not allowed: ${file.mimetype}. Use PDF, JPG, or PNG.`), false);
+    }
+  },
+});
 
 // Apply protect to EVERY route in this file — patient must be authenticated
 router.use(protect);
@@ -51,6 +78,153 @@ router.get('/records', async (req, res) => {
   }
 });
 
+// ── POST /api/patient/upload-record ───────────────────────────────────────────
+/**
+ * Patient direct upload route:
+ * Allows a patient to upload their own prescriptions, lab reports, or diagnostic files.
+ * Persists to IPFS via Pinata + MongoDB MedicalRecord collection.
+ */
+router.post('/upload-record', upload.single('file'), validateFileMagicBytes, async (req, res) => {
+  try {
+    const { recordType, notes, description, medications } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'File is required (PDF, JPG, or PNG)' });
+    }
+
+    // Normalize recordType
+    let normalizedRecordType = (recordType || 'prescription').toLowerCase().trim();
+    if (normalizedRecordType === 'lab-report') normalizedRecordType = 'lab_report';
+    if (normalizedRecordType === 'imaging')    normalizedRecordType = 'xray';
+    if (normalizedRecordType === 'vaccination') normalizedRecordType = 'other';
+
+    const validTypes = ['prescription', 'lab_report', 'diagnosis', 'xray', 'scan', 'other'];
+    if (!validTypes.includes(normalizedRecordType)) {
+      normalizedRecordType = 'other';
+    }
+
+    const patient = await User.findById(req.user._id);
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient account not found' });
+    }
+
+    // Encrypt file buffer if encryption is configured
+    let bufferToUpload = req.file.buffer;
+    let encryptionMeta = null;
+    let isEncrypted    = false;
+
+    if (isEncryptionConfigured()) {
+      const encResult = encryptBuffer(req.file.buffer);
+      bufferToUpload  = encResult.encryptedBuffer;
+      isEncrypted     = true;
+      encryptionMeta  = {
+        encryptedKey: encResult.encryptedKey,
+        iv:           encResult.iv,
+        authTag:      encResult.authTag,
+        algorithm:    'aes-256-gcm',
+        encryptedAt:  new Date(),
+      };
+      console.log('[PATIENT] 🔒 File encrypted with AES-256-GCM before upload');
+    }
+
+    // Upload to IPFS / Pinata
+    const { cid, url: ipfsURL, size: ipfsSize } = await uploadToIPFS(
+      bufferToUpload,
+      req.file.originalname,
+      {
+        patientWalletAddress: patient.walletAddress || '',
+        recordType:           normalizedRecordType,
+        uploadedBy:           patient.walletAddress || patient._id.toString(),
+        timestamp:            new Date().toISOString(),
+        encrypted:            isEncrypted ? 'true' : 'false',
+      }
+    );
+    console.log(`[PATIENT] IPFS ✅ CID: ${cid} Size: ${ipfsSize} bytes`);
+
+    // Parse medications list
+    const medicationList = medications
+      ? (Array.isArray(medications) ? medications : medications.split(',').map((m) => m.trim()).filter(Boolean))
+      : [];
+
+    // Fallback wallet address placeholder if user hasn't linked wallet yet
+    const patientWallet = patient.walletAddress || '0x0000000000000000000000000000000000000000';
+
+    // Save to MongoDB
+    const record = await MedicalRecord.create({
+      patientId:            patient._id,
+      patientWalletAddress: patientWallet,
+      doctorId:             null,
+      doctorWalletAddress:  null,
+      ipfsCID:              cid,
+      ipfsURL:              ipfsURL,
+      recordType:           normalizedRecordType,
+      fileName:             req.file.originalname,
+      fileMimeType:         req.file.validatedMime || req.file.mimetype,
+      fileSize:             req.file.size,
+      notes:                notes || description || '',
+      medications:          medicationList,
+      isEncrypted:          isEncrypted,
+      encryptionMeta:       encryptionMeta,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Record uploaded to IPFS and saved successfully',
+      record: {
+        _id:                  record._id,
+        ipfsCID:              record.ipfsCID,
+        ipfsURL:              record.ipfsURL,
+        recordType:           record.recordType,
+        fileName:             record.fileName,
+        fileSize:             record.fileSize,
+        patientWalletAddress: record.patientWalletAddress,
+        uploadedAt:           record.createdAt,
+      },
+    });
+
+  } catch (err) {
+    console.error('[PATIENT] upload-record error:', err.message);
+    if (err.message?.includes('File type not allowed') || err.message?.includes('File too large')) {
+      return res.status(400).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Prescription storage service encountered an error: ' + err.message });
+  }
+});
+
+// ── PATCH /api/patient/record/:recordId/txhash ────────────────────────────────
+/**
+ * Saves the Ethereum TX hash to the record after patient calls addRecord() on Sepolia.
+ */
+router.patch('/record/:recordId/txhash', async (req, res) => {
+  try {
+    const { txHash, blockNumber } = req.body;
+    if (!txHash) {
+      return res.status(400).json({ error: 'txHash is required' });
+    }
+    if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+      return res.status(400).json({ error: 'Invalid transaction hash format' });
+    }
+
+    const record = await MedicalRecord.findOne({
+      _id:       req.params.recordId,
+      patientId: req.user._id,
+    });
+
+    if (!record) {
+      return res.status(404).json({ error: 'Record not found' });
+    }
+
+    record.blockchainTxHash     = txHash;
+    record.blockchainBlockNumber = blockNumber || null;
+    await record.save();
+
+    return res.status(200).json({ success: true, message: 'Transaction hash confirmed on record' });
+  } catch (err) {
+    console.error('[PATIENT] txhash error:', err.message);
+    return res.status(500).json({ error: 'Failed to update transaction hash' });
+  }
+});
+
 // ── GET /api/patient/records/:recordId ───────────────────────────────────────
 /**
  * Returns a single medical record by ID.
@@ -78,9 +252,6 @@ router.get('/records/:recordId', async (req, res) => {
 /**
  * Proxies the file download from IPFS and decrypts it if encrypted.
  */
-const axios = require('axios');
-const { decryptBuffer } = require('../utils/encryption');
-
 router.get('/records/:recordId/download', async (req, res) => {
   try {
     const record = await MedicalRecord
@@ -124,14 +295,11 @@ router.get('/records/:recordId/download', async (req, res) => {
  */
 router.get('/profile', async (req, res) => {
   try {
-    // req.user is already populated by the protect middleware (no password)
     const user = await User.findById(req.user._id).select('-password -__v');
-
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Count only active records for this patient
     const recordCount = await MedicalRecord.countDocuments({
       patientId: req.user._id,
       isActive:  true,
@@ -145,18 +313,11 @@ router.get('/profile', async (req, res) => {
 });
 
 // ── PUT /api/patient/profile ──────────────────────────────────────────────────
-/**
- * Updates allowed patient profile fields only.
- * Sensitive fields (email, password, role, walletAddress) are explicitly blocked.
- */
 router.put('/profile', async (req, res) => {
   try {
-    // Whitelist of updatable fields — nothing sensitive can be changed here
     const ALLOWED_FIELDS = ['bloodGroup', 'allergies', 'chronicConditions', 'phone', 'dateOfBirth'];
-
     const updates = {};
     ALLOWED_FIELDS.forEach((field) => {
-      // Only include fields that were actually sent in the request body
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
       }
@@ -170,8 +331,8 @@ router.put('/profile', async (req, res) => {
       req.user._id,
       updates,
       {
-        returnDocument: 'after', // return the updated document
-        runValidators: true, // enforce schema validators (e.g. bloodGroup enum)
+        returnDocument: 'after',
+        runValidators: true,
         select:       '-password -__v',
       }
     );
@@ -188,26 +349,18 @@ router.put('/profile', async (req, res) => {
 });
 
 // ── POST /api/patient/link-wallet ─────────────────────────────────────────────
-/**
- * Links a MetaMask wallet address to the patient's account.
- * Body: { walletAddress: "0x..." }
- */
 router.post('/link-wallet', async (req, res) => {
   try {
     const { walletAddress } = req.body;
-
     if (!walletAddress) {
       return res.status(400).json({ error: 'walletAddress is required' });
     }
-
-    // Validate Ethereum address format
     if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
       return res.status(400).json({
         error: 'Invalid Ethereum address format (must be 0x + 40 hex chars)',
       });
     }
 
-    // Check this wallet isn't already linked to another user
     const existingUser = await User.findOne({ walletAddress, _id: { $ne: req.user._id } });
     if (existingUser) {
       return res.status(400).json({
@@ -215,7 +368,6 @@ router.post('/link-wallet', async (req, res) => {
       });
     }
 
-    // Update the user record
     await User.findByIdAndUpdate(req.user._id, {
       walletAddress,
       isWalletLinked: true,
@@ -233,10 +385,6 @@ router.post('/link-wallet', async (req, res) => {
 });
 
 // ── POST /api/patient/confirm-registration ─────────────────────────────────────
-/**
- * Marks the patient as registered on the blockchain in MongoDB.
- * Should be called AFTER contract.registerPatient() succeeds.
- */
 router.post('/confirm-registration', async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user._id, {
@@ -253,27 +401,18 @@ router.post('/confirm-registration', async (req, res) => {
 });
 
 // ── POST /api/patient/grant-access ────────────────────────────────────────────
-/**
- * Verifies a doctor exists in the system before the frontend calls grantDoctorAccess()
- * on the smart contract. Does NOT write to the blockchain — that happens in the frontend.
- * Body: { doctorWalletAddress: "0x..." }
- */
 router.post('/grant-access', async (req, res) => {
   try {
     const { doctorWalletAddress } = req.body;
-
     if (!doctorWalletAddress) {
       return res.status(400).json({ error: 'doctorWalletAddress is required' });
     }
-
-    // Validate Ethereum address format
     if (!/^0x[a-fA-F0-9]{40}$/.test(doctorWalletAddress)) {
       return res.status(400).json({ error: 'Invalid Ethereum address format' });
     }
 
-    // Look up the doctor in MongoDB by their linked wallet address
     const doctor = await User.findOne({
-      walletAddress: doctorWalletAddress,
+      walletAddress: { $regex: new RegExp(`^${doctorWalletAddress.trim()}$`, 'i') },
       role:          { $in: ['doctor', 'hospital'] },
     }).select('name specialization role');
 
@@ -283,7 +422,6 @@ router.post('/grant-access', async (req, res) => {
       });
     }
 
-    // Return doctor details so the frontend can show a confirmation before blockchain tx
     return res.status(200).json({
       doctorName:           doctor.name,
       doctorSpecialization: doctor.specialization || doctor.role,
@@ -296,17 +434,10 @@ router.post('/grant-access', async (req, res) => {
 });
 
 // ── GET /api/patient/medications ──────────────────────────────────────────────
-/**
- * Aggregates all medication names from this patient's active prescription records.
- * This list is sent to the Python AI microservice at /api/drug-check
- * to detect harmful drug-drug interactions via the RxNorm API.
- */
 router.get('/medications', async (req, res) => {
   try {
-    // Use MongoDB aggregation to flatten the medications arrays across all prescriptions
     const result = await MedicalRecord.aggregate([
       {
-        // Only look at this patient's active prescriptions
         $match: {
           patientId:  req.user._id,
           recordType: 'prescription',
@@ -314,25 +445,20 @@ router.get('/medications', async (req, res) => {
         },
       },
       {
-        // Deconstruct the medications array into individual documents
         $unwind: '$medications',
       },
       {
-        // Group all medication strings into a single deduplicated set
         $group: {
           _id:         null,
-          medications: { $addToSet: '$medications' }, // $addToSet removes duplicates
+          medications: { $addToSet: '$medications' },
         },
       },
       {
-        // Remove the _id field from the output
         $project: { _id: 0, medications: 1 },
       },
     ]);
 
-    // result is [] if no prescriptions exist — handle gracefully
     const medications = result.length > 0 ? result[0].medications : [];
-
     return res.status(200).json({ medications });
   } catch (err) {
     console.error('[PATIENT] GET /medications error:', err.message);

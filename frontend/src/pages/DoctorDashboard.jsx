@@ -16,9 +16,10 @@ import StorageProof from '../components/StorageProof';
 
 import {
   Stethoscope, QrCode, FileText, Activity, Brain,
-  Upload, AlertTriangle, CheckCircle, Plus,
+  Upload, CheckCircle, Plus, AlertTriangle,
   FileCheck, Wallet, UserCheck, Heart, AlertCircle, Database
 } from 'lucide-react';
+import { DOCTOR_IMAGES, MEDICINE_IMAGES, MEDICAL_IMAGES } from '../utils/images';
 
 const getRiskBadge = (level) => {
   if (!level) return <span className="hc-badge hc-badge-neutral">Unknown</span>;
@@ -253,9 +254,7 @@ const DoctorDashboard = () => {
             formData.append('notes',                notes || '');
             formData.append('medications',          medications.join(','));
 
-            const { data } = await api.post('/doctor/upload-record', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const { data } = await api.post('/doctor/upload-record', formData);
 
             const {
                 _id:                  recordId,
@@ -703,17 +702,84 @@ const DoctorDashboard = () => {
 
                     </div>
                 ) : (
-                    <div className="lg:col-span-2 hc-card p-16 text-center flex flex-col items-center justify-center">
-                        <div className="w-16 h-16 rounded-2xl bg-hc-blue-soft flex items-center justify-center mb-4">
-                            <QrCode className="w-8 h-8 text-hc-blue" />
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Clinical Consultation Workstation Banner */}
+                        <div className="hc-card p-6 relative overflow-hidden bg-gradient-to-br from-hc-surface to-hc-blue-soft/30 border border-hc-border">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="w-2 h-2 rounded-full bg-hc-success animate-pulse" />
+                                        <span className="text-xs font-bold text-hc-blue uppercase tracking-wider">Clinical Station Ready</span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-hc-text">Patient Diagnostic & Prescription Station</h3>
+                                    <p className="text-xs text-hc-text-muted mt-0.5">
+                                        Scan a patient's QR Health ID or select from recent consultations to review history and prescribe treatments.
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => setScanning(true)} 
+                                    className="hc-btn hc-btn-primary hc-btn-sm flex-shrink-0 flex items-center gap-2"
+                                >
+                                    <QrCode className="w-4 h-4" />
+                                    Scan Patient QR
+                                </button>
+                            </div>
+
+                            {/* Real Diagnostic Modality Cards */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-hc-border-light">
+                                {[
+                                    { title: 'AI Prescription Safety', desc: 'RxNorm multi-drug interaction checking', img: MEDICINE_IMAGES.pills, badge: 'CDSS Active' },
+                                    { title: 'Diagnostic Lab History', desc: 'Decentralized IPFS pathology records', img: MEDICAL_IMAGES.lab, badge: 'Verified' },
+                                    { title: 'Medical Imaging Suite', desc: 'High-res X-Ray, MRI & CT Scans', img: MEDICAL_IMAGES.xray, badge: 'DICOM Ready' },
+                                ].map(card => (
+                                    <div key={card.title} className="rounded-xl overflow-hidden border border-hc-border bg-hc-surface flex flex-col group hover:shadow-hc-card transition-all">
+                                        <div className="h-24 overflow-hidden relative bg-hc-bg-alt">
+                                            <img
+                                                src={card.img}
+                                                alt={card.title}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                loading="lazy"
+                                            />
+                                            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">
+                                                {card.badge}
+                                            </span>
+                                        </div>
+                                        <div className="p-3">
+                                            <p className="text-xs font-bold text-hc-text truncate">{card.title}</p>
+                                            <p className="text-[10px] text-hc-text-muted line-clamp-2 mt-0.5">{card.desc}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <h3 className="text-lg font-bold text-hc-text mb-2">No Active Patient Session</h3>
-                        <p className="text-sm text-hc-text-muted max-w-sm mx-auto leading-relaxed mb-6">
-                            Scan a patient's QR code or search by wallet address to review records and prescribe new medications.
-                        </p>
-                        <button onClick={() => setScanning(true)} className="hc-btn hc-btn-primary hc-btn-sm">
-                            Scan Patient QR Now
-                        </button>
+
+                        {/* Recent Specialist Peer Network */}
+                        <div className="hc-card p-5">
+                            <h4 className="text-xs font-bold text-hc-text uppercase tracking-wider mb-3">On-Duty Specialist Care Team</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {[
+                                    { name: 'Dr. Sarah Jenkins, MD', spec: 'Cardiology Specialist', img: DOCTOR_IMAGES.female_1 },
+                                    { name: 'Dr. Robert Vance, MD', spec: 'Radiology & Diagnostics', img: DOCTOR_IMAGES.male_1 },
+                                    { name: 'Dr. Priya Patel, MD', spec: 'Internal Medicine', img: DOCTOR_IMAGES.female_2 },
+                                ].map(doc => (
+                                    <div key={doc.name} className="flex items-center gap-3 p-2.5 rounded-xl bg-hc-bg-alt border border-hc-border-light">
+                                        <img
+                                            src={doc.img}
+                                            alt={doc.name}
+                                            className="w-10 h-10 rounded-xl object-cover border border-hc-border shadow-xs"
+                                            loading="lazy"
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-bold text-hc-text truncate">{doc.name}</p>
+                                            <p className="text-[10px] text-hc-text-muted truncate">{doc.spec}</p>
+                                            <span className="text-[9px] text-hc-success font-bold flex items-center gap-1 mt-0.5">
+                                                <CheckCircle className="w-2.5 h-2.5" /> Licensed
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

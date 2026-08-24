@@ -158,7 +158,6 @@ const PrescriptionValidator = () => {
 
       const { data } = await api.post('/prescription/validate', form, {
         timeout: 60000,
-        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       setCurrentStep(10); // complete

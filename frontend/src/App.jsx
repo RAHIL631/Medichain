@@ -176,7 +176,7 @@ function App() {
                   </ProtectedRoute>
                 } />
                 <Route path="/upload-prescription" element={
-                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital']}>
                     <UploadPrescription />
                   </ProtectedRoute>
                 } />
@@ -213,7 +213,7 @@ function App() {
                   </ProtectedRoute>
                 } />
                 <Route path="/upload-report" element={
-                  <ProtectedRoute allowedRoles={['doctor', 'hospital']}>
+                  <ProtectedRoute allowedRoles={['patient', 'doctor', 'hospital']}>
                     <UploadReport />
                   </ProtectedRoute>
                 } />

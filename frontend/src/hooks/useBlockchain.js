@@ -70,8 +70,7 @@ const NETWORKS = {
 };
 
 export const TARGET_CHAIN_ID =
-  Number(process.env.REACT_APP_TARGET_CHAIN_ID) ||
-  (process.env.NODE_ENV === 'production' ? 11155111 : 31337);
+  Number(process.env.REACT_APP_TARGET_CHAIN_ID) || 11155111;
 
 export const TARGET_NETWORK = NETWORKS[TARGET_CHAIN_ID];
 const LS_KEY = 'medichain_wallet_address'; // localStorage key for silent reconnect
