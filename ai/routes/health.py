@@ -14,6 +14,29 @@ logger = logging.getLogger("medichain.routes.health")
 health_bp = Blueprint("health", __name__)
 
 
+@health_bp.route("/", methods=["GET"])
+def index():
+    """
+    GET /
+    Root endpoint — responds to cloud load balancer pings, uptime monitors, and root requests.
+    """
+    from models_registry import registry
+    from config import settings
+
+    return jsonify({
+        "status": "online",
+        "service": settings.SERVICE_NAME,
+        "version": settings.SERVICE_VERSION,
+        "modelsLoaded": registry.is_loaded(),
+        "endpoints": {
+            "health": "/health",
+            "readiness": "/readiness",
+            "version": "/version",
+            "analyze": "/cdss/analyze"
+        }
+    }), 200
+
+
 @health_bp.route("/health", methods=["GET"])
 def liveness():
     """
