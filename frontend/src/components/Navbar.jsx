@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useWalletContext } from '../context/WalletContext';
 import {
-  Activity, Shield, Bell, LogOut, User, Menu, X,
-  FileText, Lock, Brain, Home, Heart, Stethoscope
+  Shield, Bell, LogOut, User, Menu, X,
+  FileText, Lock, Brain, Home, Heart, Stethoscope, Wallet
 } from 'lucide-react';
+import mediChainLogo from '../medichain-logo.png';
 
 const PATIENT_NAV = [
   { label: 'Dashboard',   path: '/patient-dashboard', Icon: Home        },
@@ -29,6 +31,7 @@ const PUBLIC_NAV = [
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
+  const { isConnected, shortAddress, connectWallet } = useWalletContext();
   const location = useLocation();
   const [menuOpen, setMenuOpen]   = useState(false);
   const [scrolled, setScrolled]   = useState(false);
@@ -60,14 +63,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-            <div className="w-9 h-9 bg-hc-blue rounded-xl flex items-center justify-center shadow-sm group-hover:bg-hc-blue-hover transition-colors">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="text-base font-bold text-hc-text">MediChain</span>
-              <span className="text-[10px] text-hc-text-muted font-medium hidden sm:block">Healthcare Platform</span>
-            </div>
+          <Link to="/" className="flex items-center flex-shrink-0 group">
+            <img
+              src={mediChainLogo}
+              alt="MediChain"
+              className="h-10 w-auto object-contain transition-opacity group-hover:opacity-90"
+            />
           </Link>
 
           {/* Desktop center nav */}
@@ -107,6 +108,24 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <>
+                {/* Optional wallet connect — secondary action */}
+                {isConnected ? (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-hc-success/30 bg-hc-success-soft text-xs font-semibold text-hc-success">
+                    <div className="w-1.5 h-1.5 rounded-full bg-hc-success" />
+                    {shortAddress}
+                  </div>
+                ) : (
+                  <button
+                    onClick={connectWallet}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-hc-border text-xs font-medium text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors"
+                    aria-label="Connect wallet"
+                    id="navbar-connect-wallet-btn"
+                  >
+                    <Wallet className="w-3.5 h-3.5" />
+                    Connect Wallet
+                  </button>
+                )}
+
                 <button className="relative p-2 rounded-lg text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-colors" aria-label="Notifications">
                   <Bell className="w-5 h-5" />
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-hc-danger rounded-full" aria-hidden="true" />

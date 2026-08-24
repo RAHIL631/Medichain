@@ -1,20 +1,22 @@
 // frontend/src/pages/PatientDashboard.jsx
-// MediChain — Premium patient dashboard (light healthcare theme)
+// MediChain — Patient dashboard
+// MetaMask is OPTIONAL. Dashboard loads fully without wallet.
+// Blockchain identity card is shown once, dismissible with "Maybe Later".
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth }      from '../context/AuthContext';
-import api              from '../utils/api';
-import { formatAddress } from '../utils/web3';
-import useWallet        from '../hooks/useWallet';
-import DashboardLayout  from '../components/DashboardLayout';
-import WalletSetup      from '../components/WalletSetup';
-import useContract      from '../hooks/useContract';
-import useContractEvents from '../hooks/useContractEvents';
+import { useAuth }           from '../context/AuthContext';
+import { useWalletContext }  from '../context/WalletContext';
+import api                   from '../utils/api';
+import { formatAddress }     from '../utils/web3';
+import DashboardLayout       from '../components/DashboardLayout';
+import WalletConnectionModal from '../components/WalletConnectionModal';
 import {
   FileText, Lock, Brain, Activity, QrCode,
   ChevronRight, Home, User, BarChart3,
-  Wallet, RefreshCw
+  Wallet, RefreshCw, Shield, X
 } from 'lucide-react';
+
+const DISMISS_KEY = 'medichain_wallet_card_dismissed';
 
 const TYPE_LABEL = {
   prescription: 'Prescription', 'lab-report': 'Lab Report',
@@ -105,26 +107,75 @@ const NAV = [
   { label: 'Profile',     path: '/profile',            icon: User     },
 ];
 
+// ── Optional blockchain identity card ────────────────────────────────────────
+function BlockchainIdentityCard({ onDismiss, onConnect }) {
+  return (
+    <div className="mb-6 hc-card p-5 border border-hc-blue/20 bg-gradient-to-r from-hc-blue-soft to-hc-violet-soft relative">
+      <button
+        onClick={onDismiss}
+        className="absolute top-3 right-3 p-1 rounded-md text-hc-text-light hover:text-hc-text-muted hover:bg-hc-bg-alt transition-colors"
+        aria-label="Dismiss"
+      >
+        <X className="w-4 h-4" />
+      </button>
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 rounded-xl bg-hc-blue flex items-center justify-center flex-shrink-0 shadow-sm">
+          <Shield className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 min-w-0 pr-6">
+          <h3 className="text-sm font-bold text-hc-text">Secure your healthcare identity</h3>
+          <p className="text-xs text-hc-text-muted mt-1 leading-relaxed">
+            Connect your wallet to enable blockchain-backed ownership, decentralized access control,
+            and on-chain healthcare actions.
+          </p>
+          <div className="flex items-center gap-2 mt-3">
+            <button
+              onClick={onConnect}
+              className="hc-btn hc-btn-primary hc-btn-sm"
+              id="patient-dashboard-connect-wallet-btn"
+            >
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
+                alt="MetaMask"
+                className="w-4 h-4"
+              />
+              Connect MetaMask
+            </button>
+            <button
+              onClick={onDismiss}
+              className="hc-btn hc-btn-ghost hc-btn-sm text-hc-text-muted"
+              id="patient-dashboard-maybe-later-btn"
+            >
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function PatientDashboard() {
   const { user } = useAuth();
-  const { account, connected, connect } = useWallet();
-  const { contract } = useContract();
+  const { isConnected, address } = useWalletContext();
 
-  const { latestEvent } = useContractEvents(contract, account);
-  const [toast, setToast] = useState(null);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [cardDismissed, setCardDismissed]     = useState(
+    () => localStorage.getItem(DISMISS_KEY) === 'true'
+  );
+  const [toast, setToast]                     = useState(null);
 
-  const [records, setRecords]             = useState([]);
+  const [records, setRecords]               = useState([]);
   const [recordsLoading, setRecordsLoading] = useState(true);
-  const [statsLoading, setStatsLoading]   = useState(true);
-  const [doctorCount, setDoctorCount]     = useState(0);
+  const [statsLoading, setStatsLoading]     = useState(true);
+  const [doctorCount, setDoctorCount]       = useState(0);
 
   const fetchRecords = useCallback(async () => {
     setRecordsLoading(true);
     try {
       const { data } = await api.get('/patient/records');
-      const recs = data.records || [];
-      setRecords(recs);
+      setRecords(data.records || []);
     } catch { /* silent */ }
     finally { setRecordsLoading(false); setStatsLoading(false); }
   }, []);
@@ -138,12 +189,20 @@ export default function PatientDashboard() {
 
   useEffect(() => { fetchRecords(); fetchStats(); }, [fetchRecords, fetchStats]);
 
-  useEffect(() => {
-    if (latestEvent) setToast(latestEvent.message || 'Blockchain event received');
-  }, [latestEvent]);
+  const handleDismiss = useCallback(() => {
+    localStorage.setItem(DISMISS_KEY, 'true');
+    setCardDismissed(true);
+  }, []);
 
-  const firstName = user?.name?.split(' ')[0] || 'there';
+  const handleConnectClick = useCallback(() => {
+    setWalletModalOpen(true);
+  }, []);
+
+  const firstName   = user?.name?.split(' ')[0] || 'there';
   const walletLinked = !!user?.walletAddress;
+
+  // Show card if: wallet not yet linked AND user hasn't dismissed it
+  const showBlockchainCard = !walletLinked && !cardDismissed && !isConnected;
 
   return (
     <DashboardLayout navItems={NAV}>
@@ -155,6 +214,17 @@ export default function PatientDashboard() {
         </div>
       )}
 
+      {/* WalletConnectionModal — appears only when user explicitly requests blockchain action */}
+      <WalletConnectionModal
+        isOpen={walletModalOpen}
+        onClose={() => setWalletModalOpen(false)}
+        operationLabel="set up your blockchain identity"
+        onConnected={() => {
+          setWalletModalOpen(false);
+          setCardDismissed(true);
+        }}
+      />
+
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -165,39 +235,46 @@ export default function PatientDashboard() {
           <p className="text-sm text-hc-text-muted mt-1">Here's an overview of your health records and access.</p>
         </div>
         <div className="flex items-center gap-2">
-          {connected ? (
+          {/* Optional wallet connect — secondary action, not primary */}
+          {isConnected ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-hc-success-soft border border-hc-success/20 text-xs font-semibold text-hc-success">
               <div className="w-1.5 h-1.5 rounded-full bg-hc-success" />
-              {formatAddress(account)}
+              {formatAddress(address)}
             </div>
           ) : (
             <button
-              onClick={connect}
-              className="hc-btn hc-btn-secondary hc-btn-sm"
+              onClick={handleConnectClick}
+              className="hc-btn hc-btn-ghost hc-btn-sm border border-hc-border text-hc-text-muted hover:text-hc-text"
+              id="patient-dashboard-header-connect-btn"
             >
               <Wallet className="w-3.5 h-3.5" />
               Connect Wallet
             </button>
           )}
-          <button onClick={() => { fetchRecords(); fetchStats(); }} className="p-2 rounded-lg text-hc-text-muted hover:bg-hc-bg-alt transition-colors" aria-label="Refresh">
+          <button
+            onClick={() => { fetchRecords(); fetchStats(); }}
+            className="p-2 rounded-lg text-hc-text-muted hover:bg-hc-bg-alt transition-colors"
+            aria-label="Refresh"
+          >
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* ── Wallet setup prompt ─────────────────────────────────────── */}
-      {!walletLinked && (
-        <div className="mb-6">
-          <WalletSetup />
-        </div>
+      {/* ── Optional blockchain identity card ──────────────────────── */}
+      {showBlockchainCard && (
+        <BlockchainIdentityCard
+          onDismiss={handleDismiss}
+          onConnect={handleConnectClick}
+        />
       )}
 
       {/* ── Stats row ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Stat icon={FileText}   label="Health Records"    value={statsLoading ? null : records.length} sub="Total verified records"     loading={statsLoading} variant="blue"    to="/records" />
-        <Stat icon={Lock}       label="Authorized Doctors" value={statsLoading ? null : doctorCount}   sub="Active access grants"        loading={statsLoading} variant="teal"    to="/access"  />
-        <Stat icon={Brain}      label="AI Insights"       value="Available"                            sub="Health risk analysis ready"  loading={false}        variant="violet"  to="/ai-dashboard" />
-        <Stat icon={Activity}   label="Blockchain"        value={walletLinked ? 'Verified' : 'Pending'} sub={walletLinked ? 'Identity confirmed' : 'Connect wallet to verify'} loading={false} variant={walletLinked ? 'success' : 'warning'} />
+        <Stat icon={FileText}   label="Health Records"    value={statsLoading ? null : records.length} sub="Total verified records"      loading={statsLoading} variant="blue"    to="/records" />
+        <Stat icon={Lock}       label="Authorized Doctors" value={statsLoading ? null : doctorCount}   sub="Active access grants"         loading={statsLoading} variant="teal"    to="/access"  />
+        <Stat icon={Brain}      label="AI Insights"       value="Available"                            sub="Health risk analysis ready"   loading={false}        variant="violet"  to="/ai-dashboard" />
+        <Stat icon={Activity}   label="Blockchain"        value={walletLinked ? 'Verified' : isConnected ? 'Connected' : 'Optional'} sub={walletLinked ? 'Identity confirmed' : isConnected ? 'Wallet connected' : 'Connect wallet to enhance security'} loading={false} variant={walletLinked || isConnected ? 'success' : 'blue'} />
       </div>
 
       {/* ── Quick actions + Recent records ─────────────────────────── */}

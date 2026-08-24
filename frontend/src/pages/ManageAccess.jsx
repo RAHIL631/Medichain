@@ -3,7 +3,6 @@
 import React from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import AccessManager from '../components/AccessManager';
-import { useAuth } from '../context/AuthContext';
 import { Lock, AlertTriangle, Home, FileText, Brain, BarChart3, User } from 'lucide-react';
 
 const NAV = [
@@ -16,7 +15,7 @@ const NAV = [
 ];
 
 export default function ManageAccess() {
-  const { user } = useAuth();
+  // wallet gating is handled inside AccessManager itself
 
   return (
     <DashboardLayout navItems={NAV}>
@@ -30,8 +29,8 @@ export default function ManageAccess() {
           </p>
         </div>
 
-        {/* Access Manager (existing blockchain logic) */}
-        <AccessManager patientAddress={user?.walletAddress} />
+        {/* Access Manager (blockchain access control — wallet requested on demand) */}
+        <AccessManager />
 
         {/* Security note */}
         <div className="mt-6 p-4 rounded-xl bg-hc-warning-soft border border-hc-warning/20 flex items-start gap-3">

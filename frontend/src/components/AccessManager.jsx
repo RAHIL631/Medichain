@@ -1,256 +1,333 @@
 // frontend/src/components/AccessManager.jsx
-// Complete React component for patient-controlled access management on-chain
+// Complete React component for patient-controlled access management on-chain.
+//
+// WALLET GATING: The page loads normally without wallet.
+// Wallet is only requested when a blockchain action (Grant/Revoke) is triggered.
+// WalletConnectionModal handles connect → Sepolia check → proceed flow.
 
 import React, { useState, useEffect, useCallback } from 'react';
-import useContract from '../hooks/useContract';
-import useWallet from '../hooks/useWallet';
-import { isValidEthAddress } from '../utils/web3';
+import { useWalletContext }   from '../context/WalletContext';
+import { useContract as useBlockchainContract } from '../hooks/useBlockchain';
+import WalletConnectionModal  from './WalletConnectionModal';
+import { isValidEthAddress }  from '../utils/web3';
+import { Lock, AlertCircle, CheckCircle, ExternalLink, Wallet } from 'lucide-react';
 
-/**
- * AccessManager Component
- * Allows patients to grant or revoke doctor access to their medical records.
- * Uses ethers.js v6 to interact with the MediChain smart contract.
- */
+const TARGET_CHAIN_ID = Number(process.env.REACT_APP_TARGET_CHAIN_ID) || 11155111;
+
 const AccessManager = () => {
-  const { contract } = useContract();
-  const { account } = useWallet();
-  
-  const [doctorAddress, setDoctorAddress] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
-  const [txHash, setTxHash] = useState(null);
-  const [authorizedDoctors, setAuthorizedDoctors] = useState([]);
+  const { signer, isConnected, chainId } = useWalletContext();
+  const contract = useBlockchainContract(signer);
 
-  // --- Fetch Authorized Doctors from Blockchain Events ---
-  const fetchAuthorizedDoctors = useCallback(async () => {
-    if (!contract || !account) return;
+  // wallet modal state
+  const [walletModalOpen, setWalletModalOpen]   = useState(false);
+  const [pendingAction,   setPendingAction]      = useState(null); // fn to run after wallet ready
 
-    try {
-      // Get all Grant events for this patient
-      const grantFilter = contract.filters.DoctorAccessGranted(account);
-      const grantEvents = await contract.queryFilter(grantFilter);
+  const [doctorAddress,       setDoctorAddress]       = useState('');
+  const [loading,             setLoading]             = useState(false);
+  const [error,               setError]               = useState(null);
+  const [successMsg,          setSuccessMsg]          = useState(null);
+  const [txHash,              setTxHash]              = useState(null);
+  const [authorizedDoctors,   setAuthorizedDoctors]   = useState([]);
+  const [listLoading,         setListLoading]         = useState(false);
 
-      // Get all Revoke events for this patient
-      const revokeFilter = contract.filters.DoctorAccessRevoked(account);
-      const revokeEvents = await contract.queryFilter(revokeFilter);
+  const isOnCorrectNetwork = chainId === TARGET_CHAIN_ID;
+  const isReady = isConnected && isOnCorrectNetwork && !!contract;
 
-      // Build a map of current access status
-      const accessMap = new Map();
-
-      // Process grants
-      grantEvents.forEach(event => {
-        const doctor = event.args[1];
-        accessMap.set(doctor, true);
-      });
-
-      // Process revokes (overwrite with false if revoked later)
-      revokeEvents.forEach(event => {
-        const doctor = event.args[1];
-        accessMap.set(doctor, false);
-      });
-
-      // Convert map to list of doctors who still have access
-      const currentDoctors = Array.from(accessMap.entries())
-        .filter(([_, hasAccess]) => hasAccess)
-        .map(([doctor, _]) => doctor);
-
-      setAuthorizedDoctors(currentDoctors);
-    } catch (err) {
-      console.error("Error fetching access events:", err);
-    }
-  }, [contract, account]);
-
-  // --- Initial Fetch and Event Listeners ---
-  useEffect(() => {
-    fetchAuthorizedDoctors();
-
-    if (contract) {
-      // Listen for real-time updates
-      const onGrant = (patient, doctor) => {
-        if (patient.toLowerCase() === account?.toLowerCase()) {
-          fetchAuthorizedDoctors();
-        }
-      };
-      const onRevoke = (patient, doctor) => {
-        if (patient.toLowerCase() === account?.toLowerCase()) {
-          fetchAuthorizedDoctors();
-        }
-      };
-
-      contract.on("DoctorAccessGranted", onGrant);
-      contract.on("DoctorAccessRevoked", onRevoke);
-
-      return () => {
-        contract.off("DoctorAccessGranted", onGrant);
-        contract.off("DoctorAccessRevoked", onRevoke);
-      };
-    }
-  }, [contract, account, fetchAuthorizedDoctors]);
-
-  // --- Grant Access ---
-  const handleGrantAccess = async (e) => {
-    e.preventDefault();
-    if (!isValidEthAddress(doctorAddress)) {
-      setError("Please enter a valid Ethereum address (0x...)");
+  // ── Require wallet helper ──────────────────────────────────────────────────
+  // Checks if wallet is ready. If not, opens WalletConnectionModal with a
+  // pending action that will be called once the wallet is connected & correct network.
+  const requireWallet = useCallback((action) => {
+    if (isReady) {
+      action();
       return;
     }
+    setPendingAction(() => action);
+    setWalletModalOpen(true);
+  }, [isReady]);
 
+  const handleWalletConnected = useCallback(() => {
+    setWalletModalOpen(false);
+    // The pending action will auto-run on next render once isReady becomes true
+  }, []);
+
+  // Run pendingAction once wallet becomes ready
+  useEffect(() => {
+    if (isReady && pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  }, [isReady, pendingAction]);
+
+  // ── Fetch Authorized Doctors from Blockchain Events ───────────────────────
+  const fetchAuthorizedDoctors = useCallback(async () => {
+    if (!contract || !isConnected) return;
+
+    setListLoading(true);
+    try {
+      const { address } = await contract.runner.provider.getSigner();
+      const account = address;
+
+      const grantFilter  = contract.filters.DoctorAccessGranted(account);
+      const revokeFilter = contract.filters.DoctorAccessRevoked(account);
+      const [grantEvents, revokeEvents] = await Promise.all([
+        contract.queryFilter(grantFilter),
+        contract.queryFilter(revokeFilter),
+      ]);
+
+      const accessMap = new Map();
+      grantEvents.forEach(ev  => accessMap.set(ev.args[1], true));
+      revokeEvents.forEach(ev => accessMap.set(ev.args[1], false));
+
+      setAuthorizedDoctors(
+        Array.from(accessMap.entries())
+          .filter(([, has]) => has)
+          .map(([doc]) => doc)
+      );
+    } catch (err) {
+      console.error('Error fetching access events:', err);
+    } finally {
+      setListLoading(false);
+    }
+  }, [contract, isConnected]);
+
+  useEffect(() => {
+    if (!contract || !isConnected) return;
+    fetchAuthorizedDoctors();
+
+    const onGrant  = () => fetchAuthorizedDoctors();
+    const onRevoke = () => fetchAuthorizedDoctors();
+    contract.on('DoctorAccessGranted',  onGrant);
+    contract.on('DoctorAccessRevoked',  onRevoke);
+    return () => {
+      contract.off('DoctorAccessGranted',  onGrant);
+      contract.off('DoctorAccessRevoked',  onRevoke);
+    };
+  }, [contract, isConnected, fetchAuthorizedDoctors]);
+
+  // ── Grant Access ──────────────────────────────────────────────────────────
+  const doGrantAccess = useCallback(async () => {
+    if (!isValidEthAddress(doctorAddress)) {
+      setError('Please enter a valid Ethereum address (0x...)');
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
     setTxHash(null);
-
     try {
       const tx = await contract.grantDoctorAccess(doctorAddress);
       setTxHash(tx.hash);
-      
-      // Wait for transaction to be mined
       await tx.wait();
-      
-      setSuccessMsg(`Access Granted!`);
+      setSuccessMsg('Access Granted!');
       setDoctorAddress('');
+      fetchAuthorizedDoctors();
     } catch (err) {
-      console.error("Grant Access Error:", err);
-      const msg = err.reason || err.data?.message || err.message || "Transaction failed";
-      setError(msg);
+      console.error('Grant Access Error:', err);
+      setError(err.reason || err.data?.message || err.message || 'Transaction failed');
     } finally {
       setLoading(false);
     }
-  };
+  }, [contract, doctorAddress, fetchAuthorizedDoctors]);
 
-  // --- Revoke Access ---
-  const handleRevokeAccess = async (docAddr) => {
+  const handleGrantAccess = useCallback((e) => {
+    e.preventDefault();
+    if (!isValidEthAddress(doctorAddress)) {
+      setError('Please enter a valid Ethereum address (0x...)');
+      return;
+    }
+    requireWallet(doGrantAccess);
+  }, [doctorAddress, requireWallet, doGrantAccess]);
+
+  // ── Revoke Access ─────────────────────────────────────────────────────────
+  const doRevokeAccess = useCallback(async (docAddr) => {
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
     setTxHash(null);
-
     try {
       const tx = await contract.revokeDoctorAccess(docAddr);
       setTxHash(tx.hash);
-      
       await tx.wait();
-      
-      setSuccessMsg(`Access Revoked!`);
+      setSuccessMsg('Access Revoked!');
+      fetchAuthorizedDoctors();
     } catch (err) {
-      console.error("Revoke Access Error:", err);
-      const msg = err.reason || err.data?.message || err.message || "Transaction failed";
-      setError(msg);
+      console.error('Revoke Access Error:', err);
+      setError(err.reason || err.data?.message || err.message || 'Transaction failed');
     } finally {
       setLoading(false);
     }
-  };
+  }, [contract, fetchAuthorizedDoctors]);
+
+  const handleRevokeAccess = useCallback((docAddr) => {
+    requireWallet(() => doRevokeAccess(docAddr));
+  }, [requireWallet, doRevokeAccess]);
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-        <span className="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-lg mr-3">
-          <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </span>
-        Manage Doctor Access
-      </h2>
+    <>
+      {/* WalletConnectionModal — shown only when blockchain action requires wallet */}
+      <WalletConnectionModal
+        isOpen={walletModalOpen}
+        onClose={() => { setWalletModalOpen(false); setPendingAction(null); }}
+        onConnected={handleWalletConnected}
+        operationLabel="manage blockchain-based doctor access"
+      />
 
-      {/* Grant Access Form */}
-      <form onSubmit={handleGrantAccess} className="mb-8">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Doctor's Wallet Address
-        </label>
-        <div className="flex gap-3">
-          <input
-            type="text"
-            value={doctorAddress}
-            onChange={(e) => setDoctorAddress(e.target.value)}
-            placeholder="0x..."
-            className="flex-1 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
-          />
-          <button
-            type="submit"
-            disabled={loading || !doctorAddress}
-            className={`px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-200 dark:shadow-none flex items-center ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {loading ? 'Processing...' : 'Grant Access'}
-          </button>
-        </div>
-      </form>
-
-      {/* Feedback Messages */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg flex items-start">
-          <svg className="w-5 h-5 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-          <p>{error}</p>
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg">
-          <div className="flex items-center mb-1">
-            <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-            <p className="font-bold">{successMsg}</p>
+      <div className="space-y-6">
+        {/* Wallet status banner */}
+        {!isConnected && (
+          <div className="p-4 rounded-xl bg-hc-blue-soft border border-hc-blue/20 flex items-start gap-3">
+            <Wallet className="w-5 h-5 text-hc-blue flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-hc-text">Blockchain access control</p>
+              <p className="text-xs text-hc-text-muted mt-0.5 leading-relaxed">
+                Grant or revoke doctor access on-chain. A MetaMask wallet is required only when you
+                submit a transaction. Click <strong>Grant Access</strong> or <strong>Revoke</strong> to connect.
+              </p>
+            </div>
           </div>
-          {txHash && (
-            <a 
-              href={`https://sepolia.etherscan.io/tx/${txHash}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-sm underline ml-8 hover:text-green-800"
-            >
-              View on Etherscan: {txHash.slice(0, 10)}...{txHash.slice(-8)}
-            </a>
-          )}
-        </div>
-      )}
+        )}
 
-      {/* Loading Overlay */}
-      {loading && !txHash && (
-        <div className="text-center py-4 text-indigo-600 animate-pulse font-medium">
-          Waiting for MetaMask confirmation...
-        </div>
-      )}
-      {loading && txHash && (
-        <div className="text-center py-4 text-amber-600 animate-pulse font-medium">
-          Transaction pending on blockchain...
-        </div>
-      )}
+        {isConnected && !isOnCorrectNetwork && (
+          <div className="p-4 rounded-xl bg-hc-warning-soft border border-hc-warning/20 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-hc-warning flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-hc-text-muted">
+              Wrong network. Switch to <strong className="text-hc-text">Sepolia Testnet</strong> to perform blockchain transactions.
+            </p>
+          </div>
+        )}
 
-      {/* Authorized Doctors List */}
-      <div className="mt-10">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Doctors with Current Access
-        </h3>
-        {authorizedDoctors.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 italic">No doctors currently have access to your records.</p>
-        ) : (
-          <ul className="space-y-3">
-            {authorizedDoctors.map((doc) => (
-              <li 
-                key={doc}
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors"
+        {/* ── Grant Access Form ──────────────────────────────────────── */}
+        <div className="hc-card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-hc-teal-soft flex items-center justify-center">
+              <Lock className="w-4 h-4 text-hc-teal" />
+            </div>
+            <h3 className="text-sm font-bold text-hc-text">Grant Doctor Access</h3>
+          </div>
+          <form onSubmit={handleGrantAccess} className="space-y-3">
+            <div>
+              <label className="hc-label">Doctor's Wallet Address</label>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={doctorAddress}
+                  onChange={(e) => setDoctorAddress(e.target.value)}
+                  placeholder="0x..."
+                  className="hc-input flex-1 font-mono text-sm"
+                  id="grant-access-address-input"
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !doctorAddress}
+                  className="hc-btn hc-btn-primary hc-btn-sm min-w-[120px]"
+                  id="grant-access-submit-btn"
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Processing…
+                    </span>
+                  ) : 'Grant Access'}
+                </button>
+              </div>
+              <p className="text-xs text-hc-text-muted mt-1.5">
+                Enter the doctor's Ethereum wallet address. A MetaMask confirmation will appear.
+              </p>
+            </div>
+          </form>
+        </div>
+
+        {/* ── Feedback ──────────────────────────────────────────────── */}
+        {error && (
+          <div className="p-4 rounded-xl bg-hc-danger-soft border border-hc-danger/20 flex items-start gap-2.5 text-sm text-hc-danger">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+        {successMsg && (
+          <div className="p-4 rounded-xl bg-hc-success-soft border border-hc-success/20 text-sm text-hc-success">
+            <div className="flex items-center gap-2 mb-1">
+              <CheckCircle className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold">{successMsg}</span>
+            </div>
+            {txHash && (
+              <a
+                href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 ml-6 text-xs text-hc-success hover:underline"
               >
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold mr-4">
-                    {doc.slice(2, 4).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-sm font-mono text-gray-900 dark:text-gray-100">{doc}</p>
-                    <p className="text-xs text-gray-500">Authorized Doctor</p>
+                View on Etherscan <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </div>
+        )}
+
+        {loading && !txHash && (
+          <p className="text-center text-sm text-hc-blue animate-pulse font-medium">
+            Waiting for MetaMask confirmation…
+          </p>
+        )}
+        {loading && txHash && (
+          <p className="text-center text-sm text-hc-warning animate-pulse font-medium">
+            Transaction pending on blockchain…
+          </p>
+        )}
+
+        {/* ── Authorized Doctors List ───────────────────────────────── */}
+        <div className="hc-card p-6">
+          <h3 className="text-sm font-bold text-hc-text mb-4">Doctors with Current Access</h3>
+          {!isConnected ? (
+            <p className="text-sm text-hc-text-muted italic">
+              Connect your wallet to see which doctors currently have blockchain access to your records.
+            </p>
+          ) : listLoading ? (
+            <div className="space-y-3">
+              {[1,2].map(i => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-hc-bg-alt">
+                  <div className="hc-skeleton w-10 h-10 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="hc-skeleton h-3.5 w-2/3" />
+                    <div className="hc-skeleton h-3 w-1/4" />
                   </div>
                 </div>
-                <button
-                  onClick={() => handleRevokeAccess(doc)}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/30 transition-all"
+              ))}
+            </div>
+          ) : authorizedDoctors.length === 0 ? (
+            <p className="text-sm text-hc-text-muted italic">
+              No doctors currently have access to your records.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {authorizedDoctors.map((doc) => (
+                <li
+                  key={doc}
+                  className="flex items-center justify-between p-4 bg-hc-bg-alt border border-hc-border-light rounded-xl hover:border-hc-blue/30 transition-colors"
                 >
-                  Revoke
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-hc-blue-soft rounded-full flex items-center justify-center text-hc-blue font-bold text-xs">
+                      {doc.slice(2, 4).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-xs font-mono text-hc-text">{doc.slice(0,6)}…{doc.slice(-4)}</p>
+                      <p className="text-xs text-hc-text-muted">Authorized Doctor</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRevokeAccess(doc)}
+                    disabled={loading}
+                    className="hc-btn hc-btn-sm text-hc-danger border border-hc-danger/20 hover:bg-hc-danger-soft hover:border-hc-danger/30 transition-colors"
+                    id={`revoke-access-btn-${doc.slice(2, 8)}`}
+                  >
+                    Revoke
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

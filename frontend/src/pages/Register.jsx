@@ -3,9 +3,10 @@ import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Activity, User, Stethoscope, Building2,
+  User, Stethoscope, Building2,
   ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff
 } from 'lucide-react';
+import mediChainLogo from '../medichain-logo.png';
 
 // Password rules — must mirror backend/middleware/validate.js exactly
 const passwordRules = [
@@ -162,9 +163,7 @@ const Register = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-hc-border-light">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-hc-blue rounded-xl flex items-center justify-center text-white shadow-sm">
-              <Activity className="w-5 h-5" />
-            </div>
+            <img src={mediChainLogo} alt="MediChain" className="h-10 w-auto object-contain" />
             <div>
               <h1 className="text-2xl font-bold text-hc-text">Join MediChain</h1>
               <p className="text-xs text-hc-text-muted mt-0.5">Create your secure healthcare platform identity</p>

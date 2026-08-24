@@ -2,7 +2,8 @@
 // Premium healthcare sidebar — light theme
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import mediChainLogo from '../medichain-logo.png';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar({ navItems = [] }) {
@@ -19,10 +20,11 @@ export default function Sidebar({ navItems = [] }) {
     >
       {/* Logo */}
       <div className={`flex items-center gap-2.5 h-16 px-4 border-b border-hc-border-light ${collapsed ? 'justify-center' : ''}`}>
-        <div className="w-8 h-8 bg-hc-blue rounded-lg flex items-center justify-center flex-shrink-0">
-          <Activity className="w-4 h-4 text-white" />
-        </div>
-        {!collapsed && <span className="text-sm font-bold text-hc-text">MediChain</span>}
+        {collapsed ? (
+          <img src={mediChainLogo} alt="MediChain" className="h-7 w-auto object-contain" />
+        ) : (
+          <img src={mediChainLogo} alt="MediChain" className="h-8 w-auto object-contain" />
+        )}
       </div>
 
       {/* Nav items */}

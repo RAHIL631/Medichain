@@ -2,7 +2,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import NetworkGuard from './components/NetworkGuard';
+import { WalletProvider } from './context/WalletContext';
 import { ToastProvider } from './components/ui/Toast';
 
 // ── Eagerly loaded (critical path) ───────────────────────────────────────────
@@ -88,11 +88,22 @@ const PublicRoute = ({ children }) => {
 };
 
 // ── App ───────────────────────────────────────────────────────────────────────
+//
+// Architecture: Two complementary authentication layers
+//   Layer 1 (Primary):  Email + Password → JWT/Session  [always required]
+//   Layer 2 (Optional): MetaMask → Sepolia → SmartContract [only for blockchain ops]
+//
+// NetworkGuard is intentionally removed as a global wrapper.
+// Network checks now happen only inside WalletConnectionModal when a
+// blockchain operation is explicitly triggered by the user.
+//
 function App() {
   return (
     <AuthProvider>
-      <ToastProvider>
-        <NetworkGuard>
+      {/* WalletProvider: shared optional wallet state across the app.
+          Does NOT block rendering. Silent reconnect uses eth_accounts (no popup). */}
+      <WalletProvider>
+        <ToastProvider>
           <Router>
             <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -246,8 +257,8 @@ function App() {
               </Routes>
             </Suspense>
           </Router>
-        </NetworkGuard>
-      </ToastProvider>
+        </ToastProvider>
+      </WalletProvider>
     </AuthProvider>
   );
 }

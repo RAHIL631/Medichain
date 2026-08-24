@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Activity, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
+import mediChainLogo from '../medichain-logo.png';
 
 const SIDE_IMG = 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80&auto=format&fit=crop';
 
@@ -56,10 +57,7 @@ export default function Login() {
         <div className="absolute inset-0 bg-gradient-to-t from-hc-navy/80 via-hc-navy/20 to-transparent" />
         <div className="absolute bottom-12 left-10 right-10">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-hc-blue rounded-lg flex items-center justify-center">
-              <Activity className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-white font-bold">MediChain</span>
+            <img src={mediChainLogo} alt="MediChain" className="h-8 w-auto object-contain" />
           </div>
           <h2 className="text-3xl font-bold text-white leading-snug mb-2">
             Secure, patient-controlled<br />healthcare records
@@ -74,15 +72,13 @@ export default function Login() {
       {/* Right — auth card */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md">
-          {/* Logo (mobile only shows) */}
+          {/* Logo */}
           <div className="flex items-center gap-2.5 mb-8">
-            <div className="w-9 h-9 bg-hc-blue rounded-xl flex items-center justify-center shadow-sm">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="text-base font-bold text-hc-text">MediChain</span>
-              <p className="text-[10px] text-hc-text-muted leading-none">Healthcare Platform</p>
-            </div>
+            <img
+              src={mediChainLogo}
+              alt="MediChain"
+              className="h-12 w-auto object-contain"
+            />
           </div>
 
           <h1 className="text-2xl font-bold text-hc-text mb-1">Welcome back</h1>

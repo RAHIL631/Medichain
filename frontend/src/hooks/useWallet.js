@@ -1,18 +1,22 @@
 // frontend/src/hooks/useWallet.js
 //
-// Re-export shim — maps the canonical useBlockchain.js interface back
-// to the legacy `{ account, connected, connect }` properties expected by
+// Re-export shim — maps the canonical WalletContext interface back to
+// the legacy { account, connected, connect } properties expected by
 // older components.
+//
+// This now reads from WalletContext so all components share one wallet
+// instance, instead of each having an independent useBlockchain() call.
 
-import { useWallet as useBlockchainWallet } from './useBlockchain';
+import { useWalletContext } from '../context/WalletContext';
 
 export const useWallet = () => {
-  const wallet = useBlockchainWallet();
+  const ctx = useWalletContext();
   return {
-    ...wallet,
-    account: wallet.address,
-    connected: wallet.isConnected,
-    connect: wallet.connectWallet,
+    ...ctx,
+    // Legacy aliases
+    account:  ctx.address,
+    connected: ctx.isConnected,
+    connect:  ctx.connectWallet,
   };
 };
 
