@@ -163,6 +163,8 @@ const QRScanner = ({
   const isScanningRef     = useRef(false);
   const isInitializingRef = useRef(false);
   const timeoutRef        = useRef(null);
+  const scanLoopRef       = useRef(null);
+  const barcodeDetectorRef = useRef(null);
   // Tracks whether this component instance is still mounted
   const mountedRef        = useRef(true);
 
@@ -170,6 +172,11 @@ const QRScanner = ({
   const stopCamera = useCallback(() => {
     isScanningRef.current = false;
     isInitializingRef.current = false;
+
+    if (scanLoopRef.current) {
+      cancelAnimationFrame(scanLoopRef.current);
+      scanLoopRef.current = null;
+    }
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -206,10 +213,18 @@ const QRScanner = ({
     }
   }, []);
 
-  // ── Initialize ZXing Reader instance once + enumerate cameras ────────────
+  // ── Initialize BarcodeDetector & ZXing Reader instance once ──────────────
   useEffect(() => {
     mountedRef.current = true;
     readerRef.current = new BrowserQRCodeReader();
+
+    if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+      try {
+        barcodeDetectorRef.current = new window.BarcodeDetector({ formats: ['qr_code'] });
+      } catch (e) {
+        barcodeDetectorRef.current = null;
+      }
+    }
 
     if (navigator.mediaDevices?.enumerateDevices) {
       navigator.mediaDevices.enumerateDevices().then((devices) => {
@@ -277,7 +292,7 @@ const QRScanner = ({
     if (!decodedText || !isScanningRef.current) return;
 
     // STEP 1: Log RAW decoded QR value
-    console.log("RAW QR VALUE:", decodedText);
+    console.log("[QR] DECODED:", decodedText);
 
     // STEP 3: Normalize and extract patientId
     const patientId = extractPatientIdFromQR(decodedText);
@@ -307,6 +322,7 @@ const QRScanner = ({
     }
     if (!mountedRef.current) return;
 
+    console.log("[QR] scanner starting");
     isInitializingRef.current = true;
 
     // Reset state for a fresh attempt
@@ -344,7 +360,7 @@ const QRScanner = ({
       return;
     }
 
-    // ── Guard 2: Permissions query (non-blocking — Firefox/Safari may not support) ──
+    // ── Guard 2: Permissions query (non-blocking) ─────────────────────────
     if (navigator.permissions && navigator.permissions.query) {
       try {
         const perm = await navigator.permissions.query({ name: 'camera' });
@@ -356,8 +372,7 @@ const QRScanner = ({
           if (!mountedRef.current) return;
           setStatus('error');
           setErrorMessage(
-            'Camera access is blocked for MediChain.\n\n' +
-            'To fix:\n1. Click the camera icon in your browser address bar.\n2. Select "Allow".\n3. Press Try Again.'
+            'Camera access is blocked. Please allow camera permission in your browser settings.'
           );
           return;
         }
@@ -417,6 +432,7 @@ const QRScanner = ({
         return;
       }
 
+      console.log("[QR] camera stream started");
       streamRef.current = stream;
       if (IS_DEV) setDiag(d => ({ ...d, stream: 'CONNECTED', permission: 'GRANTED' }));
 
@@ -429,9 +445,6 @@ const QRScanner = ({
       }
 
       // ── Step 2: Attach stream to <video> element ──────────────────────
-      // The video element renders whenever status is 'requesting' | 'active' | 'verifying'.
-      // We set status='requesting' above, so React has already rendered <video>.
-      // Use requestAnimationFrame + a retry loop to handle the React commit timing.
       const getVideoEl = () => new Promise((resolve, reject) => {
         // Immediate check
         if (videoRef.current) { resolve(videoRef.current); return; }
@@ -451,7 +464,7 @@ const QRScanner = ({
         };
 
         // Let React flush the DOM first, then start polling
-        requestAnimationFrame(() => setTimeout(poll, 50));
+        requestAnimationFrame(poll);
       });
 
       const videoEl = await getVideoEl();
@@ -463,19 +476,20 @@ const QRScanner = ({
       }
 
       // Ensure required attributes for mobile Safari / iOS
-      videoEl.setAttribute('autoplay',    'true');
-      videoEl.setAttribute('playsinline', 'true');
-      videoEl.setAttribute('muted',       'true');
-      videoEl.muted      = true;
       videoEl.srcObject  = stream;
+      videoEl.setAttribute('playsinline', 'true');
+      videoEl.setAttribute('autoplay', 'true');
+      videoEl.setAttribute('muted', 'true');
+      videoEl.muted      = true;
 
       // ── Step 3: Call play() ───────────────────────────────────────────
       try {
         await videoEl.play();
       } catch (playErr) {
         // play() can reject if the element is paused by browser policy.
-        // This is usually recoverable — video will play as soon as it loads.
-        console.warn('[QRScanner] video.play() warning (non-fatal):', playErr.name, playErr.message);
+        if (playErr.name !== 'AbortError') {
+          console.warn('[QRScanner] videoEl.play() warning:', playErr);
+        }
       }
 
       // ── Step 4: Wait for actual video frame data (dimensions > 0) ────
@@ -528,22 +542,17 @@ const QRScanner = ({
         return;
       }
 
+      const w = videoEl.videoWidth;
+      const h = videoEl.videoHeight;
+      console.log("[QR] video ready", w, h);
+
       if (IS_DEV) {
-        const w = videoEl.videoWidth;
-        const h = videoEl.videoHeight;
         setDiag(d => ({
           ...d,
           videoReady: w > 0 && h > 0 ? 'YES' : 'PENDING',
           videoWidth:  w,
           videoHeight: h,
         }));
-        console.log('[QRScanner] Camera ready:', {
-          secureContext: isSecure ? 'YES' : 'NO',
-          protocol: window.location.protocol,
-          stream: 'CONNECTED',
-          videoWidth: w,
-          videoHeight: h,
-        });
       }
 
       // ── Step 6: Mark as scanning-active and transition UI ────────────
@@ -551,22 +560,80 @@ const QRScanner = ({
       isScanningRef.current     = true;
       setStatus('active');
 
-      // ── Step 7: Start ZXing continuous QR decode ──────────────────────
+      // ── Step 7: Dual-Engine Active Frame Decode Loop ──────────────────────
       if (!readerRef.current) {
         readerRef.current = new BrowserQRCodeReader();
       }
 
       if (IS_DEV) setDiag(d => ({ ...d, qrDecoder: 'RUNNING' }));
 
-      readerRef.current.decodeFromVideoElementContinuously(
-        videoEl,
-        (result, _err) => {
-          if (result && isScanningRef.current) {
-            const text = result.getText();
-            if (text) handleDecodedText(text);
+      let lastScanTime = 0;
+      let throttleLogTime = 0;
+      let isDecodingBusy = false;
+
+      const scanFrame = async () => {
+        if (!isScanningRef.current || !mountedRef.current) return;
+
+        const now = Date.now();
+        // Scan every ~80ms (~12.5 fps) — optimal for real-time QR detection without CPU thrashing
+        if (now - lastScanTime >= 80 && !isDecodingBusy) {
+          lastScanTime = now;
+
+          if (now - throttleLogTime >= 2000) {
+            throttleLogTime = now;
+            console.log("[QR] scanning...");
+          }
+
+          if (videoEl && videoEl.readyState >= 2 && videoEl.videoWidth > 0) {
+            isDecodingBusy = true;
+            let decodedText = null;
+
+            // Engine 1: Native BarcodeDetector (Chrome / Android / Edge)
+            if (barcodeDetectorRef.current) {
+              try {
+                const barcodes = await barcodeDetectorRef.current.detect(videoEl);
+                if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                  decodedText = barcodes[0].rawValue;
+                }
+              } catch (bErr) {
+                // Ignore frame detector error, proceed to Engine 2
+              }
+            }
+
+            // Engine 2: ZXing QR Engine
+            if (!decodedText && readerRef.current) {
+              try {
+                const result = readerRef.current.decode(videoEl);
+                if (result && result.getText()) {
+                  decodedText = result.getText();
+                }
+              } catch (zErr) {
+                const isNotFound = zErr && (
+                  zErr.name === 'NotFoundException' ||
+                  zErr.message?.includes('No MultiFormat Readers') ||
+                  zErr.message?.includes('NotFound')
+                );
+                if (!isNotFound && IS_DEV) {
+                  console.error("[QR] decoder error:", zErr);
+                }
+              }
+            }
+
+            isDecodingBusy = false;
+
+            if (decodedText && isScanningRef.current) {
+              handleDecodedText(decodedText);
+              return; // Stop scan loop on success
+            }
           }
         }
-      );
+
+        if (isScanningRef.current && mountedRef.current) {
+          scanLoopRef.current = requestAnimationFrame(scanFrame);
+        }
+      };
+
+      scanLoopRef.current = requestAnimationFrame(scanFrame);
 
     } catch (camErr) {
       console.error('[QRScanner] Camera initialization error:', camErr.name, camErr.message);
@@ -672,16 +739,40 @@ const QRScanner = ({
         img.src = fileUrl;
       });
 
-      if (!readerRef.current) {
-        readerRef.current = new BrowserQRCodeReader();
+      let decodedText = null;
+
+      // Engine 1: BarcodeDetector
+      if (barcodeDetectorRef.current) {
+        try {
+          const barcodes = await barcodeDetectorRef.current.detect(img);
+          if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+            decodedText = barcodes[0].rawValue;
+          }
+        } catch {
+          // Proceed to Engine 2
+        }
       }
 
-      const result = await readerRef.current.decodeFromImageElement(img);
+      // Engine 2: ZXing BrowserQRCodeReader
+      if (!decodedText) {
+        if (!readerRef.current) {
+          readerRef.current = new BrowserQRCodeReader();
+        }
+        try {
+          const result = await readerRef.current.decodeFromImageElement(img);
+          if (result && result.getText()) {
+            decodedText = result.getText();
+          }
+        } catch (zErr) {
+          console.warn('[QRScanner] ZXing image decode note:', zErr);
+        }
+      }
+
       URL.revokeObjectURL(fileUrl);
 
-      if (result && result.getText()) {
+      if (decodedText) {
         isScanningRef.current = true;
-        handleDecodedText(result.getText());
+        handleDecodedText(decodedText);
       } else {
         throw new Error('No QR code found in the uploaded image.');
       }
