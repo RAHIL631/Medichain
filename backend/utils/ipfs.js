@@ -188,6 +188,7 @@ const uploadToIPFS = async (fileBuffer, fileName, metadata = {}) => {
   try {
     pinata = getPinataClient();
   } catch (credErr) {
+    if (process.env.NODE_ENV !== 'test') throw credErr;
     console.warn('[IPFS] Pinata credentials notice:', credErr.message);
   }
 

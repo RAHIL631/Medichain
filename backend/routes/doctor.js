@@ -153,6 +153,10 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
     let encryptionMeta = null;
     let isEncrypted    = false;
 
+    if (process.env.NODE_ENV === 'production' && !isEncryptionConfigured()) {
+      return res.status(503).json({ error: 'Medical document encryption is not configured. Upload was not completed.' });
+    }
+
     if (isEncryptionConfigured()) {
       const encResult = encryptBuffer(req.file.buffer);
       bufferToUpload  = encResult.encryptedBuffer;
@@ -168,20 +172,6 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
     } else {
       console.warn('[DOCTOR] ⚠️ ENCRYPTION_MASTER_KEY missing! Uploading unencrypted file to IPFS.');
     }
-
-    // uploadToIPFS pins the file AND stores searchable metadata on Pinata
-    const { cid, url: ipfsURL, size: ipfsSize } = await uploadToIPFS(
-      bufferToUpload,
-      req.file.originalname,
-      {
-        patientWalletAddress: patient.walletAddress,
-        recordType,
-        uploadedBy:  doctor?.walletAddress || req.user._id.toString(),
-        timestamp:   new Date().toISOString(),
-        encrypted:   isEncrypted ? 'true' : 'false',
-      }
-    );
-    console.log(`[DOCTOR] IPFS ✅  CID: ${cid}  Size: ${ipfsSize} bytes`);
 
     // Parse comma-separated medications field into an array
     const medicationList = medications
@@ -256,10 +246,26 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
         }
 
       } catch (aiErr) {
-        // AI service offline → log and continue (never block upload due to AI unavailability)
-        console.warn('[DOCTOR] CDSS analysis unavailable — skipping:', aiErr.message);
+        console.warn('[DOCTOR] CDSS analysis unavailable; prescription upload blocked:', aiErr.message);
+        return res.status(503).json({
+          error: 'Clinical decision support is unavailable. The prescription was not uploaded; retry when the service is available.',
+        });
       }
     }
+
+    // Do not write to external storage until required prescription analysis succeeds.
+    const { cid, url: ipfsURL, size: ipfsSize } = await uploadToIPFS(
+      bufferToUpload,
+      req.file.originalname,
+      {
+        patientWalletAddress: patient.walletAddress,
+        recordType,
+        uploadedBy:  doctor?.walletAddress || req.user._id.toString(),
+        timestamp:   new Date().toISOString(),
+        encrypted:   isEncrypted ? 'true' : 'false',
+      }
+    );
+    console.log(`[DOCTOR] IPFS ✅  CID: ${cid}  Size: ${ipfsSize} bytes`);
 
     // ── 5. Save MedicalRecord to MongoDB ────────────────────────────────
     const record = await MedicalRecord.create({

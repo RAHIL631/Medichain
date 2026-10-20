@@ -60,6 +60,10 @@ app.use(helmet());
 const pinoHttp = require('pino-http');
 app.use(pinoHttp({
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  redact: {
+    paths: ['req.headers.authorization'],
+    censor: '[REDACTED]',
+  },
   transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty' } : undefined
 }));
 

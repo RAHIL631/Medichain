@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useWalletContext } from '../context/WalletContext';
 import {
   Shield, Bell, LogOut, User, Menu, X,
-  FileText, Lock, Brain, Home, Heart, Stethoscope, Wallet, HelpCircle
+  FileText, Lock, Brain, Home, Stethoscope, Wallet, HelpCircle
 } from 'lucide-react';
 import mediChainLogo from '../medichain-logo.png';
 

@@ -138,6 +138,10 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
     let encryptionMeta = null;
     let isEncrypted    = false;
 
+    if (process.env.NODE_ENV === 'production' && !isEncryptionConfigured()) {
+      return res.status(503).json({ error: 'Medical document encryption is not configured. Upload was not completed.' });
+    }
+
     if (isEncryptionConfigured()) {
       const encResult = encryptBuffer(req.file.buffer);
       bufferToUpload  = encResult.encryptedBuffer;

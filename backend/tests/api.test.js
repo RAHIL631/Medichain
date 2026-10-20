@@ -2,9 +2,11 @@
 
 const request = require('supertest');
 const mongoose = require('mongoose');
+const axios = require('axios');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../server'); // Import the Express app (it exports `app`)
 const User = require('../models/User');
+const MedicalRecord = require('../models/MedicalRecord');
 
 let mongoServer;
 
@@ -39,6 +41,32 @@ afterAll(async () => {
   }
   // Let open handles like the rate-limiter timer close
   await new Promise(resolve => setTimeout(resolve, 500)); 
+});
+
+describe('Production email fallback', () => {
+  it('does not log verification codes when SMTP is not configured', async () => {
+    const envNames = ['NODE_ENV', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'SMTP_PASSWORD'];
+    const originalEnv = Object.fromEntries(envNames.map((name) => [name, process.env[name]]));
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    let isolatedEmailService;
+    jest.isolateModules(() => {
+      isolatedEmailService = require('../services/emailService');
+    });
+    envNames.slice(1).forEach((name) => delete process.env[name]);
+    process.env.NODE_ENV = 'production';
+
+    try {
+      await expect(isolatedEmailService.sendVerificationEmail('synthetic@example.test', 'Synthetic User', '123456'))
+        .rejects.toThrow(/email delivery is not configured/i);
+      expect(consoleSpy).not.toHaveBeenCalled();
+    } finally {
+      consoleSpy.mockRestore();
+      envNames.forEach((name) => {
+        if (originalEnv[name] === undefined) delete process.env[name];
+        else process.env[name] = originalEnv[name];
+      });
+    }
+  });
 });
 
 // ── Shared Variables ──────────────────────────────────────────────────────────
@@ -285,6 +313,30 @@ describe("Patient Routes (protected)", () => {
 
     expect(res.statusCode).toBe(400);
   });
+
+  it('POST /api/patient/upload-record rejects production uploads without encryption configuration', async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    const originalMasterKey = process.env.ENCRYPTION_MASTER_KEY;
+    process.env.NODE_ENV = 'production';
+    delete process.env.ENCRYPTION_MASTER_KEY;
+
+    try {
+      const res = await request(app)
+        .post('/api/patient/upload-record')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .attach('file', Buffer.from('%PDF-1.4\nSynthetic record\n%%EOF'), {
+          filename: 'synthetic.pdf',
+          contentType: 'application/pdf',
+        });
+
+      expect(res.statusCode).toBe(503);
+      expect(res.body.error).toMatch(/encryption is not configured/i);
+    } finally {
+      process.env.NODE_ENV = originalNodeEnv;
+      if (originalMasterKey === undefined) delete process.env.ENCRYPTION_MASTER_KEY;
+      else process.env.ENCRYPTION_MASTER_KEY = originalMasterKey;
+    }
+  });
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -340,5 +392,28 @@ describe("Doctor Routes (protected)", () => {
 
     // Assuming your role middleware returns 403 Forbidden for wrong roles
     expect(res.statusCode).toBe(403);
+  });
+
+  it('POST /api/doctor/upload-record rejects prescription when CDSS is unavailable', async () => {
+    const postSpy = jest.spyOn(axios, 'post').mockRejectedValue(new Error('AI service unavailable'));
+
+    try {
+      const res = await request(app)
+        .post('/api/doctor/upload-record')
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .field('patientWalletAddress', '0x1111111111111111111111111111111111111111')
+        .field('recordType', 'prescription')
+        .field('medications', 'SyntheticMedication')
+        .attach('file', Buffer.from('%PDF-1.4\nSynthetic prescription\n%%EOF'), {
+          filename: 'synthetic-prescription.pdf',
+          contentType: 'application/pdf',
+        });
+
+      expect(res.statusCode).toBe(503);
+      expect(res.body.error).toMatch(/prescription was not uploaded/i);
+      expect(await MedicalRecord.countDocuments()).toBe(0);
+    } finally {
+      postSpy.mockRestore();
+    }
   });
 });

@@ -70,6 +70,10 @@ const sendEmail = async (opts) => {
   const transport = getTransport();
 
   if (!transport) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Email delivery is not configured. Set SMTP credentials before sending email.');
+    }
+
     // Development / no SMTP: print to console so devs can test
     console.log('\n══════════════════════════════════════════');
     console.log('[EMAIL CONSOLE FALLBACK]');

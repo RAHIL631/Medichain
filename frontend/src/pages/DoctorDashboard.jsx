@@ -240,7 +240,7 @@ const DoctorDashboard = () => {
         }
     };
 
-    const storeOnBlockchain = async ({ recordId, ipfsCID, ipfsURL, patientAddress, recordType, notes }) => {
+    const storeOnBlockchain = async ({ recordId, ipfsCID, ipfsURL, patientAddress, recordType }) => {
         setUploadStatus('2/3 Awaiting MetaMask signature…');
         setTxStatus('pending');
 
@@ -252,27 +252,35 @@ const DoctorDashboard = () => {
             ipfsCID,
             ipfsURL,
             contractRecordType,
-            notes || ''
+            ''
         );
 
         setTxHash(tx.hash);
         setUploadStatus(`3/3 Mining… TX: ${tx.hash.slice(0, 10)}…`);
 
         const receipt = await tx.wait(1);
-
-        await api.patch(`/doctor/record/${recordId}/txhash`, {
-            txHash:      receipt.hash,
-            blockNumber: receipt.blockNumber,
-        });
-
         setBlockNumber(receipt.blockNumber);
         setTxStatus('confirmed');
+
+        try {
+            await api.patch(`/doctor/record/${recordId}/txhash`, {
+                txHash:      receipt.hash,
+                blockNumber: receipt.blockNumber,
+            });
+        } catch (syncError) {
+            syncError.chainConfirmed = true;
+            throw syncError;
+        }
+
         return receipt;
     };
 
     const handleUploadRecord = async () => {
         if (!file)                  return alert('Please attach a prescription file (PDF, JPG, or PNG).');
         if (safeToUpload === false) return alert('Cannot upload — drug conflicts detected.');
+        if ((recordType || '').toLowerCase() === 'prescription' && medications.length > 0 && safeToUpload !== true) {
+            return alert('Run a successful drug interaction check before uploading a prescription with medications.');
+        }
         if (!scannedAddress)        return alert('Please identify or scan a patient first.');
 
         setUploadLoading(true);
@@ -314,12 +322,14 @@ const DoctorDashboard = () => {
                         ipfsURL,
                         patientAddress: patientAddr || scannedAddress,
                         recordType,
-                        notes,
                     });
                     setUploadStatus('✅ Prescription securely stored on IPFS & Ethereum Sepolia');
                 } catch (chainErr) {
                     console.warn('[DoctorDashboard] Blockchain anchoring note:', chainErr);
-                    setUploadStatus('✅ Prescription securely saved to IPFS & database. (MetaMask signature skipped)');
+                    setTxStatus(chainErr.chainConfirmed ? 'confirmed' : 'failed');
+                    setUploadStatus(chainErr.chainConfirmed
+                        ? '✅ Prescription saved. Blockchain transaction confirmed, but its status could not be synchronized to the API.'
+                        : '✅ Prescription saved to IPFS & database. Blockchain anchoring was not confirmed.');
                 }
             } else {
                 setUploadStatus('✅ Prescription securely saved to IPFS & database.');
