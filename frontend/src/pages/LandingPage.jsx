@@ -89,7 +89,7 @@ export default function LandingPage() {
   const features = [
     { Icon: FileText,    title: 'Secure Health Records',        desc: 'All medical records stored on decentralized IPFS with end-to-end cryptographic verification.', accent: 'blue',    num: 1, image: MEDICAL_IMAGES.lab },
     { Icon: Lock,        title: 'Patient-Controlled Access',    desc: 'You decide who sees your health data. Grant or revoke access instantly via smart contracts.',   accent: 'teal',    num: 2, image: EDIT_IMG1 },
-    { Icon: Brain,       title: 'AI Health Insights',           desc: 'Clinical AI analyzes health patterns, risks, and provides evidence-based guidance.',          accent: 'violet',  num: 3, image: MEDICAL_IMAGES.mri },
+    { Icon: Brain,       title: 'AI Health Insights',           desc: 'Advisory clinical AI screens health patterns and prescription risks to support clinician judgment — not a diagnosis.', accent: 'violet',  num: 3, image: MEDICAL_IMAGES.mri },
     { Icon: Pill,        title: 'Drug & Dosage Safety',         desc: 'Real-time multi-drug interaction checking to catch conflicting prescriptions instantly.',        accent: 'success', num: 4, image: MEDICINE_IMAGES.pills },
     { Icon: Activity,    title: 'Blockchain Integrity',         desc: 'Every diagnostic record anchored on Ethereum Sepolia with tamper-proof cryptographic proofs.',   accent: 'blue',    num: 5, image: MEDICAL_IMAGES.blood_test },
     { Icon: Database,    title: 'Decentralized Storage',        desc: 'Immutable distributed storage on IPFS — zero single point of failure and true patient ownership.', accent: 'teal',    num: 6, image: MEDICAL_IMAGES.xray },
@@ -98,15 +98,15 @@ export default function LandingPage() {
   const trust = [
     { Icon: Lock,     label: 'Patient-controlled access',  sub: 'You decide who sees data'      },
     { Icon: Shield,   label: 'Secure records',              sub: 'Encrypted end-to-end'          },
-    { Icon: Brain,    label: 'AI-assisted insights',        sub: 'Evidence-based guidance'       },
+    { Icon: Brain,    label: 'AI-assisted insights',        sub: 'Advisory decision support'     },
     { Icon: Activity, label: 'Blockchain integrity',        sub: 'Ethereum Sepolia verified'     },
   ];
 
   const steps = [
-    { num: 1, title: 'Create your account',           desc: 'Sign up as a patient, doctor, or healthcare organization.'           },
-    { num: 2, title: 'Verify your identity',           desc: 'Confirm your email and complete verification.'                       },
-    { num: 3, title: 'Optional wallet connect',        desc: 'Link MetaMask whenever you need on-chain verified records.'           },
-    { num: 4, title: 'Manage records securely',        desc: 'Upload, view, and control access to all your health data.',  last: true },
+    { num: 1, title: 'Create your account',           desc: 'Sign up as a patient, doctor, or healthcare organization with email and password.' },
+    { num: 2, title: 'Use your Health ID',            desc: 'Patients receive a QR Health ID for identification — not automatic record access.' },
+    { num: 3, title: 'Optional wallet connect',        desc: 'Link MetaMask only when you need on-chain consent or record anchoring.'           },
+    { num: 4, title: 'Manage records securely',        desc: 'Grant or revoke doctor access, view records, and use advisory AI tools.',  last: true },
   ];
 
   const security = [
@@ -115,13 +115,6 @@ export default function LandingPage() {
     { Icon: Activity,    label: 'Blockchain integrity'          },
     { Icon: Database,    label: 'IPFS decentralized storage'    },
     { Icon: CheckCircle, label: 'Patient authorization'         },
-  ];
-
-  const partnerHospitals = [
-    { name: 'Apollo Hospitals',       city: 'National Network', image: HOSPITAL_IMAGES.apollo },
-    { name: 'Fortis Healthcare',      city: 'Delhi & NCR',       image: HOSPITAL_IMAGES.fortis },
-    { name: 'AIIMS Medical Institute',city: 'New Delhi',         image: HOSPITAL_IMAGES.aiims },
-    { name: 'Manipal Health Network', city: 'Bangalore & Pune',  image: HOSPITAL_IMAGES.manipal },
   ];
 
   return (
@@ -159,11 +152,14 @@ export default function LandingPage() {
                 <a href="#features" className="hc-btn hc-btn-ghost hc-btn-lg justify-center w-full sm:w-auto">
                   Explore MediChain
                 </a>
+                <Link to="/login" className="hc-btn hc-btn-ghost hc-btn-lg justify-center w-full sm:w-auto">
+                  Sign In
+                </Link>
               </div>
 
               {/* Trust pills */}
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-4 gap-y-2">
-                {['Private by design', 'No data brokers', 'Patient-owned'].map(label => (
+                {['Patient-controlled access', 'Encrypted records', 'Advisory AI support'].map(label => (
                   <div key={label} className="flex items-center gap-1.5 text-xs text-hc-text-muted font-medium">
                     <CheckCircle className="w-3.5 h-3.5 text-hc-success flex-shrink-0" />
                     <span>{label}</span>
@@ -234,42 +230,60 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Regional Facility Directory (Recommendation Engine Index) ──────── */}
+      {/* ── Who it is for + honest capability framing ─────────────────────── */}
       <section className="py-12 sm:py-16 bg-hc-bg border-y border-hc-border-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-hc-blue uppercase tracking-wider mb-1">
-                <Building2 className="w-4 h-4" /> Facility Capability Index
+                <Building2 className="w-4 h-4" /> Built for real care roles
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-hc-text">Healthcare Facility Directory</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-hc-text">Who MediChain is designed for</h2>
             </div>
             <p className="text-xs sm:text-sm text-hc-text-muted max-w-sm">
-              Regional clinical facilities indexed by our weighted hospital recommendation engine for specialty care, capacity, and ratings.
+              A patient-controlled health information platform — not a full hospital information system or certified clinical EHR replacement.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            {partnerHospitals.map(h => (
-              <div key={h.name} className="hc-card overflow-hidden group hover:shadow-hc-card-md transition-all">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {[
+              {
+                title: 'Patients',
+                desc: 'Hold encrypted records, share a QR Health ID for identification, and grant or revoke doctor access.',
+                image: HOSPITAL_IMAGES.apollo,
+              },
+              {
+                title: 'Doctors',
+                desc: 'Identify patients, review authorized records, upload documents, and run advisory drug-safety checks.',
+                image: HOSPITAL_IMAGES.fortis,
+              },
+              {
+                title: 'Clinics & admins',
+                desc: 'Use role-based dashboards, facility recommendation tools where configured, and operational audit visibility.',
+                image: HOSPITAL_IMAGES.aiims,
+              },
+            ].map((card) => (
+              <div key={card.title} className="hc-card overflow-hidden group hover:shadow-hc-card-md transition-all">
                 <div className="h-32 sm:h-36 overflow-hidden relative bg-hc-bg-alt">
                   <img
-                    src={h.image}
-                    alt={h.name}
+                    src={card.image}
+                    alt=""
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <span className="absolute bottom-2.5 left-3 text-[11px] font-bold text-white drop-shadow-sm">
-                    {h.city}
+                  <span className="absolute bottom-2.5 left-3 text-sm font-bold text-white drop-shadow-sm">
+                    {card.title}
                   </span>
                 </div>
-                <div className="p-3.5 flex items-center justify-between">
-                  <span className="text-xs sm:text-sm font-bold text-hc-text truncate">{h.name}</span>
-                  <span className="text-[10px] font-mono font-semibold text-hc-blue bg-hc-blue-soft px-1.5 py-0.5 rounded ml-2 flex-shrink-0">Indexed</span>
+                <div className="p-3.5">
+                  <p className="text-xs sm:text-sm text-hc-text-muted leading-relaxed">{card.desc}</p>
                 </div>
               </div>
             ))}
           </div>
+          <p className="mt-4 text-[11px] sm:text-xs text-hc-text-muted text-center max-w-2xl mx-auto">
+            Facility imagery is illustrative. MediChain does not claim commercial hospital partnerships, certifications, or verified patient volumes.
+          </p>
         </div>
       </section>
 
@@ -370,16 +384,17 @@ export default function LandingPage() {
                   <Activity className="w-5 h-5 text-hc-violet" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-hc-text truncate">Blockchain Identity</p>
-                  <p className="text-xs text-hc-text-muted truncate">Ethereum Sepolia Network</p>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-hc-success font-medium flex-shrink-0">
-                  <div className="w-2 h-2 rounded-full bg-hc-success" />
-                  Active
+                  <p className="text-sm font-bold text-hc-text truncate">Integrity & access model</p>
+                  <p className="text-xs text-hc-text-muted truncate">Ethereum Sepolia · IPFS · App auth</p>
                 </div>
               </div>
               <div className="space-y-2.5">
-                {['Wallet verified', 'IPFS storage active', 'Smart contract deployed', 'Access control enabled'].map(item => (
+                {[
+                  'Email/password login (wallet optional)',
+                  'Encrypted documents stored off-chain (IPFS)',
+                  'Hashes / consent can be anchored on Sepolia',
+                  'Patient grant/revoke controls doctor access',
+                ].map(item => (
                   <div key={item} className="flex items-center gap-2.5 p-3 rounded-xl bg-hc-bg-alt">
                     <CheckCircle className="w-4 h-4 text-hc-success flex-shrink-0" />
                     <span className="text-xs sm:text-sm text-hc-text font-medium">{item}</span>
@@ -387,7 +402,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <p className="text-[11px] sm:text-xs text-hc-text-muted mt-4 text-center leading-relaxed">
-                AI-assisted insight — not a medical diagnosis. Always consult your healthcare provider.
+                Blockchain proves integrity — it does not encrypt or hide medical content by itself. AI is advisory, not a diagnosis.
               </p>
             </div>
           </div>
@@ -423,9 +438,9 @@ export default function LandingPage() {
               <span className="text-sm font-bold text-hc-text">MediChain</span>
             </div>
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-              {['Privacy', 'Terms', 'Security'].map(label => (
-                <span key={label} className="text-xs sm:text-sm text-hc-text-muted cursor-pointer hover:text-hc-text transition-colors">{label}</span>
-              ))}
+              <a href="#security" className="text-xs sm:text-sm text-hc-text-muted hover:text-hc-text transition-colors">Security</a>
+              <Link to="/help" className="text-xs sm:text-sm text-hc-text-muted hover:text-hc-text transition-colors">Help</Link>
+              <Link to="/login" className="text-xs sm:text-sm text-hc-text-muted hover:text-hc-text transition-colors">Sign In</Link>
             </div>
             <p className="text-[11px] sm:text-xs text-hc-text-muted">
               © {new Date().getFullYear()} MediChain. Ethereum Sepolia · Chain ID 11155111

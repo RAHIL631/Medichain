@@ -10,6 +10,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage     from './pages/LandingPage';
 import Login           from './pages/Login';
 import Register        from './pages/Register';
+import HelpPage        from './pages/HelpPage';
 
 // ── Lazily loaded (code-split for optimal initial bundle) ──────────────────────
 const PatientDashboard     = lazy(() => import('./pages/PatientDashboard'));
@@ -111,6 +112,7 @@ function App() {
               <Routes>
                 {/* ── Public / Marketing Routes ─────────────────────────── */}
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/help" element={<HelpPage />} />
                 <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
 

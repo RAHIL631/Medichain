@@ -24,7 +24,7 @@
 | **Incident Response** | Incident Runbook Documentation | **READY** | `docs/INCIDENT_RESPONSE.md` and `docs/FINAL_DEMO_RECOVERY_PLAN.md` provide clear triage protocols. |
 | **Backups & Recovery** | Database snapshot & point-in-time recovery | **PARTIALLY READY** | MongoDB Atlas automated daily backups active; offline disaster recovery scripts documented in `docs/STAGE_8_BACKUP_RESTORE.md`. |
 | **Backups & Recovery** | Smart contract immutability & migration | **READY** | Smart contract bytecode verified; historical events preserved permanently on Ethereum Sepolia. |
-| **User Support** | In-app user documentation & guides | **READY** | `docs/MEDICHAIN_USER_GUIDE.md` and responsive contextual tooltips provide clear operational guidance. |
+| **User Support** | In-app user documentation & guides | **PARTIALLY READY** | Repo guide (`docs/MEDICHAIN_USER_GUIDE.md`) plus in-app `/help` for QR, upload, permissions, wallet, and AI. No ticketing desk. |
 | **User Support** | Ticketing & live helpdesk integration | **NOT READY** | Planned for post-academic SaaS integration (Zendesk / Intercom webhook). |
 | **Access & Recovery** | Password hashing & credential safety | **READY** | Salted Bcrypt (12 rounds) with strict server-side validation against common weak passwords. |
 | **Access & Recovery** | Self-service email password reset | **PARTIALLY READY** | SMTP nodemailer scaffolding present; requires dedicated production domain SPF/DKIM verification. |
@@ -38,7 +38,7 @@
 | **Scalability** | Stateless API horizontally scaleable | **READY** | Stateless Express nodes behind load balancers with externalized session state (JWT + MongoDB). |
 | **Scalability** | Database connection pooling | **READY** | Mongoose connection reuse with connection state listeners preventing connection leaks. |
 | **Accessibility (a11y)** | Keyboard navigation & readable contrast | **READY** | Semantic HTML5 buttons, high-contrast healthcare tokens, and visible focus rings. |
-| **Regulatory Assessment** | Technical Access Controls (HIPAA § 164.312) | **READY** | Role-based authentication, TLS 1.3, authenticated encryption, and audit controls meet technical specifications. |
+| **Regulatory Assessment** | Technical Access Controls (HIPAA-aligned patterns) | **PARTIALLY READY** | Role-based auth, encryption, and audit patterns are implemented. Formal HIPAA compliance (BAAs, org policies, certification) is **NOT VERIFIED**. |
 | **Regulatory Assessment** | Institutional Clinical Trial & FDA / CE Mark | **NOT VERIFIED** | AI CDSS models are designed for decision support only; formal clinical trial certification is required before diagnostic deployment. |
 
 ---

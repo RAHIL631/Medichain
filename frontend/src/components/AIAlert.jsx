@@ -1,9 +1,14 @@
-// c:\Users\Rahil hassan\OneDrive\Desktop\Major project\MediChain\frontend\src\components\AIAlert.jsx
+// frontend/src/components/AIAlert.jsx
 import React from 'react';
 
-const AIAlert = ({ alerts = [], onDismiss }) => {
+/** Accepts `alerts` or legacy `interactions` (DoctorDashboard). */
+const AIAlert = ({ alerts, interactions, onDismiss }) => {
+  const items = Array.isArray(alerts) && alerts.length > 0
+    ? alerts
+    : (Array.isArray(interactions) ? interactions : []);
+
   // If no alerts, show success state
-  if (!alerts || alerts.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
         <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -52,7 +57,7 @@ const AIAlert = ({ alerts = [], onDismiss }) => {
 
   return (
     <div className="space-y-3">
-      {alerts.map((alert, index) => {
+      {items.map((alert, index) => {
         const styles = getSeverityStyles(alert.severity);
         
         return (

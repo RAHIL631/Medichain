@@ -11,7 +11,7 @@
 ### Step 1: Sign Up
 1. Navigate to the MediChain homepage and click **Get Started** or **Create Account**.
 2. Select your account role:
-   - **Patient:** For managing personal health history, sharing records with physicians, and generating emergency QR identification.
+   - **Patient:** For managing personal health history, sharing records with physicians, and generating a QR Health ID for identification (not automatic record access).
    - **Doctor:** For licensed clinicians reviewing records, uploading diagnostic documents, and performing AI prescription safety audits.
    - **Hospital / Lab:** For institutions managing healthcare facility profiles.
 3. Enter your full name, email address, and a secure password (minimum 8 characters with at least one uppercase letter, one number, and one special character).
@@ -36,7 +36,7 @@ Upon logging in, the **Patient Dashboard** displays:
    - Scanning this code allows a healthcare provider to find your account; it does **not** give them permission to view your medical files.
 4. **Downloading or Printing Your Card:**
    - Click **Download QR** to save a high-resolution 1000x1000px PNG card.
-   - Click **Print ID** to generate a clean, physical wallet card for emergency use.
+   - Click **Print ID** to generate a clean, physical wallet card you can show for identification.
 
 ### Authorizing a Doctor (Granting Access)
 1. Go to **Manage Access** (`/access`).

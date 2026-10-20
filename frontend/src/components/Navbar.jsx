@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useWalletContext } from '../context/WalletContext';
 import {
   Shield, Bell, LogOut, User, Menu, X,
-  FileText, Lock, Brain, Home, Heart, Stethoscope, Wallet
+  FileText, Lock, Brain, Home, Heart, Stethoscope, Wallet, HelpCircle
 } from 'lucide-react';
 import mediChainLogo from '../medichain-logo.png';
 
@@ -15,18 +15,20 @@ const PATIENT_NAV = [
   { label: 'My Records',  path: '/records',            Icon: FileText    },
   { label: 'Access',      path: '/access',             Icon: Lock        },
   { label: 'AI Insights', path: '/ai-dashboard',       Icon: Brain       },
-  { label: 'Health Risk', path: '/health-risk',        Icon: Heart       },
+  { label: 'Help',        path: '/help',               Icon: HelpCircle  },
 ];
 
 const DOCTOR_NAV = [
   { label: 'Doctor Portal', path: '/doctor-dashboard', Icon: Stethoscope },
   { label: 'AI CDSS',       path: '/ai-dashboard',     Icon: Brain       },
+  { label: 'Help',          path: '/help',             Icon: HelpCircle  },
 ];
 
 const PUBLIC_NAV = [
   { label: 'Features',     href: '#features'     },
   { label: 'How it Works', href: '#how-it-works' },
   { label: 'Security',     href: '#security'     },
+  { label: 'Help',         path: '/help'         },
 ];
 
 export default function Navbar() {
@@ -108,14 +110,28 @@ export default function Navbar() {
                 {Icon && <Icon className="w-4 h-4" />}
                 {label}
               </Link>
-            )) : PUBLIC_NAV.map(({ label, href }) => (
-              <a
-                key={href}
-                href={href}
-                className="px-3 py-2 rounded-lg text-sm font-medium text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-all duration-150"
-              >
-                {label}
-              </a>
+            )) : PUBLIC_NAV.map(({ label, href, path }) => (
+              path ? (
+                <Link
+                  key={path}
+                  to={path}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                    isActive(path)
+                      ? 'bg-hc-blue-soft text-hc-blue font-semibold'
+                      : 'text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt'
+                  }`}
+                >
+                  {label}
+                </Link>
+              ) : (
+                <a
+                  key={href}
+                  href={href}
+                  className="px-3 py-2 rounded-lg text-sm font-medium text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt transition-all duration-150"
+                >
+                  {label}
+                </a>
+              )
             ))}
           </div>
 
@@ -264,15 +280,26 @@ export default function Navbar() {
                 >
                   Home
                 </a>
-                {PUBLIC_NAV.map(({ label, href }) => (
-                  <a 
-                    key={href} 
-                    href={href} 
-                    onClick={closeMenu} 
-                    className="block px-3.5 py-3 rounded-xl text-sm font-semibold text-hc-text hover:bg-hc-bg-alt transition-colors min-h-[44px] flex items-center"
-                  >
-                    {label}
-                  </a>
+                {PUBLIC_NAV.map(({ label, href, path }) => (
+                  path ? (
+                    <Link
+                      key={path}
+                      to={path}
+                      onClick={closeMenu}
+                      className="block px-3.5 py-3 rounded-xl text-sm font-semibold text-hc-text hover:bg-hc-bg-alt transition-colors min-h-[44px] flex items-center"
+                    >
+                      {label}
+                    </Link>
+                  ) : (
+                    <a
+                      key={href}
+                      href={href}
+                      onClick={closeMenu}
+                      className="block px-3.5 py-3 rounded-xl text-sm font-semibold text-hc-text hover:bg-hc-bg-alt transition-colors min-h-[44px] flex items-center"
+                    >
+                      {label}
+                    </a>
+                  )
                 ))}
               </div>
 

@@ -19,7 +19,7 @@ import {
   Upload, CheckCircle, Plus, AlertTriangle,
   FileCheck, Wallet, UserCheck, Heart, AlertCircle, Database
 } from 'lucide-react';
-import { DOCTOR_IMAGES, MEDICINE_IMAGES, MEDICAL_IMAGES } from '../utils/images';
+import { MEDICINE_IMAGES, MEDICAL_IMAGES } from '../utils/images';
 
 const getRiskBadge = (level) => {
   if (!level) return <span className="hc-badge hc-badge-neutral">Unknown</span>;
@@ -152,7 +152,7 @@ const DoctorDashboard = () => {
                         ipfsURL: r.ipfsURL,
                         timestamp: new Date(r.createdAt).getTime(),
                         doctor: r.doctorId?.name || r.doctorWalletAddress || 'Authorized Doctor',
-                        verified: !!r.blockchainTxHash || true
+                        verified: !!r.blockchainTxHash
                     }));
                 }
             } catch (dbErr) {
@@ -232,8 +232,9 @@ const DoctorDashboard = () => {
             }
         } catch (err) {
             console.error('Drug check failed:', err);
-            setSafeToUpload(true); 
-            alert('AI Drug Service offline. Proceed with caution.');
+            setInteractions([]);
+            setSafeToUpload(null);
+            alert('AI drug-check service is unavailable. When medications are listed, upload stays blocked until the check succeeds. Retry the check, or remove medications to upload a document without drug screening.');
         } finally {
             setDrugCheckLoading(false);
         }
@@ -436,7 +437,7 @@ const DoctorDashboard = () => {
                                 </div>
                                 <h3 className="text-sm font-semibold text-hc-text mb-1">Scan Patient QR Health ID</h3>
                                 <p className="text-xs text-hc-text-muted mb-4 max-w-xs mx-auto">
-                                    Scan patient's cryptographic badge to decrypt medical records.
+                                    The QR contains only the patient&apos;s ID. Medical records appear only if the patient has granted you access.
                                 </p>
                                 <button onClick={() => setScanning(true)} className="hc-btn hc-btn-primary hc-btn-sm w-full">
                                     Launch QR Camera Scanner
@@ -662,7 +663,7 @@ const DoctorDashboard = () => {
 
                                         {safeToUpload === false && (
                                             <div className="space-y-2">
-                                                <AIAlert interactions={interactions} onDismiss={() => setSafeToUpload(null)} />
+                                                <AIAlert alerts={interactions} onDismiss={() => setSafeToUpload(null)} />
                                                 <div className="p-2.5 bg-hc-danger-soft border border-hc-danger/30 rounded-xl text-center text-hc-danger text-xs font-bold">
                                                     Upload Blocked: High Severity Interaction Detected
                                                 </div>
@@ -679,15 +680,21 @@ const DoctorDashboard = () => {
                                         <div className="pt-3 border-t border-hc-border-light">
                                             <button 
                                                 onClick={handleUploadRecord}
-                                                disabled={uploading || safeToUpload === false || !file}
+                                                disabled={
+                                                    uploading
+                                                    || !file
+                                                    || safeToUpload === false
+                                                    || (medications.length > 0 && safeToUpload !== true)
+                                                }
                                                 className="hc-btn hc-btn-primary w-full py-3"
+                                                title={medications.length > 0 && safeToUpload !== true ? 'Run drug-interaction check before uploading' : undefined}
                                             >
                                                 {uploading ? (
                                                     <span className="flex items-center justify-center gap-2">
                                                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                        Signing On-Chain…
+                                                        {signer ? 'Processing upload…' : 'Saving to IPFS & database…'}
                                                     </span>
-                                                ) : 'Upload & Anchor Record'}
+                                                ) : (signer ? 'Upload & Anchor Record' : 'Upload Record (IPFS)')}
                                             </button>
                                             
                                             {uploadStatus && (
@@ -726,12 +733,12 @@ const DoctorDashboard = () => {
                         <div className="hc-card p-6">
                             <h2 className="text-base font-bold text-hc-text flex items-center gap-2 mb-4">
                                 <Database className="w-5 h-5 text-hc-teal" />
-                                Patient Health History on Blockchain
+                                Authorized Patient Records
                             </h2>
                             {recordsLoading ? (
                                 <div className="text-center py-8">
                                     <div className="w-6 h-6 border-2 border-hc-blue border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                                    <p className="text-xs text-hc-text-muted">Reading blockchain contract state…</p>
+                                    <p className="text-xs text-hc-text-muted">Loading authorized records…</p>
                                 </div>
                             ) : patientRecords.length > 0 ? (
                                 <div className="space-y-3">
@@ -747,7 +754,7 @@ const DoctorDashboard = () => {
                             ) : (
                                 <div className="text-center py-10 bg-hc-bg-alt rounded-xl border border-hc-border border-dashed">
                                     <FileText className="w-8 h-8 text-hc-text-light mx-auto mb-2" />
-                                    <p className="text-xs text-hc-text-muted">No blockchain medical records found for this patient yet.</p>
+                                    <p className="text-xs text-hc-text-muted">No accessible records for this patient yet. Confirm consent is granted, then ask the patient to share their QR ID again if needed.</p>
                                 </div>
                             )}
                         </div>
@@ -805,32 +812,18 @@ const DoctorDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Recent Specialist Peer Network */}
+                        {/* Clinical workflow tips */}
                         <div className="hc-card p-5">
-                            <h4 className="text-xs font-bold text-hc-text uppercase tracking-wider mb-3">On-Duty Specialist Care Team</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                {[
-                                    { name: 'Dr. Sarah Jenkins, MD', spec: 'Cardiology Specialist', img: DOCTOR_IMAGES.female_1 },
-                                    { name: 'Dr. Robert Vance, MD', spec: 'Radiology & Diagnostics', img: DOCTOR_IMAGES.male_1 },
-                                    { name: 'Dr. Priya Patel, MD', spec: 'Internal Medicine', img: DOCTOR_IMAGES.female_2 },
-                                ].map(doc => (
-                                    <div key={doc.name} className="flex items-center gap-3 p-2.5 rounded-xl bg-hc-bg-alt border border-hc-border-light">
-                                        <img
-                                            src={doc.img}
-                                            alt={doc.name}
-                                            className="w-10 h-10 rounded-xl object-cover border border-hc-border shadow-xs"
-                                            loading="lazy"
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-xs font-bold text-hc-text truncate">{doc.name}</p>
-                                            <p className="text-[10px] text-hc-text-muted truncate">{doc.spec}</p>
-                                            <span className="text-[9px] text-hc-success font-bold flex items-center gap-1 mt-0.5">
-                                                <CheckCircle className="w-2.5 h-2.5" /> Licensed
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <h4 className="text-xs font-bold text-hc-text uppercase tracking-wider mb-3">Clinical workflow</h4>
+                            <ol className="space-y-2.5 text-xs text-hc-text-muted list-decimal list-inside">
+                                <li>Scan or enter the patient&apos;s QR Health ID (identification only).</li>
+                                <li>Confirm the patient has granted you access before expecting records.</li>
+                                <li>Run the drug-interaction check before uploading a prescription.</li>
+                                <li>Upload stores the file on IPFS; MetaMask anchors integrity on Sepolia when connected.</li>
+                            </ol>
+                            <p className="mt-3 text-[11px] text-hc-text-muted leading-relaxed border-t border-hc-border-light pt-3">
+                                AI screening is advisory decision support — not a medical diagnosis. Verify results clinically before prescribing.
+                            </p>
                         </div>
                     </div>
                 )}

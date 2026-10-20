@@ -1,8 +1,8 @@
 # MediChain — Product Definition & Positioning Specification
 
 **Product Name:** MediChain  
-**Version:** 3.0.0 (Market-Ready Software Release Candidate)  
-**Date:** October 2026  
+**Version:** 3.0.1 (Productization Stage 5 — experience improved with limitations)  
+**Date:** October 20, 2026  
 **Category:** Patient-Controlled Health Information Platform (PCHIP)  
 **Document Purpose:** Defines the genuine product identity, target personas, core value proposition, architectural differentiators, and verifiable demonstration boundaries.
 

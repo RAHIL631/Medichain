@@ -6,14 +6,14 @@ import { useAuth }           from '../context/AuthContext';
 import { useWalletContext }  from '../context/WalletContext';
 import api                   from '../utils/api';
 import { formatAddress }     from '../utils/web3';
-import { getRecordTypeImage, DOCTOR_IMAGES, MEDICINE_IMAGES } from '../utils/images';
+import { getRecordTypeImage, MEDICINE_IMAGES } from '../utils/images';
 import DashboardLayout       from '../components/DashboardLayout';
 import WalletConnectionModal from '../components/WalletConnectionModal';
 import QRHealthID            from '../components/QRHealthID';
 import {
   FileText, Lock, Brain, Activity, QrCode,
   ChevronRight, Home, User, BarChart3,
-  Wallet, RefreshCw, Shield, X, CheckCircle,
+  Wallet, RefreshCw, Shield, X,
   Stethoscope, Pill
 } from 'lucide-react';
 
@@ -111,6 +111,7 @@ const NAV = [
   { label: 'AI Health',   path: '/ai-dashboard',       icon: Brain    },
   { label: 'Health Risk', path: '/health-risk',        icon: Activity },
   { label: 'Analytics',   path: '/analytics',          icon: BarChart3},
+  { label: 'Help',        path: '/help',               icon: Shield  },
   { label: 'Profile',     path: '/profile',            icon: User     },
 ];
 
@@ -296,7 +297,7 @@ export default function PatientDashboard() {
             { Icon: FileText, label: 'View all records',   sub: `${records.length} records`, path: '/records',       color: 'text-hc-blue' },
             { Icon: Lock,     label: 'Manage access',      sub: `${doctorCount} authorized`, path: '/access',        color: 'text-hc-teal' },
             { Icon: Brain,    label: 'AI Health Insights', sub: 'CDSS analysis',             path: '/ai-dashboard',  color: 'text-hc-violet' },
-            { Icon: QrCode,   label: 'My Health QR',       sub: 'Emergency access',          path: '/qr-id',         color: 'text-hc-success' },
+            { Icon: QrCode,   label: 'My Health QR',       sub: 'ID only — not record access', path: '/qr-id',       color: 'text-hc-success' },
           ].map(({ Icon, label, sub, path, color }) => (
             <Link key={path} to={path} className="hc-card p-3.5 sm:p-4 flex items-center gap-3 hover:shadow-hc-card-md hover:-translate-y-0.5 transition-all duration-200 min-h-[52px]">
               <div className={`w-9 h-9 rounded-xl bg-hc-bg-alt flex items-center justify-center flex-shrink-0 ${color}`}>
@@ -326,23 +327,26 @@ export default function PatientDashboard() {
               <div className="min-w-0">
                 <span className="text-[9px] uppercase font-bold text-hc-text-muted block">Patient ID</span>
                 <span className="text-xs sm:text-sm font-mono font-bold text-hc-text truncate block">
-                  {user?.patientId || 'MC-PAT-2026-000001'}
+                  {user?.patientId || 'ID pending — refresh after setup'}
                 </span>
               </div>
               <button
+                type="button"
+                disabled={!user?.patientId}
                 onClick={() => {
-                  navigator.clipboard.writeText(user?.patientId || 'MC-PAT-2026-000001');
+                  if (!user?.patientId) return;
+                  navigator.clipboard.writeText(user.patientId);
                   setCopiedId(true);
                   setTimeout(() => setCopiedId(false), 2500);
                 }}
-                className="px-2.5 py-1 rounded-lg bg-hc-surface border border-hc-border text-[11px] font-bold text-hc-text hover:text-hc-teal transition-colors flex-shrink-0"
+                className="px-2.5 py-1 rounded-lg bg-hc-surface border border-hc-border text-[11px] font-bold text-hc-text hover:text-hc-teal transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {copiedId ? 'Copied!' : 'Copy'}
               </button>
             </div>
 
             <p className="text-[11px] text-hc-text-muted leading-relaxed">
-              Your secure identity for authorized healthcare access.
+              Identification only. Showing this ID or QR does not grant doctors access to your medical records — you control that under Manage Access.
             </p>
 
             <div className="flex gap-2 pt-1">
@@ -361,26 +365,20 @@ export default function PatientDashboard() {
             </div>
           </div>
 
-          {/* Real Clinical Care Preview Card */}
+          {/* Quick-start guidance */}
           <div className="hc-card p-4 bg-gradient-to-br from-hc-surface to-hc-bg-alt border border-hc-border space-y-3">
             <div className="flex items-center gap-2">
               <Stethoscope className="w-4 h-4 text-hc-teal" />
-              <span className="text-xs font-bold text-hc-text uppercase tracking-wider">Clinical Care Network</span>
+              <span className="text-xs font-bold text-hc-text uppercase tracking-wider">Patient quick start</span>
             </div>
-            <div className="flex items-center gap-3">
-              <img
-                src={DOCTOR_IMAGES.female_1}
-                alt="Doctor"
-                className="w-11 h-11 rounded-xl object-cover border border-hc-teal/30 shadow-xs"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-hc-text truncate">Dr. Sarah Jenkins, MD</p>
-                <p className="text-[10px] text-hc-text-muted truncate">Cardiology &bull; Verified Specialist</p>
-                <span className="inline-flex items-center gap-1 text-[9px] text-hc-success font-bold mt-0.5">
-                  <CheckCircle className="w-2.5 h-2.5" /> On-Chain Licensed
-                </span>
-              </div>
-            </div>
+            <ol className="space-y-2 text-[11px] sm:text-xs text-hc-text-muted list-decimal list-inside leading-relaxed">
+              <li>Show your Health QR so a clinician can identify you.</li>
+              <li>Grant access under Manage Access before they can open records.</li>
+              <li>Authorized doctors upload encrypted records to your timeline.</li>
+            </ol>
+            <Link to="/help" className="text-[11px] font-bold text-hc-blue hover:underline inline-flex items-center gap-1">
+              Open product help <ChevronRight className="w-3 h-3" />
+            </Link>
           </div>
         </div>
 
@@ -416,10 +414,15 @@ export default function PatientDashboard() {
                   <div className="w-14 h-14 rounded-2xl bg-hc-blue-soft border border-hc-blue/20 flex items-center justify-center mx-auto mb-3.5 text-hc-blue">
                     <FileText className="w-7 h-7" />
                   </div>
-                  <h3 className="text-sm sm:text-base font-bold text-hc-text mb-1">Welcome to Your Health Records</h3>
-                  <p className="text-xs text-hc-text-muted leading-relaxed mb-5">
-                    Your medical records uploaded by authorized physicians will appear here, encrypted with AES-256-GCM and anchored to Ethereum Sepolia.
+                  <h3 className="text-sm sm:text-base font-bold text-hc-text mb-1">No medical records yet</h3>
+                  <p className="text-xs text-hc-text-muted leading-relaxed mb-4">
+                    Authorized physicians upload encrypted documents for you. Your QR ID identifies you — it does not open records by itself.
                   </p>
+                  <ol className="text-left text-[11px] sm:text-xs text-hc-text-muted space-y-1.5 mb-5 max-w-xs mx-auto list-decimal list-inside">
+                    <li>Show your Health QR at the clinic.</li>
+                    <li>Grant that doctor access under Manage Access.</li>
+                    <li>Records appear here after the doctor uploads them.</li>
+                  </ol>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
                     <button
                       onClick={() => setShowQRModal(true)}

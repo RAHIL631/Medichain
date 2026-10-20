@@ -21,7 +21,8 @@ export default function Login() {
   useEffect(() => {
     if (isAuthenticated && user) {
       if (user.role === 'patient') navigate('/patient-dashboard');
-      else if (user.role === 'doctor' || user.role === 'hospital') navigate('/doctor-dashboard');
+      else if (user.role === 'doctor') navigate('/doctor-dashboard');
+      else if (user.role === 'hospital') navigate('/hospital-dashboard');
       else if (user.role === 'admin') navigate('/admin-dashboard');
     }
   }, [isAuthenticated, user, navigate]);
@@ -34,7 +35,8 @@ export default function Login() {
       const data = await login(email, password);
       const role = data?.user?.role?.toLowerCase();
       if (role === 'patient') navigate('/patient-dashboard');
-      else if (role === 'doctor' || role === 'hospital') navigate('/doctor-dashboard');
+      else if (role === 'doctor') navigate('/doctor-dashboard');
+      else if (role === 'hospital') navigate('/hospital-dashboard');
       else if (role === 'admin') navigate('/admin-dashboard');
       else navigate('/patient-dashboard');
     } catch (err) {
