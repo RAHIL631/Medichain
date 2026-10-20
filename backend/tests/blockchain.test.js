@@ -27,7 +27,8 @@ describe('MediChain Stage 5 — Blockchain Integration & Smart Contract Tests', 
     
     // We can use a local provider or Hardhat simulation provider with staticNetwork to prevent background polling
     const hardhatUrl = process.env.BLOCKCHAIN_RPC_URL || 'http://127.0.0.1:8545';
-    provider = new ethers.JsonRpcProvider(hardhatUrl, undefined, { staticNetwork: true });
+    const testNet = ethers.Network.from(31337);
+    provider = new ethers.JsonRpcProvider(hardhatUrl, testNet, { staticNetwork: testNet });
 
     // If local RPC is running, use it; otherwise test with simulated wallets
     try {
@@ -212,7 +213,8 @@ describe('MediChain Stage 5 — Blockchain Integration & Smart Contract Tests', 
       // Point service to a non-existent port
       const offlineService = new (require('../services/blockchainService').constructor)();
       offlineService.rpcUrl = 'http://127.0.0.1:9999';
-      offlineService.provider = new ethers.JsonRpcProvider('http://127.0.0.1:9999', undefined, { staticNetwork: true });
+      const offlineNet = ethers.Network.from(31337);
+      offlineService.provider = new ethers.JsonRpcProvider('http://127.0.0.1:9999', offlineNet, { staticNetwork: offlineNet });
 
       const health = await offlineService.checkHealth();
       expect(health.status).toBe('DOWN');

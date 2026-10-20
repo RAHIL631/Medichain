@@ -15,7 +15,7 @@
 from flask import Blueprint, request, jsonify
 import logging
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger("cdss.predictive_analytics")
 
@@ -82,7 +82,7 @@ def predictive_analytics():
         progression  = _predict_disease_progression(ctx)
 
         report = {
-            "timestamp":      datetime.utcnow().isoformat() + "Z",
+            "timestamp":      datetime.now(timezone.utc).isoformat(),
             "predictions": {
                 "readmission30Day":   readmission,
                 "mortalityRisk":      mortality,

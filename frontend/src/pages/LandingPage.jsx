@@ -234,18 +234,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Real Hospital Network Gallery ─────────────────────────────────── */}
+      {/* ── Regional Facility Directory (Recommendation Engine Index) ──────── */}
       <section className="py-12 sm:py-16 bg-hc-bg border-y border-hc-border-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-hc-blue uppercase tracking-wider mb-1">
-                <Building2 className="w-4 h-4" /> Connected Clinical Institutions
+                <Building2 className="w-4 h-4" /> Facility Capability Index
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-hc-text">Hospital & Diagnostic Network</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-hc-text">Healthcare Facility Directory</h2>
             </div>
             <p className="text-xs sm:text-sm text-hc-text-muted max-w-sm">
-              Authentic diagnostic findings securely anchored on decentralized storage across premier clinical networks.
+              Regional clinical facilities indexed by our weighted hospital recommendation engine for specialty care, capacity, and ratings.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -265,7 +265,7 @@ export default function LandingPage() {
                 </div>
                 <div className="p-3.5 flex items-center justify-between">
                   <span className="text-xs sm:text-sm font-bold text-hc-text truncate">{h.name}</span>
-                  <span className="w-2 h-2 rounded-full bg-hc-success flex-shrink-0 ml-2" />
+                  <span className="text-[10px] font-mono font-semibold text-hc-blue bg-hc-blue-soft px-1.5 py-0.5 rounded ml-2 flex-shrink-0">Indexed</span>
                 </div>
               </div>
             ))}

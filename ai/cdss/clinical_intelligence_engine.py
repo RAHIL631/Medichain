@@ -11,7 +11,7 @@
 from flask import Blueprint, request, jsonify
 import logging
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger("cdss.clinical_intelligence")
 
@@ -144,7 +144,7 @@ def clinical_intelligence():
 
         # ── Build response ─────────────────────────────────────────────────
         report = {
-            "timestamp":          datetime.utcnow().isoformat() + "Z",
+            "timestamp":          datetime.now(timezone.utc).isoformat(),
             "patientProfile": {
                 "age":               age,
                 "gender":            gender,
@@ -506,7 +506,7 @@ def _recommend_specialists(disease_risks, symptoms, emergency_score):
 
 def _compute_followup(risk_level, specialist_recs):
     interval = FOLLOWUP_INTERVALS.get(risk_level, FOLLOWUP_INTERVALS["MINIMAL"])
-    next_date = (datetime.utcnow() + timedelta(days=interval["days"])).strftime("%Y-%m-%d")
+    next_date = (datetime.now(timezone.utc) + timedelta(days=interval["days"])).strftime("%Y-%m-%d")
     primary_spec = specialist_recs[0]["specialist"] if specialist_recs else "General Physician"
 
     return {

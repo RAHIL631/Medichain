@@ -85,6 +85,8 @@ const ConsentRecordSchema = new mongoose.Schema({
 // Compound indexes
 ConsentRecordSchema.index({ patientId: 1, granteeId: 1, status: 1 });
 ConsentRecordSchema.index({ patientId: 1, status: 1, createdAt: -1 });
+ConsentRecordSchema.index({ granteeId: 1, status: 1, createdAt: -1 });
+ConsentRecordSchema.index({ granteeId: 1, patientId: 1, status: 1 });
 
 // Auto-expire consents
 ConsentRecordSchema.index(

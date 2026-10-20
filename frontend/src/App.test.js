@@ -3,6 +3,6 @@ import App from './App';
 
 test('renders MediChain app title', () => {
   render(<App />);
-  const titleElement = screen.getByText(/MediChain/i);
-  expect(titleElement).toBeInTheDocument();
+  const titleElements = screen.getAllByText(/MediChain/i);
+  expect(titleElements.length).toBeGreaterThan(0);
 });

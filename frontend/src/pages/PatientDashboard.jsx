@@ -89,9 +89,9 @@ function RecordRow({ record }) {
       <span className={`hc-badge text-[10px] sm:text-xs flex-shrink-0 ${TYPE_COLOR[type] || 'hc-badge-neutral'}`}>
         {TYPE_LABEL[type] || type}
       </span>
-      {record.ipfsHash && (
+      {(record.ipfsURL || record.ipfsCID || record.ipfsHash) && (
         <a
-          href={`https://gateway.pinata.cloud/ipfs/${record.ipfsHash}`}
+          href={record.ipfsURL || `https://gateway.pinata.cloud/ipfs/${record.ipfsCID || record.ipfsHash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-xs text-hc-blue hover:underline font-bold flex-shrink-0 px-1 py-1"
@@ -412,14 +412,30 @@ export default function PatientDashboard() {
                   {records.slice(0, 5).map(r => <RecordRow key={r._id} record={r} />)}
                 </div>
               ) : (
-                <div className="py-10 sm:py-12 text-center">
-                  <img
-                    src={MEDICINE_IMAGES.prescription}
-                    alt="Prescription"
-                    className="w-14 h-14 rounded-2xl object-cover mx-auto mb-3 opacity-70 border border-hc-border"
-                  />
-                  <p className="text-xs sm:text-sm font-bold text-hc-text mb-1">No records yet</p>
-                  <p className="text-xs text-hc-text-muted">Your verified records anchored on IPFS and Sepolia will appear here.</p>
+                <div className="py-8 sm:py-10 text-center max-w-md mx-auto">
+                  <div className="w-14 h-14 rounded-2xl bg-hc-blue-soft border border-hc-blue/20 flex items-center justify-center mx-auto mb-3.5 text-hc-blue">
+                    <FileText className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-sm sm:text-base font-bold text-hc-text mb-1">Welcome to Your Health Records</h3>
+                  <p className="text-xs text-hc-text-muted leading-relaxed mb-5">
+                    Your medical records uploaded by authorized physicians will appear here, encrypted with AES-256-GCM and anchored to Ethereum Sepolia.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                    <button
+                      onClick={() => setShowQRModal(true)}
+                      className="hc-btn hc-btn-primary hc-btn-sm w-full sm:w-auto text-xs justify-center"
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                      Show Health QR to Doctor
+                    </button>
+                    <Link
+                      to="/access"
+                      className="hc-btn hc-btn-ghost hc-btn-sm w-full sm:w-auto text-xs justify-center border border-hc-border"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      Manage Doctor Access
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

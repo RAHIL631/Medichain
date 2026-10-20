@@ -20,7 +20,7 @@ const { protect, authorize }    = require('../middleware/auth');
 const User                      = require('../models/User');
 const MedicalRecord             = require('../models/MedicalRecord');
 const ConsentRecord             = require('../models/ConsentRecord');
-const { uploadToIPFS }          = require('../utils/ipfs');
+const { uploadToIPFS, fetchFromIPFS } = require('../utils/ipfs');
 const { validateFileMagicBytes }= require('../middleware/fileValidator');
 const { encryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
 
@@ -424,9 +424,16 @@ router.get('/record/:recordId/download', async (req, res) => {
       });
     }
 
-    // Fetch ciphertext from IPFS Gateway
-    const response = await axios.get(record.ipfsURL, { responseType: 'arraybuffer' });
-    let fileBuffer = Buffer.from(response.data);
+    // Resiliently fetch ciphertext from IPFS Gateways with multi-gateway fallback
+    let fileBuffer;
+    try {
+      fileBuffer = await fetchFromIPFS(record.ipfsURL || record.ipfsCID);
+    } catch (ipfsErr) {
+      console.error('[DOCTOR] IPFS gateway retrieval failed:', ipfsErr.message);
+      return res.status(502).json({
+        error: 'Medical file temporarily unavailable from decentralized IPFS storage. Please try again shortly.',
+      });
+    }
 
     // Decrypt if encrypted
     if (record.isEncrypted && record.encryptionMeta) {
@@ -615,6 +622,61 @@ router.get('/patient/:walletAddress', async (req, res) => {
   } catch (err) {
     console.error('[DOCTOR] GET /patient/:wallet error:', err.message);
     return res.status(500).json({ error: 'Failed to fetch patient details' });
+  }
+});
+
+// ── GET /api/doctor/patient-medications/:identifier ───────────────────────────
+/**
+ * Resolves patient medications for prescription CDSS drug-interaction checks.
+ */
+router.get('/patient-medications/:identifier', async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    if (!identifier) return res.status(400).json({ error: 'Patient identifier required' });
+
+    const isEth = /^0x[a-fA-F0-9]{40}$/.test(identifier);
+    let patient = null;
+
+    if (isEth) {
+      patient = await User.findOne({
+        walletAddress: { $regex: new RegExp(`^${identifier.trim()}$`, 'i') },
+        role: 'patient',
+      });
+    } else {
+      const queryList = [{ patientId: identifier.trim().toUpperCase() }];
+      if (/^[0-9a-fA-F]{24}$/.test(identifier)) {
+        queryList.push({ _id: identifier });
+      }
+      patient = await User.findOne({ $or: queryList, role: 'patient' });
+    }
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    const result = await MedicalRecord.aggregate([
+      {
+        $match: {
+          patientId:  patient._id,
+          recordType: 'prescription',
+          isActive:   true,
+        },
+      },
+      { $unwind: '$medications' },
+      {
+        $group: {
+          _id:         null,
+          medications: { $addToSet: '$medications' },
+        },
+      },
+      { $project: { _id: 0, medications: 1 } },
+    ]);
+
+    const medications = result.length > 0 ? result[0].medications : [];
+    return res.status(200).json({ success: true, medications });
+  } catch (err) {
+    console.error('[DOCTOR] GET /patient-medications error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch patient medications' });
   }
 });
 

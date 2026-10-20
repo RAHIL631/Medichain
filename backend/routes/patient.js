@@ -10,9 +10,11 @@ const axios         = require('axios');
 const { protect, authorize } = require('../middleware/auth');
 const User          = require('../models/User');
 const MedicalRecord = require('../models/MedicalRecord');
-const { uploadToIPFS } = require('../utils/ipfs');
+const ConsentRecord = require('../models/ConsentRecord');
+const { uploadToIPFS, fetchFromIPFS } = require('../utils/ipfs');
 const { validateFileMagicBytes } = require('../middleware/fileValidator');
 const { encryptBuffer, decryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
+const { auditLog, AuditEvents } = require('../utils/auditLogger');
 
 // ── Multer config for patient uploads ─────────────────────────────────────────
 const ALLOWED_MIME_TYPES = [
@@ -75,6 +77,29 @@ router.get('/records', async (req, res) => {
   } catch (err) {
     console.error('[PATIENT] GET /records error:', err.message);
     return res.status(500).json({ error: 'Failed to fetch records' });
+  }
+});
+
+// ── GET /api/patient/stats ────────────────────────────────────────────────────
+/**
+ * Returns summary counts for the authenticated patient:
+ *   - total active medical records
+ *   - total authorized doctors/entities with active consent
+ */
+router.get('/stats', async (req, res) => {
+  try {
+    const [recordCount, activeConsents] = await Promise.all([
+      MedicalRecord.countDocuments({ patientId: req.user._id, isActive: true }),
+      ConsentRecord.countDocuments({ patientId: req.user._id, status: 'active' }),
+    ]);
+
+    return res.status(200).json({
+      totalRecords: recordCount,
+      authorizedDoctors: activeConsents,
+    });
+  } catch (err) {
+    console.error('[PATIENT] GET /stats error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch patient stats' });
   }
 });
 
@@ -212,6 +237,13 @@ router.patch('/record/:recordId/txhash', async (req, res) => {
 
     if (!record) {
       return res.status(404).json({ error: 'Record not found' });
+    }
+
+    if (record.blockchainTxHash) {
+      return res.status(409).json({
+        error:   'Transaction hash already set for this record',
+        txHash:  record.blockchainTxHash,
+      });
     }
 
     record.blockchainTxHash     = txHash;
@@ -463,6 +495,74 @@ router.get('/medications', async (req, res) => {
   } catch (err) {
     console.error('[PATIENT] GET /medications error:', err.message);
     return res.status(500).json({ error: 'Failed to aggregate medications' });
+  }
+});
+
+// ── GET /api/patient/record/:recordId/download ────────────────────────────────
+/**
+ * Patient-facing route to retrieve and decrypt their own medical record.
+ * Strict authorization enforced:
+ *   1. Must be authenticated as patient
+ *   2. Must be the owner of the record (record.patientId === req.user._id)
+ *   3. Fetches encrypted ciphertext from IPFS gateways
+ *   4. Decrypts using AES-256-GCM
+ *   5. Logs audit trail event
+ */
+router.get('/record/:recordId/download', async (req, res) => {
+  try {
+    const record = await MedicalRecord.findOne({
+      _id: req.params.recordId,
+      patientId: req.user._id,
+      isActive: true,
+    }).select('+encryptionMeta.encryptedKey +encryptionMeta.authTag');
+
+    if (!record) {
+      return res.status(404).json({ error: 'Record not found or access denied' });
+    }
+
+    // Resiliently fetch ciphertext from IPFS Gateways with multi-gateway fallback
+    let fileBuffer;
+    try {
+      fileBuffer = await fetchFromIPFS(record.ipfsURL || record.ipfsCID);
+    } catch (ipfsErr) {
+      console.error('[PATIENT] IPFS gateway retrieval failed:', ipfsErr.message);
+      return res.status(502).json({
+        error: 'Medical file temporarily unavailable from decentralized IPFS storage. Please try again shortly.',
+      });
+    }
+
+    // Decrypt if encrypted
+    if (record.isEncrypted && record.encryptionMeta) {
+      try {
+        fileBuffer = decryptBuffer(
+          fileBuffer,
+          record.encryptionMeta.encryptedKey,
+          record.encryptionMeta.iv,
+          record.encryptionMeta.authTag
+        );
+      } catch (decErr) {
+        console.error('[PATIENT] Decryption failed:', decErr.message);
+        return res.status(500).json({ error: 'Failed to decrypt medical file content' });
+      }
+    }
+
+    auditLog(AuditEvents.RECORD_ACCESSED, req, {
+      recordId: record._id,
+      patientId: record.patientId,
+      fileName: record.fileName,
+      ipfsCID: record.ipfsCID,
+      role: 'patient',
+    });
+
+    res.setHeader('Content-Type', record.fileMimeType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${record.fileName || 'record'}"`);
+    res.setHeader('Content-Length', fileBuffer.length);
+    return res.send(fileBuffer);
+
+  } catch (err) {
+    console.error('[PATIENT] Record download error:', err.message);
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Record not found' });
+    return res.status(500).json({ error: 'Failed to retrieve file: ' + err.message });
   }
 });
 

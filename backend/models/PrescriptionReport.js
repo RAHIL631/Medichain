@@ -109,8 +109,8 @@ const PrescriptionReportSchema = new mongoose.Schema({
 });
 
 // ── Indexes ────────────────────────────────────────────────────────────────────
-PrescriptionReportSchema.index({ patientId: 1, createdAt: -1 });
-PrescriptionReportSchema.index({ doctorId: 1, createdAt: -1 });
+PrescriptionReportSchema.index({ patientId: 1, isActive: 1, createdAt: -1 });
+PrescriptionReportSchema.index({ doctorId: 1, isActive: 1, createdAt: -1 });
 PrescriptionReportSchema.index({ safetyScore: 1 });
 PrescriptionReportSchema.index({ severity: 1, createdAt: -1 });
 

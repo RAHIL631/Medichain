@@ -163,6 +163,15 @@ def predict_legacy(patient: dict) -> dict:
         "model_version": registry.get_version_info().get("heart", {}).get("version", "1.0.0"),
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "explanation": explanation,
+        "input_factors": {
+            "age": age,
+            "gender": "Male" if gender == 1 else "Female",
+            "blood_pressure": bp,
+            "bmi": bmi,
+            "cholesterol": chol,
+            "glucose": glucose,
+        },
+        "clinical_disclaimer": "Algorithmic decision support only. Not a medical diagnosis or certainty. Must be independently reviewed by a licensed healthcare professional.",
         "status": "success",
     }
 

@@ -29,8 +29,8 @@ export const aiApi = axios.create({
   timeout: 60000,
 });
 
-// ── Request Interceptor ───────────────────────────────────────────────────────
-// Attach JWT from localStorage to every outgoing request
+// ── Request Interceptor ──────────────────────────────────────────────────────
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('medichain_token');
@@ -40,6 +40,12 @@ api.interceptors.request.use(
     // If payload is FormData, remove manual Content-Type so browser sets boundary automatically
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
       delete config.headers['Content-Type'];
+    }
+
+    // Attach deduplication key for safe idempotent GET requests
+    if (config.method?.toLowerCase() === 'get') {
+      const cacheKey = `${config.baseURL || ''}${config.url}?${JSON.stringify(config.params || {})}`;
+      config._cacheKey = cacheKey;
     }
     return config;
   },
@@ -74,6 +80,12 @@ const handleResponseError = (error) => {
     message = 'The server is taking too long to respond. The backend may be waking up — please wait a moment and try again.';
   } else if (isNetworkFailure) {
     message = 'Unable to reach the MediChain server. Please check your internet connection. If the problem persists, the server may be temporarily offline — try again in 30 seconds.';
+  } else if (error.response?.status === 429) {
+    message = error.response?.data?.error || 'Request rate limit reached. Please wait a moment before trying again.';
+  } else if (error.response?.status === 422) {
+    message = error.response?.data?.error || 'Clinical validation alert: High-severity interaction or dosage warning detected.';
+  } else if (error.response?.status === 409) {
+    message = error.response?.data?.error || 'Conflict: This record or blockchain transaction has already been established.';
   } else {
     message =
       error.response?.data?.error ||
@@ -81,7 +93,7 @@ const handleResponseError = (error) => {
       error.response?.data?.errors?.[0]?.message ||
       error.response?.data?.errors?.[0]?.msg ||
       error.message ||
-      'An unexpected error occurred';
+      'Operation could not be completed. Please retry.';
   }
 
   const customError    = new Error(message);

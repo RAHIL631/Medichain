@@ -218,6 +218,10 @@ const UserSchema = new mongoose.Schema({
 // which implicitly creates an index. Adding schema.index() for them again causes
 // Mongoose duplicate-index warnings — so only define the extras here.
 UserSchema.index({ role: 1 });
+UserSchema.index({ role: 1, isVerified: 1 });
+UserSchema.index({ role: 1, walletAddress: 1 });
+UserSchema.index({ role: 1, patientId: 1 });
+UserSchema.index({ role: 1, createdAt: -1 });
 
 // ── Pre-save Hook: auto-generate unique Patient ID for patients ───────────────
 function createPatientIdString() {
@@ -313,8 +317,9 @@ UserSchema.statics.findByWallet = function (walletAddress) {
 // Usage:  const user = await User.findByPatientId('MC-PAT-2026-000001');
 UserSchema.statics.findByPatientId = function (patientId) {
   if (!patientId || typeof patientId !== 'string') return null;
+  const normalized = patientId.trim().toUpperCase();
   return this.findOne({
-    patientId: { $regex: new RegExp(`^${patientId.trim()}$`, 'i') },
+    patientId: normalized,
     role: 'patient',
   });
 };

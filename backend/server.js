@@ -205,7 +205,11 @@ app.use('/api/auth', authLimiter);
 // ══════════════════════════════════════════════════════════════════════════════
 
 // Helper to mount routes to support both /api and /api/v1 (API versioning)
+// Helper to mount routes to support both /api and /api/v1 (API versioning)
 const mountApi = (prefix) => {
+  // ── Audit Log (Security) — must be registered before routes to capture res.on('finish')
+  app.use(prefix, auditLog);
+
   app.use(`${prefix}/auth`,         authRoutes);
   app.use(`${prefix}/account`,      accountRoutes);
   app.use(`${prefix}/patient`,      patientRoutes);
@@ -230,9 +234,6 @@ const mountApi = (prefix) => {
   app.use(`${prefix}/admin`,                  adminRoutes);
   app.use(`${prefix}/hospital-recommendation`, hospitalRecommendRoutes);
   app.use(`${prefix}/timeline`,               timelineRoutes);
-
-  // ── Audit Log (Security — Phase 12) ─────────────────────────────────────────
-  app.use(prefix, auditLog);
 };
 
 mountApi('/api');
@@ -243,7 +244,8 @@ app.get('/', (req, res) => {
   res.status(200).json({
     message: 'Welcome to the MediChain API',
     docs: 'Endpoints are available under /api',
-    healthCheck: '/health'
+    healthCheck: '/health',
+    readiness: '/ready'
   });
 });
 
@@ -257,17 +259,50 @@ app.get('/health', (req, res) =>
   })
 );
 
-// ── Readiness check endpoint ─────────────────────────────────────────────
+// ── Multi-Subsystem Readiness check endpoint ─────────────────────────────
 const mongoose = require('mongoose');
+const axios = require('axios');
 app.get('/ready', async (req, res) => {
+  const timeoutPromise = (ms) => new Promise(resolve => setTimeout(() => resolve('timeout'), ms));
+
+  // 1. Database check
+  const dbStatus = mongoose.connection.readyState === 1 ? 'ok' : 'disconnected';
+
+  // 2. Blockchain RPC health check (non-blocking, 1000ms max)
+  let blockchainStatus = 'offline';
+  try {
+    const blockchainService = require('./services/blockchainService');
+    const bHealth = await Promise.race([blockchainService.checkHealth(), timeoutPromise(1000)]);
+    blockchainStatus = (bHealth && bHealth.status === 'UP') ? 'ok' : (bHealth === 'timeout' ? 'latency_warning' : 'degraded');
+  } catch {
+    blockchainStatus = 'offline';
+  }
+
+  // 3. AI Service health check (non-blocking, 1000ms max)
+  let aiStatus = 'unreachable';
+  try {
+    const aiUrl = process.env.AI_SERVICE_URL || 'http://localhost:5001';
+    const aiRes = await Promise.race([
+      axios.get(`${aiUrl}/health`, { timeout: 1000 }),
+      timeoutPromise(1000)
+    ]);
+    aiStatus = (aiRes && aiRes.status === 200) ? 'ok' : (aiRes === 'timeout' ? 'latency_warning' : 'offline');
+  } catch {
+    aiStatus = 'offline';
+  }
+
   const checks = {
-    database: mongoose.connection.readyState === 1 ? 'ok' : 'not_connected',
-    service:  'MediChain API',
-    timestamp: new Date().toISOString(),
+    database:   dbStatus,
+    blockchain: blockchainStatus,
+    aiService:  aiStatus,
+    service:    'MediChain API',
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp:  new Date().toISOString(),
   };
-  const allOk = checks.database === 'ok';
-  return res.status(allOk ? 200 : 503).json({
-    status: allOk ? 'ready' : 'not_ready',
+
+  const isCoreHealthy = dbStatus === 'ok';
+  return res.status(isCoreHealthy ? 200 : 503).json({
+    status: isCoreHealthy ? 'ready' : 'not_ready',
     checks,
   });
 });
@@ -381,16 +416,29 @@ if (process.env.NODE_ENV !== 'test') {
       });
   });
 
-  // Graceful shutdown — close DB connection on SIGTERM (Docker / PM2 stop)
-  process.on('SIGTERM', () => {
-    console.log('⚠️  SIGTERM received — shutting down gracefully');
+  // Graceful shutdown handler — shared between SIGTERM (Docker/PM2) and SIGINT (Ctrl+C)
+  const gracefulShutdown = (signal) => {
+    console.log(`⚠️  ${signal} received — shutting down gracefully`);
     if (server) {
       server.close(() => {
         console.log('✅  HTTP server closed');
-        process.exit(0);
+        mongoose.connection.close(false, () => {
+          console.log('✅  MongoDB connection closed');
+          process.exit(0);
+        });
       });
+      // Force exit after 10 seconds if graceful shutdown hangs
+      setTimeout(() => {
+        console.error('⚠️  Forced shutdown after timeout');
+        process.exit(1);
+      }, 10_000).unref();
+    } else {
+      process.exit(0);
     }
-  });
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM')); // Docker / PM2 stop
+  process.on('SIGINT',  () => gracefulShutdown('SIGINT'));  // Ctrl+C in development
 }
 
 module.exports = app; // exported for supertest / Jest integration tests

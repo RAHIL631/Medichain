@@ -23,7 +23,7 @@ const AuditLogSchema = new mongoose.Schema({
   // ── Request ────────────────────────────────────────────────────────────────
   method: {
     type: String,
-    enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'EVENT'],
     required: true,
   },
   path: {
@@ -92,11 +92,10 @@ AuditLogSchema.index({ path: 1, method: 1, createdAt: -1 });
 AuditLogSchema.index({ success: 1, createdAt: -1 });
 
 // Prevent updates — audit logs are immutable
-AuditLogSchema.pre('save', function (next) {
+AuditLogSchema.pre('save', function () {
   if (!this.isNew) {
-    return next(new Error('AuditLog records are immutable'));
+    throw new Error('AuditLog records are immutable');
   }
-  next();
 });
 
 module.exports = mongoose.model('AuditLog', AuditLogSchema);

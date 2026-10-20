@@ -32,8 +32,7 @@ const BLOCKLIST_PREFIX = 'medichain:blocklist:';
  */
 const blockToken = async (token, expiresIn = 86400) => {
   const redis = getRedis();
-  if (!redis) {
-    console.warn('[BLOCKLIST] Redis unavailable — token not blocklisted (logout is client-side only)');
+  if (!redis || !redis.isReady) {
     return false;
   }
   try {
@@ -56,7 +55,7 @@ const blockToken = async (token, expiresIn = 86400) => {
  */
 const isTokenBlocked = async (token) => {
   const redis = getRedis();
-  if (!redis) return false; // Fail open if Redis is down
+  if (!redis || !redis.isReady) return false; // Fail open if Redis is down
   try {
     const nodeCrypto = require('crypto');
     const hash = nodeCrypto.createHash('sha256').update(token).digest('hex');

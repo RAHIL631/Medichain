@@ -65,14 +65,18 @@ def train_all_cdss(diseases: list, data_dir: Path, model_dir: Path) -> dict:
 
         gen_fn, target_col, csv_name = generators[disease]
         csv_path = data_dir / csv_name
+        synth_path = data_dir / f"{disease}_synthetic.csv"
 
         if csv_path.exists():
             logger.info(f"  [REAL DATA] Loading {csv_name}")
             df = pd.read_csv(csv_path)
+        elif synth_path.exists():
+            logger.info(f"  [SYNTHETIC DATA] Loading {synth_path.name}")
+            df = pd.read_csv(synth_path)
         else:
             logger.info(f"  [SYNTHETIC] {csv_name} not found — generating data")
             df = gen_fn()
-            df.to_csv(data_dir / f"{disease}_synthetic.csv", index=False)
+            df.to_csv(synth_path, index=False)
 
         # Adherence model saved without prefix (existing convention)
         prefix = "" if disease == "adherence" else "xgb"
@@ -97,6 +101,9 @@ def update_manifest(results: dict) -> None:
             "trained_at": now,
             "auc":        res.get("auc"),
             "f1":         res.get("f1"),
+            "accuracy":   res.get("accuracy"),
+            "precision":  res.get("precision"),
+            "recall":     res.get("recall"),
         }
 
     registry.save_manifest(updates)
@@ -178,7 +185,15 @@ Examples:
     import pandas as pd
     if results:
         rows = [
-            {"disease": d, "algorithm": r.get("algorithm"), "auc": r.get("auc"), "f1": r.get("f1")}
+            {
+                "disease": d,
+                "algorithm": r.get("algorithm"),
+                "auc": r.get("auc"),
+                "f1": r.get("f1"),
+                "accuracy": r.get("accuracy"),
+                "precision": r.get("precision"),
+                "recall": r.get("recall"),
+            }
             for d, r in results.items()
         ]
         print("\n" + "=" * 70)

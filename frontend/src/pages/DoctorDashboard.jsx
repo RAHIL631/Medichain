@@ -212,7 +212,8 @@ const DoctorDashboard = () => {
         try {
             let currentMeds = [];
             try {
-                const { data } = await api.get(`/patient/medications?address=${scannedAddress}`);
+                const { data } = await api.get(`/doctor/patient-medications/${encodeURIComponent(scannedAddress)}`)
+                    .catch(() => api.get(`/patient/medications?address=${encodeURIComponent(scannedAddress)}`));
                 currentMeds = data.medications || [];
             } catch (err) {
                 console.warn('Could not fetch existing patient meds, checking new ones only.');

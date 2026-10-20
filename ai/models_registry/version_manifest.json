@@ -1,53 +1,71 @@
 {
-  "_updated_at": "2026-06-30T16:07:11.889701+00:00",
+  "_updated_at": "2026-09-16T14:23:38.837995+00:00",
   "_note": "Auto-updated by scripts/train_all.py after each training run. Do not edit manually.",
   "xgb_heart": {
     "disease": "heart",
     "algorithm": "XGBoost",
     "version": "1.0.0",
-    "trained_at": null,
-    "auc": null,
-    "f1": null
+    "trained_at": "2026-09-16T14:23:38.836899+00:00",
+    "auc": 0.4683,
+    "f1": 0.0,
+    "accuracy": 0.7775,
+    "precision": 0.0,
+    "recall": 0.0
   },
   "xgb_diabetes": {
     "disease": "diabetes",
     "algorithm": "XGBoost",
     "version": "1.0.0",
-    "trained_at": null,
-    "auc": null,
-    "f1": null
+    "trained_at": "2026-09-16T14:23:38.836899+00:00",
+    "auc": 0.5551,
+    "f1": 0.1304,
+    "accuracy": 0.8,
+    "precision": 0.4,
+    "recall": 0.0779
   },
   "xgb_stroke": {
     "disease": "stroke",
     "algorithm": "XGBoost",
     "version": "1.0.0",
-    "trained_at": null,
-    "auc": null,
-    "f1": null
+    "trained_at": "2026-09-16T14:23:38.836899+00:00",
+    "auc": 0.5346,
+    "f1": 0.0,
+    "accuracy": 0.9517,
+    "precision": 0.0,
+    "recall": 0.0
   },
   "xgb_kidney": {
     "disease": "kidney",
     "algorithm": "XGBoost",
     "version": "1.0.0",
-    "trained_at": null,
-    "auc": null,
-    "f1": null
+    "trained_at": "2026-09-16T14:23:38.836899+00:00",
+    "auc": 0.7426,
+    "f1": 0.1231,
+    "accuracy": 0.8575,
+    "precision": 0.3333,
+    "recall": 0.0755
   },
   "xgb_liver": {
     "disease": "liver",
     "algorithm": "XGBoost",
     "version": "1.0.0",
-    "trained_at": null,
-    "auc": null,
-    "f1": null
+    "trained_at": "2026-09-16T14:23:38.836899+00:00",
+    "auc": 0.5039,
+    "f1": 0.5659,
+    "accuracy": 0.4975,
+    "precision": 0.5436,
+    "recall": 0.5901
   },
   "adherence": {
     "disease": "adherence",
     "algorithm": "XGBoost",
     "version": "1.0.0",
-    "trained_at": null,
-    "auc": null,
-    "f1": null
+    "trained_at": "2026-09-16T14:23:38.836899+00:00",
+    "auc": 0.6274,
+    "f1": 0.5076,
+    "accuracy": 0.5975,
+    "precision": 0.5646,
+    "recall": 0.4611
   },
   "dosage_safety_rf": {
     "algorithm": "dosage_safety_rf",

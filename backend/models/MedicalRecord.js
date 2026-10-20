@@ -288,6 +288,12 @@ const MedicalRecordSchema = new mongoose.Schema({
 // Speeds up the most common query: all active records for a given patient
 MedicalRecordSchema.index({ patientId: 1, isActive: 1, createdAt: -1 });
 
+// Speeds up doctor dashboard queries: all records uploaded by a doctor
+MedicalRecordSchema.index({ doctorId: 1, isActive: 1, createdAt: -1 });
+
+// Speeds up patient dashboard recordType filter queries (e.g. lab-report, prescription)
+MedicalRecordSchema.index({ patientId: 1, recordType: 1, isActive: 1, createdAt: -1 });
+
 // Allows the blockchain sync service to look up records by patient wallet address
 MedicalRecordSchema.index({ patientWalletAddress: 1 });
 

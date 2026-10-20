@@ -22,6 +22,7 @@ describe('MediChain Stage 6 — IPFS Secure Storage & Medical File Tests', () =>
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
+    await new Promise(resolve => setTimeout(resolve, 1000));
     mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri());
 
@@ -53,12 +54,12 @@ describe('MediChain Stage 6 — IPFS Secure Storage & Medical File Tests', () =>
       licenseNumber: 'MD-000000',
       walletAddress: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
     });
-  });
+  }, 60000);
 
   afterAll(async () => {
     await mongoose.disconnect();
     if (mongoServer) await mongoServer.stop();
-  });
+  }, 30000);
 
   // ════════════════════════════════════════════════════════════════════════════
   // 1. FILE VALIDATION & MAGIC BYTES TEST

@@ -4,15 +4,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { WalletProvider } from './context/WalletContext';
 import { ToastProvider } from './components/ui/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // ── Eagerly loaded (critical path) ───────────────────────────────────────────
 import LandingPage     from './pages/LandingPage';
 import Login           from './pages/Login';
 import Register        from './pages/Register';
-import PatientDashboard from './pages/PatientDashboard';
-import DoctorDashboard  from './pages/DoctorDashboard';
 
-// ── Lazily loaded (non-critical) ──────────────────────────────────────────────
+// ── Lazily loaded (code-split for optimal initial bundle) ──────────────────────
+const PatientDashboard     = lazy(() => import('./pages/PatientDashboard'));
+const DoctorDashboard      = lazy(() => import('./pages/DoctorDashboard'));
 const HospitalDashboard    = lazy(() => import('./pages/HospitalDashboard'));
 const AdminDashboard       = lazy(() => import('./pages/AdminDashboard'));
 const QRHealthIDPage       = lazy(() => import('./pages/QRHealthID'));
@@ -99,13 +100,14 @@ const PublicRoute = ({ children }) => {
 //
 function App() {
   return (
-    <AuthProvider>
-      {/* WalletProvider: shared optional wallet state across the app.
-          Does NOT block rendering. Silent reconnect uses eth_accounts (no popup). */}
-      <WalletProvider>
-        <ToastProvider>
-          <Router>
-            <Suspense fallback={<PageLoader />}>
+    <ErrorBoundary>
+      <AuthProvider>
+        {/* WalletProvider: shared optional wallet state across the app.
+            Does NOT block rendering. Silent reconnect uses eth_accounts (no popup). */}
+        <WalletProvider>
+          <ToastProvider>
+            <Router>
+              <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* ── Public / Marketing Routes ─────────────────────────── */}
                 <Route path="/" element={<LandingPage />} />
@@ -260,6 +262,7 @@ function App() {
         </ToastProvider>
       </WalletProvider>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

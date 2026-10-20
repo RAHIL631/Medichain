@@ -523,6 +523,54 @@ const testPinataConnection = async () => {
   }
 };
 
+/**
+ * FUNCTION 8: fetchFromIPFS
+ * Fetches an IPFS file buffer with multi-gateway fallback and timeout resilience.
+ *
+ * @param {string} cidOrUrl  — IPFS CID or full gateway URL
+ * @param {number} timeoutMs — Timeout per gateway attempt (default 15,000ms)
+ * @returns {Promise<Buffer>}
+ */
+const fetchFromIPFS = async (cidOrUrl, timeoutMs = 15000) => {
+  if (!cidOrUrl || typeof cidOrUrl !== 'string') {
+    throw new Error('fetchFromIPFS: cidOrUrl must be a non-empty string');
+  }
+
+  const axios = require('axios');
+
+  let cid = cidOrUrl;
+  const match = cidOrUrl.match(/(?:ipfs\/|bafy[a-z0-9]+|Qm[a-zA-Z0-9]{44})/);
+  if (match) {
+    cid = match[0].replace('ipfs/', '');
+  }
+
+  const candidateUrls = [
+    cidOrUrl.startsWith('http') ? cidOrUrl : `${PINATA_GATEWAY}/${cid}`,
+    `https://gateway.pinata.cloud/ipfs/${cid}`,
+    `https://ipfs.io/ipfs/${cid}`,
+    `https://cloudflare-ipfs.com/ipfs/${cid}`,
+  ];
+
+  const uniqueUrls = [...new Set(candidateUrls)];
+
+  let lastError = null;
+  for (const url of uniqueUrls) {
+    try {
+      const response = await axios.get(url, {
+        responseType: 'arraybuffer',
+        timeout: timeoutMs,
+      });
+      if (response.data && response.data.length > 0) {
+        return Buffer.from(response.data);
+      }
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw new Error(`Failed to retrieve file from IPFS gateways: ${lastError?.message || 'Gateway timeout'}`);
+};
+
 // ── Module exports ─────────────────────────────────────────────────────────────
 module.exports = {
   uploadToIPFS,         // FUNCTION 1 — primary upload (buffer + full metadata)
@@ -533,4 +581,5 @@ module.exports = {
   unpinFromIPFS,        // FUNCTION 5 — admin unpin
   testPinataConnection, // FUNCTION 6 — startup health check
   computeCID,           // FUNCTION 7 — compute deterministic SHA-256 IPFS CID
+  fetchFromIPFS,        // FUNCTION 8 — retrieve buffer via resilient multi-gateway fallback
 };

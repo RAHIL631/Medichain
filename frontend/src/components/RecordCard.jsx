@@ -1,10 +1,10 @@
-// frontend/src/components/RecordCard.jsx
-// MediChain — Record Card Component (Mobile-First Responsive)
 import React, { useState } from 'react';
 import { getRecordTypeImage } from '../utils/images';
+import api from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import {
   ExternalLink, CheckCircle, Copy, Check,
-  Clock, User, Paperclip
+  Clock, User, Paperclip, Loader2, Lock
 } from 'lucide-react';
 
 // Icon Map based on Record Type
@@ -38,8 +38,11 @@ const formatDate = (dateString) => {
 };
 
 const RecordCard = ({ record }) => {
+  const { user } = useAuth();
   const [showFullNotes, setShowFullNotes] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!record) return null;
 
@@ -48,6 +51,33 @@ const RecordCard = ({ record }) => {
       navigator.clipboard.writeText(record.ipfsCID);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleView = async (e) => {
+    if (!record.isEncrypted) {
+      // Unencrypted file — default link opens gateway
+      return;
+    }
+    e.preventDefault();
+    setDownloading(true);
+    setErrorMsg('');
+    try {
+      const endpoint = (user?.role === 'doctor' || user?.role === 'hospital')
+        ? `/doctor/record/${record._id}/download`
+        : `/patient/record/${record._id}/download`;
+
+      const response = await api.get(endpoint, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: record.fileMimeType || 'application/octet-stream' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      console.error('[RecordCard] Decrypted file retrieval error:', err);
+      setErrorMsg(err.response?.data?.error || 'Failed to decrypt file');
+      setTimeout(() => setErrorMsg(''), 4000);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -135,20 +165,48 @@ const RecordCard = ({ record }) => {
             )}
           </div>
         )}
+
+        {errorMsg && (
+          <div role="alert" className="mt-2 p-2 rounded-lg bg-hc-danger-soft border border-hc-danger/20 text-[11px] text-hc-danger flex items-center gap-1.5">
+            <span>⚠️ {errorMsg}</span>
+          </div>
+        )}
       </div>
 
       {/* Action Footer */}
       <div className="grid grid-cols-3 border-t border-hc-border-light bg-hc-bg-alt/50 divide-x divide-hc-border-light text-xs font-semibold">
         {/* View File */}
-        <a 
-          href={record.ipfsURL || `https://gateway.pinata.cloud/ipfs/${record.ipfsCID}`} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="min-h-[44px] flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-blue hover:bg-hc-bg-alt transition-colors"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          <span>View</span>
-        </a>
+        {record.isEncrypted ? (
+          <button
+            type="button"
+            onClick={handleView}
+            disabled={downloading}
+            className="min-h-[44px] flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-blue hover:bg-hc-bg-alt transition-colors disabled:opacity-50"
+            title="Decrypt and view medical file"
+          >
+            {downloading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-hc-blue" />
+                <span className="text-hc-blue">Decrypting...</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3.5 h-3.5 text-hc-blue" />
+                <span>Decrypt & View</span>
+              </>
+            )}
+          </button>
+        ) : (
+          <a 
+            href={record.ipfsURL || `https://gateway.pinata.cloud/ipfs/${record.ipfsCID}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="min-h-[44px] flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-blue hover:bg-hc-bg-alt transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>View</span>
+          </a>
+        )}
 
         {/* On-Chain Verify */}
         {isPending ? (

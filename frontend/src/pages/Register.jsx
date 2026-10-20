@@ -240,6 +240,12 @@ const Register = () => {
                 <span className="text-xs text-hc-text-muted mt-1.5 sm:mt-2 leading-relaxed">Anchor authentic diagnostic test reports on decentralized storage</span>
               </button>
             </div>
+
+            <div className="mt-6 p-3 sm:p-3.5 rounded-xl bg-hc-blue-soft/50 border border-hc-blue/20 text-center">
+              <p className="text-xs text-hc-text-muted">
+                <span className="font-semibold text-hc-blue">Wallet-Optional Sign Up:</span> You do not need a cryptocurrency wallet to create an account. You can link MetaMask anytime from your dashboard for decentralized access control.
+              </p>
+            </div>
           </div>
         )}
 

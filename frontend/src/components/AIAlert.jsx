@@ -101,6 +101,10 @@ const AIAlert = ({ alerts = [], onDismiss }) => {
           </div>
         );
       })}
+      <div className="flex items-center gap-2 p-2 rounded-lg bg-medichain-surface/50 border border-medichain-border/40 text-[10px] text-text-muted">
+        <span className="font-semibold text-accent-cyan">⚠️ Clinical Advisory:</span>
+        <span>Algorithmic decision support. Not a standalone medical diagnosis. Prescriptions must be independently verified by a licensed clinician.</span>
+      </div>
     </div>
   );
 };

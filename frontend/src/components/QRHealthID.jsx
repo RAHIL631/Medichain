@@ -279,11 +279,16 @@ const QRHealthID = ({
         )}
 
         {/* Security / Privacy Assurance */}
-        <div className="w-full bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 flex items-center gap-2 mb-4 text-left">
-          <Shield className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-          <p className="text-[10px] text-emerald-800 leading-snug">
-            <strong>✓ Secure Patient Identifier:</strong> This QR contains only your verified Patient ID. It does not expose medical records or sensitive data.
-          </p>
+        <div className="w-full bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 flex items-start gap-2.5 mb-4 text-left">
+          <Shield className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-[11px] text-emerald-900 font-bold leading-tight mb-0.5">
+              Zero-Knowledge Patient Identifier
+            </p>
+            <p className="text-[10px] text-emerald-800 leading-relaxed">
+              This QR code contains <strong>strictly your unique identifier</strong>. It does not encode medical records or personal health information. A scanning doctor cannot access your medical files unless you explicitly authorize them via your Access Manager.
+            </p>
+          </div>
         </div>
 
         {/* Card Footer Details */}

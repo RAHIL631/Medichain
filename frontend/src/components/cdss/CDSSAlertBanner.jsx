@@ -186,6 +186,22 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
               </ul>
             </div>
           )}
+
+          {/* Clinical Disclaimer */}
+          <div style={{
+            marginTop: '12px',
+            paddingTop: '8px',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            fontSize: '11px',
+            color: '#94a3b8',
+            fontStyle: 'italic',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span>⚕️</span>
+            <span>Clinical Notice: Algorithmic decision support. Not a replacement for professional clinical judgment. Licensed medical practitioners must verify all drug interactions and dosages.</span>
+          </div>
         </div>
       )}
     </div>

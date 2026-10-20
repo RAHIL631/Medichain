@@ -45,9 +45,14 @@ class BlockchainService {
 
       // 2. Initialize Provider
       if (this.rpcUrl) {
-        this.provider = new ethers.JsonRpcProvider(this.rpcUrl, undefined, {
-          staticNetwork: true, // prevents unnecessary extra getNetwork calls
-        });
+        try {
+          const network = ethers.Network.from(this.chainId || 31337);
+          this.provider = new ethers.JsonRpcProvider(this.rpcUrl, network, {
+            staticNetwork: network,
+          });
+        } catch {
+          this.provider = new ethers.JsonRpcProvider(this.rpcUrl);
+        }
       }
 
       // 3. Initialize Contract instance (read-only)
@@ -128,12 +133,13 @@ class BlockchainService {
    * Checks if a patient wallet is registered on-chain
    */
   async isPatientRegistered(patientAddress) {
+    if (!patientAddress || !/^0x[a-fA-F0-9]{40}$/i.test(patientAddress)) return false;
     try {
       const contract = this.getContract();
       return await contract.isRegistered(patientAddress);
     } catch (err) {
-      console.error('[BlockchainService] isPatientRegistered error:', err.message);
-      throw err;
+      console.warn('[BlockchainService] isPatientRegistered fallback:', err.message);
+      return false;
     }
   }
 
@@ -141,12 +147,13 @@ class BlockchainService {
    * Checks if doctor has on-chain access to patient's records
    */
   async hasAccess(patientAddress, doctorAddress) {
+    if (!patientAddress || !doctorAddress) return false;
     try {
       const contract = this.getContract();
       return await contract.hasAccess(patientAddress, doctorAddress);
     } catch (err) {
-      console.error('[BlockchainService] hasAccess error:', err.message);
-      throw err;
+      console.warn('[BlockchainService] hasAccess fallback:', err.message);
+      return false;
     }
   }
 
@@ -154,6 +161,9 @@ class BlockchainService {
    * Verifies an on-chain transaction hash and returns receipt details
    */
   async verifyTransaction(txHash) {
+    if (!txHash || !/^0x[a-fA-F0-9]{64}$/i.test(txHash)) {
+      return { confirmed: false, error: 'Invalid transaction hash format' };
+    }
     try {
       const provider = this.getProvider();
       if (!provider) throw new Error('Provider unavailable');

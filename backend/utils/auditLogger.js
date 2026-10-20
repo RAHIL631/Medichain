@@ -42,13 +42,30 @@ const auditLog = (event, req, details = {}) => {
   delete entry.token;
   delete entry.secret;
 
-  // In production, replace console.log with a proper logger (e.g. Winston, Pino)
-  if (process.env.NODE_ENV !== 'test') {
-    console.log(`[AUDIT] ${event}`, JSON.stringify(entry));
+  // Persist to MongoDB AuditLog collection for regulatory and security compliance (non-blocking)
+  try {
+    const AuditLog = require('../models/AuditLog');
+    AuditLog.create({
+      userId: entry.userId || null,
+      userRole: entry.userRole || 'anonymous',
+      action: entry.event,
+      ipAddress: entry.ip,
+      userAgent: entry.userAgent,
+      method: entry.method || 'EVENT',
+      path: entry.path || '/audit',
+      resourceType: entry.resourceType || 'SecurityAudit',
+      resourceId: entry.resourceId || null,
+      success: !entry.event.includes('FAILURE') && !entry.event.includes('UNAUTHORIZED'),
+      errorMessage: entry.errorMessage || null,
+    }).catch(err => {
+      // Non-blocking log notice
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn('[AUDIT] Async persist notice:', err.message);
+      }
+    });
+  } catch (dbErr) {
+    // Non-blocking
   }
-
-  // TODO: Persist to MongoDB AuditLog collection for compliance
-  // AuditLog.create(entry).catch(err => console.error('[AUDIT] Failed to persist:', err));
 
   return entry;
 };

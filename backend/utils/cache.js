@@ -62,5 +62,48 @@ const cacheRoute = (duration = 60) => {
 module.exports = {
     connectRedis,
     cacheRoute,
-    getRedisClient: () => redisClient
+    getRedisClient: () => redisClient,
+
+    /**
+     * Invalidate a single cached route by its URL path.
+     * Call after POST/PUT/DELETE operations to prevent stale cache reads.
+     * @param {string} urlPath — e.g. '/api/patient/records'
+     */
+    invalidateCache: async (urlPath) => {
+        if (!redisClient || !redisClient.isReady) return;
+        const key = `__express__${urlPath}`;
+        try {
+            await redisClient.del(key);
+            console.log(`[Redis] Cache invalidated: ${key}`);
+        } catch (err) {
+            console.warn('[Redis] Cache invalidation error:', err.message);
+        }
+    },
+
+    /**
+     * Invalidate all cached routes matching a key pattern.
+     * Uses SCAN (not KEYS) to avoid blocking Redis in production.
+     * @param {string} pattern — e.g. '/api/patient/*' or '/api/doctor/*'
+     */
+    invalidateCachePattern: async (pattern) => {
+        if (!redisClient || !redisClient.isReady) return;
+        const keyPattern = `__express__${pattern}`;
+        try {
+            let cursor = 0;
+            let count = 0;
+            do {
+                const result = await redisClient.scan(cursor, { MATCH: keyPattern, COUNT: 100 });
+                cursor = result.cursor;
+                if (result.keys.length > 0) {
+                    await redisClient.del(result.keys);
+                    count += result.keys.length;
+                }
+            } while (cursor !== 0);
+            if (count > 0) {
+                console.log(`[Redis] Cache pattern invalidated (${count} keys): ${keyPattern}`);
+            }
+        } catch (err) {
+            console.warn('[Redis] Cache pattern invalidation error:', err.message);
+        }
+    },
 };

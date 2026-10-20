@@ -26,6 +26,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@pinata/sdk": "^2.1.0",
     "@tailwindcss/postcss": "^4.2.4"
   }
 }

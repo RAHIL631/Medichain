@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.metrics import classification_report, roc_auc_score, f1_score
+from sklearn.metrics import classification_report, roc_auc_score, f1_score, accuracy_score, precision_score, recall_score
 from sklearn.ensemble import RandomForestClassifier
 
 try:
@@ -286,7 +286,10 @@ def train_disease_model(name: str, df: pd.DataFrame, target_col: str, prefix="xg
 
     auc = roc_auc_score(y_test, y_prob)
     f1 = f1_score(y_test, y_pred, zero_division=0)
-    print(f"  Test AUC: {auc:.4f} | F1: {f1:.4f}")
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, zero_division=0)
+    rec = recall_score(y_test, y_pred, zero_division=0)
+    print(f"  Test AUC: {auc:.4f} | F1: {f1:.4f} | Acc: {acc:.4f} | Prec: {prec:.4f} | Rec: {rec:.4f}")
     print(classification_report(y_test, y_pred, zero_division=0))
 
     # Save model and scaler
@@ -316,7 +319,15 @@ def train_disease_model(name: str, df: pd.DataFrame, target_col: str, prefix="xg
         except Exception as e:
             print(f"  [WARNING] SHAP plot failed: {e}")
 
-    return {"model": name, "algorithm": algo_name, "auc": round(auc, 4), "f1": round(f1, 4)}
+    return {
+        "model": name,
+        "algorithm": algo_name,
+        "auc": round(auc, 4),
+        "f1": round(f1, 4),
+        "accuracy": round(acc, 4),
+        "precision": round(prec, 4),
+        "recall": round(rec, 4),
+    }
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
