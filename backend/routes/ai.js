@@ -22,6 +22,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { protect } = require('../middleware/auth');
+const { requirePatientAccess } = require('../middleware/patientAccess');
 const MedicalRecord = require('../models/MedicalRecord');
 const AdherenceLog = require('../models/AdherenceLog');
 const User = require('../models/User');
@@ -30,6 +31,22 @@ const cdssEngine = require('../services/cdssEngine');
 const AI_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
 const AI_TIMEOUT_DEFAULT = 15000;
 const AI_TIMEOUT_LONG = 30000; // OCR + SHAP can take longer
+
+async function requireRecordAccess(req, res, recordId) {
+    const record = await MedicalRecord.findOne({ _id: recordId, isActive: true }).select('patientId');
+    if (!record) {
+        res.status(404).json({ error: 'Active medical record not found' });
+        return false;
+    }
+
+    const patient = await User.findById(record.patientId).select('walletAddress walletVerified');
+    if (!patient) {
+        res.status(404).json({ error: 'Patient not found' });
+        return false;
+    }
+
+    return requirePatientAccess(req, res, patient);
+}
 
 // Simple logging helper
 const log = (msg) => console.log(`[AI-PROXY] ${new Date().toISOString()}: ${msg}`);
@@ -182,6 +199,8 @@ router.post('/cdss/analyze', protect, async (req, res) => {
             file_base64,
             mime_type
         } = req.body;
+
+        if (recordId && !(await requireRecordAccess(req, res, recordId))) return;
 
         // Enrich patient context from MongoDB
         let patientProfile = { ...clientPatient };
@@ -369,6 +388,8 @@ router.post('/cdss/dosage-safety/batch', protect, async (req, res) => {
         if (!medications.length) {
             return res.status(400).json({ error: 'medications array is required' });
         }
+
+        if (recordId && !(await requireRecordAccess(req, res, recordId))) return;
 
         // Enrich patient data from MongoDB
         let patientProfile = { ...clientPatient };
@@ -816,4 +837,3 @@ router.post('/assistant/summarize', protect, async (req, res) => {
 });
 
 module.exports = router;
-

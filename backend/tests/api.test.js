@@ -3,10 +3,13 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const axios = require('axios');
+const { Wallet } = require('ethers');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../server'); // Import the Express app (it exports `app`)
 const User = require('../models/User');
 const MedicalRecord = require('../models/MedicalRecord');
+const ConsentRecord = require('../models/ConsentRecord');
+const blockchainService = require('../services/blockchainService');
 
 let mongoServer;
 
@@ -73,6 +76,7 @@ describe('Production email fallback', () => {
 let patientToken = '';
 let doctorToken = '';
 let patientId = '';
+let accessSpy;
 const patientCreds = {
   name: 'John Doe',
   email: 'john@example.com',
@@ -254,6 +258,65 @@ describe("GET /api/auth/me", () => {
   });
 });
 
+describe('Signed wallet ownership verification', () => {
+  let token;
+
+  beforeEach(async () => {
+    const response = await request(app).post('/api/auth/register').send(patientCreds);
+    token = response.body.token;
+  });
+
+  it('links a wallet only after a valid, one-time signature', async () => {
+    const wallet = Wallet.createRandom();
+    const challenge = await request(app)
+      .post('/api/auth/wallet/challenge')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ walletAddress: wallet.address });
+    expect(challenge.statusCode).toBe(200);
+
+    const signature = await wallet.signMessage(challenge.body.message);
+    const link = await request(app)
+      .patch('/api/auth/wallet')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ walletAddress: wallet.address, nonce: challenge.body.nonce, signature });
+    expect(link.statusCode).toBe(200);
+    expect(link.body.walletVerified).toBe(true);
+
+    const linkedUser = await User.findOne({ email: patientCreds.email });
+    expect(linkedUser.walletAddress).toBe(wallet.address.toLowerCase());
+    expect(linkedUser.walletVerified).toBe(true);
+
+    const replay = await request(app)
+      .patch('/api/auth/wallet')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ walletAddress: wallet.address, nonce: challenge.body.nonce, signature });
+    expect(replay.statusCode).toBe(400);
+  });
+
+  it('rejects unsigned linking and a signature from another wallet', async () => {
+    const wallet = Wallet.createRandom();
+    const otherWallet = Wallet.createRandom();
+    const challenge = await request(app)
+      .post('/api/auth/wallet/challenge')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ walletAddress: wallet.address });
+
+    const unsigned = await request(app)
+      .patch('/api/auth/wallet')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ walletAddress: wallet.address });
+    expect(unsigned.statusCode).toBe(400);
+
+    const signature = await otherWallet.signMessage(challenge.body.message);
+    const rejected = await request(app)
+      .patch('/api/auth/wallet')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ walletAddress: wallet.address, nonce: challenge.body.nonce, signature });
+    expect(rejected.statusCode).toBe(403);
+    expect((await User.findOne({ email: patientCreds.email })).walletVerified).toBe(false);
+  });
+});
+
 // ══════════════════════════════════════════════════════════════════════════════
 // 2. PATIENT ROUTES (Protected)
 // ══════════════════════════════════════════════════════════════════════════════
@@ -294,15 +357,15 @@ describe("Patient Routes (protected)", () => {
     expect(res.body.user.bloodGroup).toBe('O+');
   });
 
-  it("POST /api/patient/link-wallet → 200, wallet saved", async () => {
+  it("POST /api/patient/link-wallet rejects an unsigned wallet claim", async () => {
     const walletAddress = '0x1234567890123456789012345678901234567890';
     const res = await request(app)
       .post('/api/patient/link-wallet')
       .set('Authorization', `Bearer ${patientToken}`)
       .send({ walletAddress });
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body.walletAddress).toBe(walletAddress.toLowerCase()); // assuming backend lowercases it
+    expect(res.statusCode).toBe(400);
+    expect(res.body.walletAddress).toBeUndefined();
   });
 
   it("POST /api/patient/link-wallet with invalid address → 400", async () => {
@@ -344,6 +407,14 @@ describe("Patient Routes (protected)", () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 describe("Doctor Routes (protected)", () => {
+  beforeEach(() => {
+    accessSpy = jest.spyOn(blockchainService, 'hasAccess').mockResolvedValue(false);
+  });
+
+  afterEach(() => {
+    accessSpy.mockRestore();
+  });
+
   beforeEach(async () => {
     // 1. Create Patient with wallet
     const pRes = await request(app).post('/api/auth/register').send(patientCreds);
@@ -354,19 +425,35 @@ describe("Doctor Routes (protected)", () => {
       .set('Authorization', `Bearer ${patientToken}`)
       .send({ walletAddress: '0x1111111111111111111111111111111111111111' });
 
+    await User.findOneAndUpdate(
+      { email: patientCreds.email },
+      { walletAddress: '0x1111111111111111111111111111111111111111', isWalletLinked: true, walletVerified: true }
+    );
+
     // 2. Create Doctor
     const dRes = await request(app).post('/api/auth/register').send(doctorCreds);
     doctorToken = dRes.body.token;
+    await User.findOneAndUpdate(
+      { email: doctorCreds.email },
+      { walletAddress: '0x2222222222222222222222222222222222222222', isWalletLinked: true, walletVerified: true }
+    );
   });
 
-  it("GET /api/doctor/patient/:walletAddress → 200 if wallet exists, 404 if not", async () => {
+  it("GET /api/doctor/patient/:walletAddress requires active on-chain access", async () => {
     // Valid wallet
     const resValid = await request(app)
       .get('/api/doctor/patient/0x1111111111111111111111111111111111111111')
       .set('Authorization', `Bearer ${doctorToken}`);
     
-    expect(resValid.statusCode).toBe(200);
-    expect(resValid.body.name).toBe(patientCreds.name);
+    expect(resValid.statusCode).toBe(403);
+    expect(resValid.body.name).toBeUndefined();
+
+    accessSpy.mockResolvedValue(true);
+    const resAuthorized = await request(app)
+      .get('/api/doctor/patient/0x1111111111111111111111111111111111111111')
+      .set('Authorization', `Bearer ${doctorToken}`);
+    expect(resAuthorized.statusCode).toBe(200);
+    expect(resAuthorized.body.patient.name).toBe(patientCreds.name);
 
     // Invalid/non-existent wallet
     const resInvalid = await request(app)
@@ -394,7 +481,142 @@ describe("Doctor Routes (protected)", () => {
     expect(res.statusCode).toBe(403);
   });
 
+  it('fails closed when the on-chain authorization provider is unavailable', async () => {
+    accessSpy.mockRejectedValue(new Error('RPC unavailable'));
+    const res = await request(app)
+      .get('/api/doctor/patient/0x1111111111111111111111111111111111111111')
+      .set('Authorization', `Bearer ${doctorToken}`);
+
+    expect(res.statusCode).toBe(503);
+    expect(res.body.patient).toBeUndefined();
+  });
+
+  it('requires chain access across timeline and patient-linked AI endpoints', async () => {
+    const patient = await User.findOne({ email: patientCreds.email });
+    const auth = `Bearer ${doctorToken}`;
+    const responses = await Promise.all([
+      request(app).get(`/api/timeline?patientId=${patient._id}`).set('Authorization', auth),
+      request(app).get(`/api/timeline/stats?patientId=${patient._id}`).set('Authorization', auth),
+      request(app).get(`/api/health-risk/history?patientId=${patient._id}`).set('Authorization', auth),
+      request(app).get(`/api/ensemble-predict/history?patientId=${patient._id}`).set('Authorization', auth),
+      request(app).get(`/api/adherence-sys/history?patientId=${patient._id}`).set('Authorization', auth),
+      request(app).get(`/api/digital-twin/profile?patientId=${patient._id}`).set('Authorization', auth),
+    ]);
+
+    expect(responses.map((response) => response.statusCode)).toEqual([403, 403, 403, 403, 403, 403]);
+  });
+
+  it('denies CDSS updates to a patient record without active on-chain access', async () => {
+    const patient = await User.findOne({ email: patientCreds.email });
+    const doctor = await User.findOne({ email: doctorCreds.email });
+    const record = await MedicalRecord.create({
+      patientId: patient._id,
+      patientWalletAddress: patient.walletAddress,
+      doctorId: doctor._id,
+      doctorWalletAddress: doctor.walletAddress,
+      ipfsCID: 'bafybeigdyrzt5syntheticcidforcdssauthorization',
+      ipfsURL: 'https://gateway.example.test/ipfs/bafybeigdyrzt5syntheticcidforcdssauthorization',
+      recordType: 'prescription',
+      fileName: 'synthetic-prescription.pdf',
+      fileMimeType: 'application/pdf',
+      fileSize: 12,
+      isActive: true,
+    });
+    const originalAiAnalysis = record.aiAnalysis.toObject();
+    const auth = `Bearer ${doctorToken}`;
+    const responses = await Promise.all([
+      request(app).post('/api/ai/cdss/analyze').set('Authorization', auth)
+        .send({ recordId: record._id, medications: ['SyntheticMedication'] }),
+      request(app).post('/api/ai/cdss/dosage-safety/batch').set('Authorization', auth)
+        .send({ recordId: record._id, medications: ['SyntheticMedication'] }),
+    ]);
+
+    expect(responses.map((response) => response.statusCode)).toEqual([403, 403]);
+    const unchangedRecord = await MedicalRecord.findById(record._id);
+    expect(unchangedRecord.aiAnalysis.toObject()).toEqual(originalAiAnalysis);
+  });
+
+  it('serves persisted analytics and restricts the account registry to administrators', async () => {
+    const patient = await User.findOne({ email: patientCreds.email });
+    const doctor = await User.findOne({ email: doctorCreds.email });
+    await MedicalRecord.create({
+      patientId: patient._id,
+      patientWalletAddress: patient.walletAddress,
+      doctorId: doctor._id,
+      doctorWalletAddress: doctor.walletAddress,
+      ipfsCID: 'bafybeigdyrzt5syntheticanalyticsrecord',
+      ipfsURL: 'https://gateway.example.test/ipfs/bafybeigdyrzt5syntheticanalyticsrecord',
+      recordType: 'prescription',
+      fileName: 'synthetic-prescription.pdf',
+      fileMimeType: 'application/pdf',
+      fileSize: 12,
+      blockchainTxHash: `0x${'a'.repeat(64)}`,
+      medications: ['SyntheticMedication'],
+      aiAnalysis: { analyzedAt: new Date() },
+      isActive: true,
+    });
+    const auth = `Bearer ${doctorToken}`;
+    const [summary, scopedStats, userRegistry, platformStats] = await Promise.all([
+      request(app).get('/api/analytics/summary').set('Authorization', auth),
+      request(app).get('/api/analytics/stats').set('Authorization', auth),
+      request(app).get('/api/analytics/users').set('Authorization', auth),
+      request(app).get('/api/analytics/platform-stats').set('Authorization', auth),
+    ]);
+
+    expect(summary.statusCode).toBe(200);
+    expect(summary.body.data.platformStats.totalRecords).toBe(1);
+    expect(summary.body.data.blockchainStats.recordsWithTransactionHash).toBe(1);
+    expect(summary.body.data.aiStats.storedPrescriptionAnalyses).toBe(1);
+    expect(summary.body.data.recordActivity.reduce((sum, entry) => sum + entry.records, 0)).toBe(1);
+    expect(summary.body.data.diseaseTrends).toEqual([]);
+    expect(scopedStats.statusCode).toBe(200);
+    expect(scopedStats.body.totalRecords).toBe(1);
+    expect(scopedStats.body.uniquePatients).toBe(1);
+    expect(userRegistry.statusCode).toBe(403);
+    expect(platformStats.statusCode).toBe(403);
+  });
+
+  it('does not upload a record or create implicit consent without a chain grant', async () => {
+    const res = await request(app)
+      .post('/api/doctor/upload-record')
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .field('patientWalletAddress', '0x1111111111111111111111111111111111111111')
+      .field('recordType', 'lab_report')
+      .attach('file', Buffer.from('%PDF-1.4\nSynthetic report\n%%EOF'), {
+        filename: 'synthetic-report.pdf',
+        contentType: 'application/pdf',
+      });
+
+    expect(res.statusCode).toBe(403);
+    expect(await MedicalRecord.countDocuments()).toBe(0);
+    expect(await ConsentRecord.countDocuments()).toBe(0);
+  });
+
+  it('does not exempt the original uploader from current on-chain access checks', async () => {
+    const patient = await User.findOne({ email: patientCreds.email });
+    const doctor = await User.findOne({ email: doctorCreds.email });
+    const record = await MedicalRecord.create({
+      patientId: patient._id,
+      patientWalletAddress: patient.walletAddress,
+      doctorId: doctor._id,
+      doctorWalletAddress: doctor.walletAddress,
+      ipfsCID: 'bafybeigdyrzt5syntheticcidforauthorizationcheck',
+      ipfsURL: 'https://gateway.example.test/ipfs/bafybeigdyrzt5syntheticcidforauthorizationcheck',
+      recordType: 'lab_report',
+      fileName: 'synthetic.pdf',
+      fileMimeType: 'application/pdf',
+      fileSize: 12,
+      isActive: true,
+    });
+    const res = await request(app)
+      .get(`/api/doctor/record/${record._id}/download`)
+      .set('Authorization', `Bearer ${doctorToken}`);
+
+    expect(res.statusCode).toBe(403);
+  });
+
   it('POST /api/doctor/upload-record rejects prescription when CDSS is unavailable', async () => {
+    accessSpy.mockResolvedValue(true);
     const postSpy = jest.spyOn(axios, 'post').mockRejectedValue(new Error('AI service unavailable'));
 
     try {

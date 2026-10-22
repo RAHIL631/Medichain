@@ -10,11 +10,14 @@ const axios         = require('axios');
 const { protect, authorize } = require('../middleware/auth');
 const User          = require('../models/User');
 const MedicalRecord = require('../models/MedicalRecord');
-const ConsentRecord = require('../models/ConsentRecord');
+const blockchainService = require('../services/blockchainService');
 const { uploadToIPFS, fetchFromIPFS } = require('../utils/ipfs');
 const { validateFileMagicBytes } = require('../middleware/fileValidator');
 const { encryptBuffer, decryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
 const { auditLog, AuditEvents } = require('../utils/auditLogger');
+const {
+  linkWalletWithSignature,
+} = require('../services/walletLinkService');
 
 // ── Multer config for patient uploads ─────────────────────────────────────────
 const ALLOWED_MIME_TYPES = [
@@ -84,18 +87,17 @@ router.get('/records', async (req, res) => {
 /**
  * Returns summary counts for the authenticated patient:
  *   - total active medical records
- *   - total authorized doctors/entities with active consent
+ *   - total active medical records
  */
 router.get('/stats', async (req, res) => {
   try {
-    const [recordCount, activeConsents] = await Promise.all([
-      MedicalRecord.countDocuments({ patientId: req.user._id, isActive: true }),
-      ConsentRecord.countDocuments({ patientId: req.user._id, status: 'active' }),
-    ]);
+    const recordCount = await MedicalRecord.countDocuments({
+      patientId: req.user._id,
+      isActive: true,
+    });
 
     return res.status(200).json({
       totalRecords: recordCount,
-      authorizedDoctors: activeConsents,
     });
   } catch (err) {
     console.error('[PATIENT] GET /stats error:', err.message);
@@ -387,35 +389,20 @@ router.put('/profile', async (req, res) => {
 // ── POST /api/patient/link-wallet ─────────────────────────────────────────────
 router.post('/link-wallet', async (req, res) => {
   try {
-    const { walletAddress } = req.body;
-    if (!walletAddress) {
-      return res.status(400).json({ error: 'walletAddress is required' });
-    }
-    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-      return res.status(400).json({
-        error: 'Invalid Ethereum address format (must be 0x + 40 hex chars)',
-      });
-    }
-
-    const existingUser = await User.findOne({ walletAddress, _id: { $ne: req.user._id } });
-    if (existingUser) {
-      return res.status(400).json({
-        error: 'This wallet address is already linked to another MediChain account',
-      });
-    }
-
-    await User.findByIdAndUpdate(req.user._id, {
-      walletAddress,
-      isWalletLinked: true,
+    const updated = await linkWalletWithSignature(req.user._id, req.body);
+    auditLog(AuditEvents.WALLET_LINKED, req, {
+      walletAddress: updated.walletAddress,
+      walletVerified: true,
     });
-
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Wallet linked successfully',
-      walletAddress 
+    return res.status(200).json({
+      success: true,
+      message: 'Wallet ownership verified and linked successfully',
+      walletAddress: updated.walletAddress,
+      walletVerified: updated.walletVerified,
     });
   } catch (err) {
     console.error('[PATIENT] POST /link-wallet error:', err.message);
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
     return res.status(500).json({ error: 'Failed to link wallet' });
   }
 });
@@ -423,9 +410,22 @@ router.post('/link-wallet', async (req, res) => {
 // ── POST /api/patient/confirm-registration ─────────────────────────────────────
 router.post('/confirm-registration', async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user._id, {
-      isBlockchainRegistered: true,
-    });
+    if (req.user.walletVerified !== true || !req.user.walletAddress) {
+      return res.status(403).json({ error: 'Verify a linked wallet before confirming blockchain registration' });
+    }
+
+    let isRegistered;
+    try {
+      isRegistered = await blockchainService.isPatientRegistered(req.user.walletAddress);
+    } catch (err) {
+      console.error('[PATIENT] Blockchain registration check unavailable:', err.message);
+      return res.status(503).json({ error: 'Blockchain registration could not be verified. Please retry when the network is available.' });
+    }
+    if (!isRegistered) {
+      return res.status(409).json({ error: 'The linked wallet is not registered as a patient on the configured contract' });
+    }
+
+    await User.findByIdAndUpdate(req.user._id, { isBlockchainRegistered: true });
     return res.status(200).json({ 
       success: true, 
       message: 'Blockchain registration confirmed in profile' 
@@ -450,6 +450,7 @@ router.post('/grant-access', async (req, res) => {
     const doctor = await User.findOne({
       walletAddress: { $regex: new RegExp(`^${doctorWalletAddress.trim()}$`, 'i') },
       role:          { $in: ['doctor', 'hospital'] },
+      walletVerified: true,
     }).select('name specialization role');
 
     if (!doctor) {

@@ -177,9 +177,9 @@ export default function PatientDashboard() {
   const [toast, setToast]                     = useState(null);
 
   const [records, setRecords]               = useState([]);
+  const [recordCount, setRecordCount]       = useState(0);
   const [recordsLoading, setRecordsLoading] = useState(true);
   const [statsLoading, setStatsLoading]     = useState(true);
-  const [doctorCount, setDoctorCount]       = useState(0);
 
   const fetchRecords = useCallback(async () => {
     setRecordsLoading(true);
@@ -187,14 +187,18 @@ export default function PatientDashboard() {
       const { data } = await api.get('/patient/records');
       setRecords(data.records || []);
     } catch { /* silent */ }
-    finally { setRecordsLoading(false); setStatsLoading(false); }
+    finally { setRecordsLoading(false); }
   }, []);
 
   const fetchStats = useCallback(async () => {
     try {
       const { data } = await api.get('/patient/stats');
-      setDoctorCount(data.authorizedDoctors ?? 0);
-    } catch { /* silent */ }
+      setRecordCount(data.totalRecords || 0);
+    } catch (err) {
+      console.error('Failed to fetch patient statistics:', err.message);
+    } finally {
+      setStatsLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchRecords(); fetchStats(); }, [fetchRecords, fetchStats]);
@@ -209,7 +213,7 @@ export default function PatientDashboard() {
   }, []);
 
   const firstName   = user?.name?.split(' ')[0] || 'there';
-  const walletLinked = !!user?.walletAddress;
+  const walletLinked = user?.walletVerified === true && !!user?.walletAddress;
 
   // Show card if: wallet not yet linked AND user hasn't dismissed it
   const showBlockchainCard = !walletLinked && !cardDismissed && !isConnected;
@@ -281,8 +285,8 @@ export default function PatientDashboard() {
 
       {/* ── Stats row ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <Stat icon={FileText}   label="Health Records"    value={statsLoading ? null : records.length} sub="Total verified"              loading={statsLoading} variant="blue"    to="/records" />
-        <Stat icon={Lock}       label="Doctor Access"     value={statsLoading ? null : doctorCount}   sub="Active grants"                loading={statsLoading} variant="teal"    to="/access"  />
+        <Stat icon={FileText}   label="Health Records"    value={statsLoading ? null : recordCount} sub="Active records"              loading={statsLoading} variant="blue"    to="/records" />
+        <Stat icon={Lock}       label="Doctor Access"     value="Manage"                              sub="View on-chain grants"         loading={false}        variant="teal"    to="/access"  />
         <Stat icon={Brain}      label="AI Insights"       value="Available"                            sub="CDSS ready"                   loading={false}        variant="violet"  to="/ai-dashboard" />
         <Stat icon={Activity}   label="Blockchain"        value={walletLinked ? 'Verified' : isConnected ? 'Connected' : 'Optional'} sub={walletLinked ? 'Confirmed' : isConnected ? 'Active' : 'Enhanced security'} loading={false} variant={walletLinked || isConnected ? 'success' : 'blue'} />
       </div>
@@ -294,8 +298,8 @@ export default function PatientDashboard() {
         <div className="space-y-3 sm:space-y-4">
           <h2 className="text-xs sm:text-sm font-bold text-hc-text uppercase tracking-wide">Quick Actions</h2>
           {[
-            { Icon: FileText, label: 'View all records',   sub: `${records.length} records`, path: '/records',       color: 'text-hc-blue' },
-            { Icon: Lock,     label: 'Manage access',      sub: `${doctorCount} authorized`, path: '/access',        color: 'text-hc-teal' },
+            { Icon: FileText, label: 'View all records',   sub: `${recordCount} records`, path: '/records',       color: 'text-hc-blue' },
+            { Icon: Lock,     label: 'Manage access',      sub: 'Review on-chain grants', path: '/access',        color: 'text-hc-teal' },
             { Icon: Brain,    label: 'AI Health Insights', sub: 'CDSS analysis',             path: '/ai-dashboard',  color: 'text-hc-violet' },
             { Icon: QrCode,   label: 'My Health QR',       sub: 'ID only — not record access', path: '/qr-id',       color: 'text-hc-success' },
           ].map(({ Icon, label, sub, path, color }) => (

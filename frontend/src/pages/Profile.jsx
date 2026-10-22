@@ -37,7 +37,7 @@ function InfoRow({ label, value, icon: Icon }) {
 
 export default function Profile() {
   const { user, updateWallet } = useAuth();
-  const { address: account, isConnected: connected, connectWallet: connect } = useWalletContext();
+  const { address: account, signer, isConnected: connected, connectWallet: connect } = useWalletContext();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -45,8 +45,8 @@ export default function Profile() {
     if (!connected || !account) return;
     setLoading(true);
     try {
-      await updateWallet(account);
-      setMsg('Wallet successfully linked to your profile.');
+      await updateWallet(account, signer);
+      setMsg('Wallet ownership verified and linked to your profile.');
     } catch (err) {
       setMsg('Error: ' + err.message);
     } finally {
@@ -77,10 +77,10 @@ export default function Profile() {
               </div>
               <p className="font-bold text-sm sm:text-base text-hc-text truncate">{user?.name}</p>
               <span className="hc-badge hc-badge-primary mt-2">{roleLabel}</span>
-              {user?.isWalletLinked && (
+              {user?.walletVerified && (
                 <div className="flex items-center justify-center gap-1.5 mt-3 text-xs text-hc-success font-medium">
                   <CheckCircle className="w-3.5 h-3.5" />
-                  <span>Blockchain verified</span>
+                  <span>Wallet ownership verified</span>
                 </div>
               )}
             </div>
@@ -138,10 +138,10 @@ export default function Profile() {
                 )}
               </div>
 
-              {connected && account !== user?.walletAddress && (
+              {connected && (!user?.walletVerified || account?.toLowerCase() !== user?.walletAddress?.toLowerCase()) && (
                 <div className="mt-3 p-3.5 sm:p-4 rounded-xl bg-hc-blue-soft border border-hc-blue-mid space-y-3">
                   <p className="text-xs text-hc-text-muted leading-relaxed">
-                    A new wallet session detected. Link it to your profile to enable on-chain interactions.
+                    Sign a short wallet challenge to prove ownership before using this wallet for patient-authorized access.
                   </p>
                   <button onClick={handleLinkWallet} disabled={loading} className="hc-btn hc-btn-primary hc-btn-sm w-full min-h-[44px]">
                     <Link2 className="w-3.5 h-3.5" />

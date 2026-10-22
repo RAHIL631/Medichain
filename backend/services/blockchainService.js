@@ -134,27 +134,21 @@ class BlockchainService {
    */
   async isPatientRegistered(patientAddress) {
     if (!patientAddress || !/^0x[a-fA-F0-9]{40}$/i.test(patientAddress)) return false;
-    try {
-      const contract = this.getContract();
-      return await contract.isRegistered(patientAddress);
-    } catch (err) {
-      console.warn('[BlockchainService] isPatientRegistered fallback:', err.message);
-      return false;
-    }
+    const contract = this.getContract();
+    return contract.isRegistered(patientAddress);
   }
 
   /**
    * Checks if doctor has on-chain access to patient's records
    */
   async hasAccess(patientAddress, doctorAddress) {
-    if (!patientAddress || !doctorAddress) return false;
-    try {
-      const contract = this.getContract();
-      return await contract.hasAccess(patientAddress, doctorAddress);
-    } catch (err) {
-      console.warn('[BlockchainService] hasAccess fallback:', err.message);
-      return false;
-    }
+    if (
+      !/^0x[a-fA-F0-9]{40}$/.test(patientAddress || '') ||
+      !/^0x[a-fA-F0-9]{40}$/.test(doctorAddress || '')
+    ) return false;
+
+    const contract = this.getContract();
+    return contract.hasAccess(patientAddress, doctorAddress);
   }
 
   /**

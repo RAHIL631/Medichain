@@ -8,6 +8,7 @@ const axios = require('axios');
 const { protect } = require('../middleware/auth');
 const User = require('../models/User');
 const DigitalTwinProfile = require('../models/DigitalTwinProfile');
+const { requirePatientAccess } = require('../middleware/patientAccess');
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
 
@@ -24,16 +25,17 @@ router.get('/profile', async (req, res) => {
     if (!patientId) {
       return res.status(400).json({ error: 'Patient ID is required' });
     }
+    if (!['patient', 'doctor', 'hospital'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const patientUser = await User.findById(patientId);
+    if (!patientUser) return res.status(404).json({ error: 'Patient not found' });
+    if (!(await requirePatientAccess(req, res, patientUser))) return;
 
     let profile = await DigitalTwinProfile.findOne({ patientId });
     
     if (!profile) {
       // Find patient details to populate defaults
-      const patientUser = await User.findById(patientId);
-      if (!patientUser) {
-        return res.status(404).json({ error: 'Patient not found' });
-      }
-
       const ageVal = patientUser.dateOfBirth ? (new Date().getFullYear() - new Date(patientUser.dateOfBirth).getFullYear()) : 45;
 
       profile = await DigitalTwinProfile.create({
@@ -79,6 +81,12 @@ router.put('/profile', async (req, res) => {
     if (!patientId) {
       return res.status(400).json({ error: 'Patient ID is required' });
     }
+    if (!['patient', 'doctor', 'hospital'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const patientUser = await User.findById(patientId);
+    if (!patientUser) return res.status(404).json({ error: 'Patient not found' });
+    if (!(await requirePatientAccess(req, res, patientUser))) return;
 
     const { metrics } = req.body;
     if (!metrics) {
@@ -119,6 +127,12 @@ router.post('/simulate', async (req, res) => {
     if (!targetPatientId) {
       return res.status(400).json({ error: 'Patient ID is required' });
     }
+    if (!['patient', 'doctor', 'hospital'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const patientUser = await User.findById(targetPatientId);
+    if (!patientUser) return res.status(404).json({ error: 'Patient not found' });
+    if (!(await requirePatientAccess(req, res, patientUser))) return;
 
     const profile = await DigitalTwinProfile.findOne({ patientId: targetPatientId });
     if (!profile) {

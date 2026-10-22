@@ -120,11 +120,30 @@ export const AuthProvider = ({ children }) => {
   }, [state.user]);
 
   // ── updateWallet ─────────────────────────────────────────────────────────
-  const updateWallet = useCallback(async (walletAddress) => {
-    const { data } = await api.patch('/auth/wallet', { walletAddress });
+  const updateWallet = useCallback(async (walletAddress, signer) => {
+    if (!signer || typeof signer.signMessage !== 'function') {
+      throw new Error('Connect the wallet you want to link before continuing.');
+    }
+    const signerAddress = await signer.getAddress();
+    if (signerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+      throw new Error('The connected wallet does not match the wallet being linked.');
+    }
+
+    const { data: challenge } = await api.post('/auth/wallet/challenge', { walletAddress });
+    const signature = await signer.signMessage(challenge.message);
+    const { data } = await api.patch('/auth/wallet', {
+      walletAddress,
+      nonce: challenge.nonce,
+      signature,
+    });
     dispatch({
       type: AUTH_ACTIONS.SET_USER,
-      payload: { ...state.user, walletAddress: data.walletAddress, isWalletLinked: true },
+      payload: {
+        ...state.user,
+        walletAddress: data.walletAddress,
+        isWalletLinked: true,
+        walletVerified: true,
+      },
     });
     return data;
   }, [state.user]);

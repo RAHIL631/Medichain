@@ -66,6 +66,26 @@ const UserSchema = new mongoose.Schema({
     default: false,
   },
 
+  walletVerified: {
+    type:    Boolean,
+    default: false,
+  },
+
+  walletLinkAddress: {
+    type:   String,
+    select: false,
+  },
+
+  walletLinkNonce: {
+    type:   String,
+    select: false,
+  },
+
+  walletLinkExpires: {
+    type:   Date,
+    select: false,
+  },
+
   // True after patient has called registerPatient() on the smart contract
   isBlockchainRegistered: {
     type:    Boolean,

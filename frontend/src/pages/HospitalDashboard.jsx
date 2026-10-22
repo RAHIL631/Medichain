@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import GlassCard from '../components/GlassCard';
 import DashboardLayout from '../components/DashboardLayout';
-import { getHospitalImage, HOSPITAL_IMAGES, MEDICAL_IMAGES, DOCTOR_IMAGES } from '../utils/images';
+import { getHospitalImage, HOSPITAL_IMAGES } from '../utils/images';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
@@ -39,27 +39,6 @@ const StatCard = ({ icon, label, value, sub, color = 'accent-cyan', loading }) =
   </GlassCard>
 );
 
-// ── Activity Row ──────────────────────────────────────────────────────────────
-const ActivityRow = ({ type, patient, time, status }) => {
-  const colours = { prescription: 'text-accent-blue', lab_report: 'text-accent-cyan', xray: 'text-accent-indigo', diagnosis: 'text-status-warning', other: 'text-text-secondary' };
-  return (
-    <div className="flex items-center gap-3 py-3 border-b border-medichain-border last:border-0">
-      <div className={`w-8 h-8 rounded-lg bg-medichain-bg-dark flex items-center justify-center ${colours[type] || 'text-text-secondary'} flex-shrink-0`}>
-        {Icons.records}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-white truncate">{patient}</p>
-        <p className="text-[10px] text-text-secondary capitalize">{type?.replace('_', ' ')} · {time}</p>
-      </div>
-      <span className={`text-[10px] px-2 py-1 rounded-full border ${
-        status === 'confirmed' ? 'bg-status-success/10 text-status-success border-status-success/20' :
-        status === 'pending'   ? 'bg-status-warning/10 text-status-warning border-status-warning/20' :
-                                 'bg-medichain-surface text-text-secondary border-medichain-border'
-      } font-mono uppercase`}>{status}</span>
-    </div>
-  );
-};
-
 // ── Chart tooltip styling ─────────────────────────────────────────────────────
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -73,20 +52,11 @@ const ChartTooltip = ({ active, payload, label }) => {
   );
 };
 
-// ── Clinical Units ────────────────────────────────────────────────────────────
-const CLINICAL_UNITS = [
-  { name: 'Cardiology Diagnostics', lead: 'Dr. Sarah Jenkins, MD', image: MEDICAL_IMAGES.ecg, avatar: DOCTOR_IMAGES.female_1, status: 'Online' },
-  { name: 'Radiology & Imaging',    lead: 'Dr. Robert Vance, MD',    image: MEDICAL_IMAGES.xray, avatar: DOCTOR_IMAGES.male_1,   status: 'Operational' },
-  { name: 'Central Pathology Lab',   lead: 'Dr. Priya Patel, MD',     image: MEDICAL_IMAGES.lab,  avatar: DOCTOR_IMAGES.female_2, status: 'Active' },
-  { name: 'Emergency Surgical ICU', lead: 'Dr. Alex Mercer, MD',     image: MEDICAL_IMAGES.icu,  avatar: DOCTOR_IMAGES.surgeon,  status: '24/7 Standby' },
-];
-
 // ── Main Component ────────────────────────────────────────────────────────────
 const HospitalDashboard = () => {
   const { user } = useAuth();
 
   const [stats, setStats]           = useState({ records: 0, patientsServed: 0, pendingSync: 0, todayUploads: 0 });
-  const [recentRecords, setRecent]  = useState([]);
   const [chartData, setChartData]   = useState([]);
   const [typeData, setTypeData]     = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -106,39 +76,18 @@ const HospitalDashboard = () => {
       setLoading(true);
       setError(null);
 
-      const [statsRes, uploadsRes] = await Promise.allSettled([
-        api.get('/doctor/stats'),
-        api.get('/doctor/recent-uploads?limit=8'),
-      ]);
-
-      if (statsRes.status === 'fulfilled' && statsRes.value.data) {
-        const d = statsRes.value.data;
-        setStats({
-          records:        d.totalRecords || 0,
-          patientsServed: d.uniquePatients || 0,
-          pendingSync:    d.pendingSync || 0,
-          todayUploads:   d.todayUploads || 0,
-        });
-      }
-
-      if (uploadsRes.status === 'fulfilled' && uploadsRes.value.data?.records) {
-        setRecent(uploadsRes.value.data.records.map(r => ({
-          type:    r.recordType,
-          patient: r.patientName || (r.patientWalletAddress ? `${r.patientWalletAddress.slice(0,6)}...${r.patientWalletAddress.slice(-4)}` : 'Patient'),
-          time:    new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status:  r.blockchainTxHash ? 'confirmed' : 'pending',
-        })));
-      }
-
-      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      setChartData(days.map(day => ({ day, uploads: Math.floor(Math.random() * 12) + 3 })));
-
-      setTypeData([
-        { name: 'Prescriptions', value: 42, fill: '#38BDF8' },
-        { name: 'Lab Reports',   value: 28, fill: '#22D3EE' },
-        { name: 'Diagnostics',   value: 18, fill: '#818CF8' },
-        { name: 'Imaging / X-Ray', value: 12, fill: '#22C55E' },
-      ]);
+      const { data } = await api.get('/analytics/stats');
+      setStats({
+        records: data.totalRecords ?? 0,
+        patientsServed: data.uniquePatients ?? 0,
+        pendingSync: data.pendingSync ?? 0,
+        todayUploads: data.todayUploads ?? 0,
+      });
+      setChartData(Array.isArray(data.weeklyUploads) ? data.weeklyUploads : []);
+      const colors = ['#38BDF8', '#22D3EE', '#818CF8', '#22C55E', '#F59E0B', '#EC4899'];
+      setTypeData(Array.isArray(data.typeBreakdown)
+        ? data.typeBreakdown.map((entry, index) => ({ ...entry, fill: colors[index % colors.length] }))
+        : []);
 
     } catch (err) {
       setError(err.message || 'Failed to load dashboard data');
@@ -165,16 +114,13 @@ const HospitalDashboard = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-medichain-bg-dark/90 via-transparent to-transparent" />
           <div className="absolute inset-0 p-6 flex flex-col justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-mono text-emerald-400 uppercase tracking-wider font-bold">Verified Clinical Medical Institution</span>
+              <span className="w-2 h-2 rounded-full bg-slate-400" />
+              <span className="text-xs font-mono text-slate-300 uppercase tracking-wider font-bold">Hospital workspace</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">{user?.name || 'MediChain Super-Speciality Hospital'}</h1>
-                <p className="text-text-secondary mt-1 text-xs sm:text-sm">
-                  Institutional Portal &bull; Ethereum Sepolia Node &bull;{' '}
-                  <span className="text-accent-cyan font-mono text-xs">Chain ID: 11155111</span>
-                </p>
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">{user?.name || 'Hospital account'}</h1>
+                <p className="text-text-secondary mt-1 text-xs sm:text-sm">Workspace metrics are limited to records uploaded by this account.</p>
               </div>
               <div className="flex items-center gap-3">
                 <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-sm border border-white/20 rounded-xl text-white hover:bg-black/70 transition-all text-xs font-semibold">
@@ -193,57 +139,16 @@ const HospitalDashboard = () => {
         {error && (
           <div className="p-4 bg-status-danger/10 border border-status-danger/20 rounded-xl text-status-danger text-sm flex items-center gap-3">
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            {error} — Using cached telemetry
+            {error} — Metrics may be unavailable.
           </div>
         )}
 
         {/* ── Stat Cards ────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={Icons.records}  label="Total Records Issued"   value={stats.records}        sub="IPFS Anchored"  color="accent-cyan"     loading={loading} />
+          <StatCard icon={Icons.records}  label="Uploaded Records"       value={stats.records}        sub="Active records"  color="accent-cyan"     loading={loading} />
           <StatCard icon={Icons.patients} label="Patients Served"        value={stats.patientsServed} sub="Unique Accounts" color="accent-blue"     loading={loading} />
           <StatCard icon={Icons.upload}   label="Today's Uploads"        value={stats.todayUploads}   sub="Last 24 hours"  color="accent-indigo"   loading={loading} />
-          <StatCard icon={Icons.records}  label="Blockchain Target"      value="Sepolia"              sub="Chain 11155111" color="status-success" loading={false} />
-        </div>
-
-        {/* ── Real Clinical Departments & Lab Units ─────────────────────────── */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-accent-cyan" />
-              Active Clinical Diagnostic Units
-            </h2>
-            <span className="text-xs text-text-secondary font-mono">4 Units Operational</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {CLINICAL_UNITS.map(unit => (
-              <GlassCard key={unit.name} className="p-0 overflow-hidden group hover:border-accent-cyan/40 transition-all">
-                <div className="relative h-28 w-full overflow-hidden bg-slate-900">
-                  <img
-                    src={unit.image}
-                    alt={unit.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    {unit.status}
-                  </span>
-                </div>
-                <div className="p-3.5 space-y-2">
-                  <p className="text-xs font-bold text-white truncate">{unit.name}</p>
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={unit.avatar}
-                      alt={unit.lead}
-                      className="w-6 h-6 rounded-full object-cover border border-accent-cyan/30"
-                    />
-                    <span className="text-[10px] text-text-secondary truncate">{unit.lead}</span>
-                  </div>
-                </div>
-              </GlassCard>
-            ))}
-          </div>
+          <StatCard icon={Icons.records}  label="Pending TX Hash"        value={stats.pendingSync}    sub="Saved records only" color="status-warning" loading={loading} />
         </div>
 
         {/* ── Charts Row ────────────────────────────────────────────────────── */}
@@ -253,11 +158,11 @@ const HospitalDashboard = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-xs uppercase tracking-widest text-text-secondary">Weekly Record Uploads</p>
-                <p className="text-lg font-display font-bold text-white mt-0.5">Diagnostic Throughput</p>
+                <p className="text-lg font-display font-bold text-white mt-0.5">Saved records from this account</p>
               </div>
-              <span className="text-xs px-2 py-1 rounded-full bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20 font-semibold">Live Audit</span>
+              <span className="text-xs text-text-secondary">Based on record timestamps</span>
             </div>
-            <ResponsiveContainer width="100%" height={180}>
+            {chartData.length ? <ResponsiveContainer width="100%" height={180}>
               <BarChart data={chartData} barSize={20}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                 <XAxis dataKey="day" tick={{ fill: '#94A3B8', fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -271,14 +176,14 @@ const HospitalDashboard = () => {
                   </linearGradient>
                 </defs>
               </BarChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer> : <p className="py-12 text-center text-sm text-text-secondary">No record activity is available for this account yet.</p>}
           </GlassCard>
 
           {/* Record type pie chart */}
           <GlassCard>
             <p className="text-xs uppercase tracking-widest text-text-secondary mb-1">Record Type Distribution</p>
             <p className="text-lg font-display font-bold text-white mb-4">By Category</p>
-            <ResponsiveContainer width="100%" height={160}>
+            {typeData.length ? <ResponsiveContainer width="100%" height={160}>
               <PieChart>
                 <Pie data={typeData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
                   {typeData.map((entry, index) => (
@@ -287,7 +192,7 @@ const HospitalDashboard = () => {
                 </Pie>
                 <Tooltip formatter={(v, n) => [`${v}%`, n]} />
               </PieChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer> : <p className="py-12 text-center text-sm text-text-secondary">No record types are available yet.</p>}
             <div className="space-y-1.5 mt-2">
               {typeData.map(({ name, value, fill }) => (
                 <div key={name} className="flex items-center justify-between text-[10px]">
@@ -304,30 +209,13 @@ const HospitalDashboard = () => {
 
         {/* ── Recent Activity & Quick Actions ─────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent records */}
+          {/* Patient details are intentionally not listed outside an access-checked workflow. */}
           <GlassCard>
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-display font-bold text-white">Recent Uploads on IPFS</p>
-              <Link to="/analytics" className="text-xs text-accent-cyan hover:underline font-semibold">View All →</Link>
-            </div>
-            {loading ? (
-              <div className="space-y-3">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-12 bg-medichain-surface rounded-lg animate-pulse" />
-                ))}
-              </div>
-            ) : recentRecords.length > 0 ? (
-              <div>
-                {recentRecords.map((r, i) => (
-                  <ActivityRow key={i} {...r} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-text-secondary text-sm">No uploads yet</p>
-                <Link to="/upload-report" className="text-accent-cyan text-xs hover:underline mt-1 block font-semibold">Upload your first record →</Link>
-              </div>
-            )}
+            <p className="text-sm font-display font-bold text-white">Patient record access</p>
+            <p className="mt-2 text-sm text-text-secondary">
+              Patient identifiers and record details are shown only after current on-chain access is verified.
+            </p>
+            <Link to="/scan" className="text-accent-cyan text-xs hover:underline mt-4 inline-block font-semibold">Identify a patient by QR or ID →</Link>
           </GlassCard>
 
           {/* Quick Actions & Network Status */}
@@ -353,25 +241,11 @@ const HospitalDashboard = () => {
               </div>
             </GlassCard>
 
-            {/* Network Status */}
             <GlassCard>
-              <p className="text-xs uppercase tracking-widest text-text-secondary mb-4 font-bold">Decentralized Infrastructure</p>
-              <div className="space-y-2">
-                {[
-                  { label: 'Ethereum Sepolia Node (11155111)', value: 'Connected', status: 'ok' },
-                  { label: 'IPFS Pinata Gateway',             value: 'Operational', status: 'ok' },
-                  { label: 'AI CDSS Inference Service',       value: 'Active',      status: 'ok' },
-                  { label: 'MongoDB Encrypted Vault',          value: 'Encrypted',   status: 'ok' },
-                ].map(({ label, value, status }) => (
-                  <div key={label} className="flex items-center justify-between p-2.5 bg-medichain-bg-dark/60 rounded-lg border border-medichain-border">
-                    <span className="text-xs text-text-secondary font-medium">{label}</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full ${status === 'ok' ? 'bg-status-success' : 'bg-status-danger'} animate-pulse`} />
-                      <span className={`text-xs font-mono font-bold ${status === 'ok' ? 'text-status-success' : 'text-status-danger'}`}>{value}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs uppercase tracking-widest text-text-secondary mb-4 font-bold">External service status</p>
+              <p className="text-sm text-text-secondary">
+                Blockchain, IPFS, AI, and database health are not checked by this dashboard.
+              </p>
             </GlassCard>
           </div>
         </div>

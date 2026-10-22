@@ -18,6 +18,10 @@ const {
 } = require('../middleware/validate');
 const { sendVerificationEmail, sendPasswordResetEmail, sendSecurityAlert } = require('../services/emailService');
 const { blockToken, isTokenBlocked } = require('../services/tokenBlocklist');
+const {
+  createWalletLinkChallenge,
+  linkWalletWithSignature,
+} = require('../services/walletLinkService');
 
 // ── Token generators ──────────────────────────────────────────────────────────
 
@@ -51,6 +55,7 @@ const safeUser = (user) => ({
   isActive:               user.isActive !== false,
   walletAddress:          user.walletAddress   || null,
   isWalletLinked:         user.isWalletLinked  || false,
+  walletVerified:         user.walletVerified  || false,
   isBlockchainRegistered: user.isBlockchainRegistered || false,
   // Patient fields
   bloodGroup:             user.bloodGroup      || null,
@@ -497,22 +502,39 @@ router.patch('/blockchain-registered', protect, async (req, res) => {
   }
 });
 
+// ── POST /api/auth/wallet/challenge ───────────────────────────────────────────
+router.post('/wallet/challenge', protect, walletValidation, handleValidationErrors, async (req, res) => {
+  try {
+    const challenge = await createWalletLinkChallenge(req.user._id, req.body.walletAddress);
+    return res.status(200).json({
+      message: challenge.message,
+      nonce: challenge.nonce,
+      expiresAt: challenge.expiresAt,
+    });
+  } catch (err) {
+    console.error('[AUTH] Wallet challenge error:', err.message);
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
+    return res.status(500).json({ error: 'Could not create wallet-link challenge' });
+  }
+});
+
 // ── PATCH /api/auth/wallet ────────────────────────────────────────────────────
 router.patch('/wallet', protect, walletValidation, handleValidationErrors, async (req, res) => {
   try {
-    const { walletAddress } = req.body;
-    const updated = await User.findByIdAndUpdate(
-      req.user._id,
-      { walletAddress, isWalletLinked: true },
-      { returnDocument: 'after', runValidators: true }
-    );
+    const updated = await linkWalletWithSignature(req.user._id, req.body);
+    auditLog(AuditEvents.WALLET_LINKED, req, {
+      walletAddress: updated.walletAddress,
+      walletVerified: true,
+    });
     return res.status(200).json({
-      message:       'Wallet linked successfully',
+      message: 'Wallet ownership verified and linked successfully',
       walletAddress: updated.walletAddress,
       isWalletLinked: updated.isWalletLinked,
+      walletVerified: updated.walletVerified,
     });
   } catch (err) {
     console.error('[AUTH] Wallet link error:', err.message);
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
     if (err.code === 11000) {
       return res.status(400).json({ error: 'Wallet address already linked to another account' });
     }

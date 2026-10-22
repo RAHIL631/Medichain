@@ -8,6 +8,8 @@ const router  = express.Router();
 const { query, validationResult } = require('express-validator');
 
 const { protect, authorize } = require('../middleware/auth');
+const User = require('../models/User');
+const { requirePatientAccess } = require('../middleware/patientAccess');
 const MedicalRecord     = require('../models/MedicalRecord');
 const PrescriptionReport = require('../models/PrescriptionReport');
 const HealthRiskReport  = require('../models/HealthRiskReport');
@@ -204,10 +206,17 @@ router.get('/', protect, [
     let targetPatientId;
     if (req.user.role === 'patient') {
       targetPatientId = req.user._id;
-    } else if (['doctor', 'hospital', 'admin'].includes(req.user.role)) {
+    } else if (['doctor', 'hospital'].includes(req.user.role)) {
       if (!qPatientId) return res.status(400).json({ error: 'patientId is required for doctor/hospital/admin' });
       targetPatientId = qPatientId;
+    } else {
+      return res.status(403).json({ error: 'Access denied' });
     }
+
+    const patient = await User.findById(targetPatientId);
+    if (!patient) return res.status(404).json({ error: 'Patient not found' });
+    if (!(await requirePatientAccess(req, res, patient))) return;
+    targetPatientId = patient._id;
 
     logger(`Timeline requested for patient ${targetPatientId} by ${req.user.role} ${req.user._id}`);
 
@@ -298,14 +307,20 @@ router.get('/stats', protect, async (req, res) => {
   try {
     const patientId = req.user.role === 'patient' ? req.user._id : req.query.patientId;
     if (!patientId) return res.status(400).json({ error: 'patientId required' });
+    if (!['patient', 'doctor', 'hospital'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const patient = await User.findById(patientId);
+    if (!patient) return res.status(404).json({ error: 'Patient not found' });
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     const [recordCount, prescriptionCount, riskCount] = await Promise.all([
-      MedicalRecord.countDocuments({ patientId, isActive: true }),
-      PrescriptionReport.countDocuments({ patientId }).catch(() => 0),
-      HealthRiskReport.countDocuments({ patientId }).catch(() => 0),
+      MedicalRecord.countDocuments({ patientId: patient._id, isActive: true }),
+      PrescriptionReport.countDocuments({ patientId: patient._id }).catch(() => 0),
+      HealthRiskReport.countDocuments({ patientId: patient._id }).catch(() => 0),
     ]);
 
-    const lastRecord = await MedicalRecord.findOne({ patientId, isActive: true })
+    const lastRecord = await MedicalRecord.findOne({ patientId: patient._id, isActive: true })
       .sort({ createdAt: -1 })
       .select('recordType createdAt')
       .lean();

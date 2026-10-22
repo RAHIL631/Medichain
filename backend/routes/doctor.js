@@ -19,10 +19,10 @@ const axios         = require('axios');
 const { protect, authorize }    = require('../middleware/auth');
 const User                      = require('../models/User');
 const MedicalRecord             = require('../models/MedicalRecord');
-const ConsentRecord             = require('../models/ConsentRecord');
 const { uploadToIPFS, fetchFromIPFS } = require('../utils/ipfs');
 const { validateFileMagicBytes }= require('../middleware/fileValidator');
 const { encryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
+const { requirePatientAccess } = require('../middleware/patientAccess');
 
 // ── Multer config ─────────────────────────────────────────────────────────────
 // Files are kept in memory (Buffer) — never touch disk — then streamed to IPFS.
@@ -126,24 +126,7 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
       await User.ensurePatientId(patient);
     }
 
-    // ── CONSENT VERIFICATION & ESTABLISHMENT ───────────────────────────────
-    // Check if patient has active consent; if not, automatically record clinical consent for this upload
-    let hasConsent = await ConsentRecord.hasActiveConsent(patient._id, req.user._id);
-    if (!hasConsent) {
-      try {
-        await ConsentRecord.create({
-          patientId:   patient._id,
-          granteeId:   req.user._id,
-          granteeRole: 'doctor',
-          scope:       ['read_records', 'write_records'],
-          status:      'active',
-          notes:       'Clinical prescription issuance authorization',
-        });
-        hasConsent = true;
-      } catch (cErr) {
-        console.warn('[DOCTOR] Consent auto-record notice:', cErr.message);
-      }
-    }
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     // Reload doctor to get walletAddress (req.user comes from protect middleware)
     const doctor = await User.findById(req.user._id).select('walletAddress name');
@@ -392,7 +375,7 @@ router.patch('/record/:recordId/txhash', async (req, res) => {
  * Doctor-facing route to retrieve and decrypt a patient's medical record.
  * Strict authorization enforced:
  *   1. Must be authenticated as doctor or hospital
- *   2. Must have active ConsentRecord from the patient OR be the original uploader
+ *   2. Must have current on-chain access from the patient's verified wallet
  *   3. Fetches encrypted ciphertext from IPFS gateway
  *   4. Decrypts using AES-256-GCM with stored key bundle
  *   5. Logs audit trail event
@@ -411,24 +394,9 @@ router.get('/record/:recordId/download', async (req, res) => {
       return res.status(404).json({ error: 'Record not found' });
     }
 
-    // Check authorization: doctor must either be the uploader or have active patient consent
-    const isUploader = record.doctorId && record.doctorId.toString() === req.user._id.toString();
-    let isAuthorizedDoctor = isUploader;
-
-    if (!isAuthorizedDoctor) {
-      isAuthorizedDoctor = await ConsentRecord.hasActiveConsent(record.patientId, req.user._id);
-    }
-
-    if (!isAuthorizedDoctor) {
-      auditLog(AuditEvents.UNAUTHORIZED, req, {
-        recordId: req.params.recordId,
-        patientId: record.patientId,
-        reason: 'Missing active patient consent',
-      });
-      return res.status(403).json({
-        error: 'Access denied: You do not have active patient consent to access this medical file',
-      });
-    }
+    const patient = await User.findById(record.patientId);
+    if (!patient) return res.status(404).json({ error: 'Patient not found' });
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     // Resiliently fetch ciphertext from IPFS Gateways with multi-gateway fallback
     let fileBuffer;
@@ -533,10 +501,14 @@ const resolvePatientHandler = async (req, res) => {
       return res.status(404).json({ error: 'Patient ID not found.' });
     }
 
+    if (!(await requirePatientAccess(req, res, patient))) return;
+
     // Ensure older patients have a patientId
     if (!patient.patientId) {
       await User.ensurePatientId(patient);
     }
+
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     const recordCount = await MedicalRecord.countDocuments({
       patientId: patient._id,
@@ -592,11 +564,12 @@ router.get('/patient/:walletAddress', async (req, res) => {
           role: 'patient'
         };
 
-    const patient = await User.findOne(query).select('name bloodGroup allergies chronicConditions walletAddress patientId isWalletLinked isBlockchainRegistered');
+    const patient = await User.findOne(query).select('name bloodGroup allergies chronicConditions walletAddress walletVerified patientId isWalletLinked isBlockchainRegistered');
 
     if (!patient) {
       return res.status(404).json({ error: 'Patient not found' });
     }
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     if (!patient.patientId) {
       await User.ensurePatientId(patient);
@@ -613,6 +586,7 @@ router.get('/patient/:walletAddress', async (req, res) => {
       name:                   patient.name,
       walletAddress:          patient.walletAddress,
       isWalletLinked:         patient.isWalletLinked || false,
+      walletVerified:         patient.walletVerified || false,
       isBlockchainRegistered: patient.isBlockchainRegistered || false,
       bloodGroup:             patient.bloodGroup        || 'Unknown',
       allergies:              patient.allergies         || [],
@@ -659,6 +633,7 @@ router.get('/patient-medications/:identifier', async (req, res) => {
     if (!patient) {
       return res.status(404).json({ error: 'Patient not found' });
     }
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     const result = await MedicalRecord.aggregate([
       {
@@ -691,32 +666,10 @@ router.get('/patient-medications/:identifier', async (req, res) => {
  * Paginated list of all registered patients — for the Doctor's PatientRegistry page.
  * Query params: ?page=1&limit=20
  */
-router.get('/patients', async (req, res) => {
-  try {
-    const page  = Math.max(1, parseInt(req.query.page)  || 1);
-    const limit = Math.min(50, parseInt(req.query.limit) || 20);
-    const skip  = (page - 1) * limit;
-
-    const [patients, total] = await Promise.all([
-      User.find({ role: 'patient' })
-        .select('name email patientId walletAddress bloodGroup isWalletLinked createdAt')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      User.countDocuments({ role: 'patient' }),
-    ]);
-
-    return res.status(200).json({
-      patients,
-      page,
-      totalPages: Math.ceil(total / limit),
-      total,
-    });
-
-  } catch (err) {
-    console.error('[DOCTOR] GET /patients error:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch patients' });
-  }
+router.get('/patients', (req, res) => {
+  return res.status(403).json({
+    error: 'The patient directory is unavailable. Use a patient-shared QR or Patient ID; patient details are returned only after on-chain access is verified.',
+  });
 });
 
 // ── GET /api/doctor/patient-records/:patientIdOrWallet ────────────────────────
@@ -742,6 +695,7 @@ router.get('/patient-records/:patientIdOrWallet', async (req, res) => {
     if (!patient) {
       return res.status(404).json({ error: 'Patient not found' });
     }
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     const records = await MedicalRecord.find({
       patientId: patient._id,

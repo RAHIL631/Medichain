@@ -2,7 +2,6 @@
 // MediChain Admin Dashboard — Platform-wide analytics, user management, audit logs.
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import GlassCard from '../components/GlassCard';
 import DashboardLayout from '../components/DashboardLayout';
@@ -19,15 +18,10 @@ const Icon = ({ path, className = 'w-5 h-5' }) => (
 );
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
-const StatCard = ({ icon, label, value, trend, trendUp, color, loading }) => (
+const StatCard = ({ icon, label, value, color, loading }) => (
   <GlassCard className={`border-${color}/10 hover:border-${color}/30 transition-colors`}>
     <div className="flex items-center justify-between mb-3">
       <div className={`w-10 h-10 rounded-xl bg-${color}/10 flex items-center justify-center text-${color}`}>{icon}</div>
-      {trend !== undefined && (
-        <span className={`text-xs px-2 py-0.5 rounded-full ${trendUp ? 'bg-status-success/10 text-status-success' : 'bg-status-danger/10 text-status-danger'}`}>
-          {trendUp ? '↑' : '↓'} {Math.abs(trend)}%
-        </span>
-      )}
     </div>
     <p className="text-2xl font-display font-bold text-white">
       {loading ? <span className="inline-block w-16 h-6 bg-medichain-surface rounded animate-pulse" /> : value}
@@ -92,12 +86,12 @@ const COLORS = ['#38BDF8','#22D3EE','#818CF8','#22C55E','#F59E0B'];
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const AdminDashboard = () => {
-  useAuth();
   const [stats,   setStats]   = useState({ totalUsers: 0, totalRecords: 0, totalDoctors: 0, totalHospitals: 0, totalPatients: 0 });
   const [users,   setUsers]   = useState([]);
   const [growth,  setGrowth]  = useState([]);
   const [roleData,setRoleData]= useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [tab,     setTab]     = useState('overview');
 
   const navItems = [
@@ -108,49 +102,42 @@ const AdminDashboard = () => {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    try {
-      const [statsRes, usersRes] = await Promise.allSettled([
-        api.get('/analytics/platform-stats'),
-        api.get('/analytics/users?limit=20'),
-      ]);
+    setError('');
+    const [statsRes, usersRes] = await Promise.allSettled([
+      api.get('/analytics/platform-stats'),
+      api.get('/analytics/users?limit=20'),
+    ]);
 
-      if (statsRes.status === 'fulfilled') {
-        const d = statsRes.value.data;
-        setStats({
-          totalUsers:     d.totalUsers     || 0,
-          totalRecords:   d.totalRecords   || 0,
-          totalDoctors:   d.totalDoctors   || 0,
-          totalHospitals: d.totalHospitals || 0,
-          totalPatients:  d.totalPatients  || 0,
-        });
-        if (d.growthData) setGrowth(d.growthData);
-        else {
-          // Demo growth data
-          const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
-          setGrowth(months.map((m, i) => ({
-            month: m,
-            patients:  Math.floor(10 + i * 8 + Math.random() * 5),
-            doctors:   Math.floor(3 + i * 2 + Math.random() * 2),
-            records:   Math.floor(20 + i * 15 + Math.random() * 10),
-          })));
-        }
-        setRoleData([
-          { name: 'Patients',  value: d.totalPatients  || 65, fill: COLORS[0] },
-          { name: 'Doctors',   value: d.totalDoctors   || 25, fill: COLORS[1] },
-          { name: 'Hospitals', value: d.totalHospitals || 10, fill: COLORS[2] },
-        ]);
-      } else {
-        // Demo mode
-        setStats({ totalUsers: 142, totalRecords: 1847, totalDoctors: 38, totalHospitals: 12, totalPatients: 92 });
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
-        setGrowth(months.map((m, i) => ({ month: m, patients: 10 + i*8, doctors: 3 + i*2, records: 20 + i*15 })));
-        setRoleData([{ name:'Patients',value:65,fill:COLORS[0]},{name:'Doctors',value:25,fill:COLORS[1]},{name:'Hospitals',value:10,fill:COLORS[2]}]);
-      }
+    if (statsRes.status === 'fulfilled') {
+      const data = statsRes.value.data;
+      setStats({
+        totalUsers: data.totalUsers ?? 0,
+        totalRecords: data.totalRecords ?? 0,
+        totalDoctors: data.totalDoctors ?? 0,
+        totalHospitals: data.totalHospitals ?? 0,
+        totalPatients: data.totalPatients ?? 0,
+      });
+      setGrowth(Array.isArray(data.growthData) ? data.growthData : []);
+      const roleTotal = (data.totalPatients || 0) + (data.totalDoctors || 0) + (data.totalHospitals || 0) + (data.totalAdmins || 0);
+      setRoleData(roleTotal ? [
+        { name: 'Patients', value: (data.totalPatients / roleTotal) * 100, fill: COLORS[0] },
+        { name: 'Doctors', value: (data.totalDoctors / roleTotal) * 100, fill: COLORS[1] },
+        { name: 'Hospitals', value: (data.totalHospitals / roleTotal) * 100, fill: COLORS[2] },
+        { name: 'Administrators', value: ((data.totalAdmins || 0) / roleTotal) * 100, fill: COLORS[3] },
+      ] : []);
+    } else {
+      setError('Platform metrics could not be loaded.');
+      setStats({ totalUsers: 0, totalRecords: 0, totalDoctors: 0, totalHospitals: 0, totalPatients: 0 });
+      setGrowth([]);
+      setRoleData([]);
+    }
 
-      if (usersRes.status === 'fulfilled') {
-        setUsers(usersRes.value.data?.users || []);
-      }
-    } catch {}
+    if (usersRes.status === 'fulfilled') {
+      setUsers(usersRes.value.data?.users || []);
+    } else {
+      setUsers([]);
+      setError((current) => current ? `${current} User registry is unavailable.` : 'User registry is unavailable.');
+    }
     setLoading(false);
   }, []);
 
@@ -165,19 +152,25 @@ const AdminDashboard = () => {
           <div>
             <h1 className="text-3xl font-display font-bold text-white">Admin Control Center</h1>
             <p className="text-text-secondary mt-1 text-sm">
-              Platform-wide analytics · {new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
+              Database-backed platform metrics · {new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-2 bg-medichain-surface border border-medichain-border rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
-              <span className="text-xs text-text-secondary font-mono">All systems operational</span>
+              <span className="w-2 h-2 rounded-full bg-text-secondary" />
+              <span className="text-xs text-text-secondary font-mono">Service health not checked</span>
             </div>
             <button onClick={fetchData} className="p-2 bg-medichain-surface border border-medichain-border rounded-xl text-text-secondary hover:text-white transition-colors">
               <Icon path="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </button>
           </div>
         </div>
+
+        {error && (
+          <div role="alert" className="p-4 bg-status-danger/10 border border-status-danger/20 rounded-xl text-status-danger text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="flex gap-1 p-1 bg-medichain-surface/50 border border-medichain-border rounded-xl w-fit">
@@ -193,8 +186,8 @@ const AdminDashboard = () => {
           <>
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <StatCard icon={<Icon path="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />} label="Total Users" value={stats.totalUsers} color="accent-blue" trend={12} trendUp={true} loading={loading} />
-              <StatCard icon={<Icon path="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />} label="Patients" value={stats.totalPatients} color="accent-cyan" trend={8} trendUp={true} loading={loading} />
+              <StatCard icon={<Icon path="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />} label="Total Users" value={stats.totalUsers} color="accent-blue" loading={loading} />
+              <StatCard icon={<Icon path="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />} label="Patients" value={stats.totalPatients} color="accent-cyan" loading={loading} />
               <StatCard icon={<Icon path="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />} label="Doctors" value={stats.totalDoctors} color="accent-indigo" loading={loading} />
               <StatCard icon={<Icon path="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />} label="Hospitals" value={stats.totalHospitals} color="status-warning" loading={loading} />
               <StatCard icon={<Icon path="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />} label="Total Records" value={stats.totalRecords} color="status-success" trend={23} trendUp={true} loading={loading} />
@@ -205,7 +198,7 @@ const AdminDashboard = () => {
               <GlassCard className="lg:col-span-2">
                 <p className="text-xs uppercase tracking-widest text-text-secondary mb-1">Platform Growth</p>
                 <p className="text-lg font-display font-bold text-white mb-5">Users & Records Over Time</p>
-                <ResponsiveContainer width="100%" height={220}>
+                {growth.length > 0 ? <ResponsiveContainer width="100%" height={220}>
                   <AreaChart data={growth}>
                     <defs>
                       <linearGradient id="colorP" x1="0" y1="0" x2="0" y2="1">
@@ -224,20 +217,20 @@ const AdminDashboard = () => {
                     <Area type="monotone" dataKey="patients" stroke="#38BDF8" fill="url(#colorP)" strokeWidth={2} name="Patients" />
                     <Area type="monotone" dataKey="records"  stroke="#22D3EE" fill="url(#colorR)" strokeWidth={2} name="Records" />
                   </AreaChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer> : <p className="py-12 text-center text-sm text-text-secondary">No monthly activity is available yet.</p>}
               </GlassCard>
 
               <GlassCard>
                 <p className="text-xs uppercase tracking-widest text-text-secondary mb-1">User Distribution</p>
                 <p className="text-lg font-display font-bold text-white mb-4">By Role</p>
-                <ResponsiveContainer width="100%" height={160}>
+                {roleData.length > 0 ? <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie data={roleData} cx="50%" cy="50%" outerRadius={65} innerRadius={35} paddingAngle={3} dataKey="value">
                       {roleData.map((e, i) => <Cell key={i} fill={e.fill} />)}
                     </Pie>
                     <Tooltip formatter={(v, n) => [`${v}%`, n]} />
                   </PieChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer> : <p className="py-12 text-center text-sm text-text-secondary">No registered accounts are available.</p>}
                 <div className="space-y-2 mt-2">
                   {roleData.map(({ name, value, fill }) => (
                     <div key={name} className="flex items-center justify-between text-xs">
@@ -245,7 +238,7 @@ const AdminDashboard = () => {
                         <span className="w-2 h-2 rounded-full" style={{ background: fill }} />
                         <span className="text-text-secondary">{name}</span>
                       </div>
-                      <span className="text-white font-mono font-bold">{value}%</span>
+                      <span className="text-white font-mono font-bold">{value.toFixed(1)}%</span>
                     </div>
                   ))}
                 </div>
@@ -289,30 +282,13 @@ const AdminDashboard = () => {
         )}
 
         {tab === 'health' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              { service: 'Backend API',        url: 'http://localhost:5000/health',  status: 'operational', latency: '12ms' },
-              { service: 'AI Microservice',    url: 'http://localhost:5001/health',  status: 'operational', latency: '45ms' },
-              { service: 'MongoDB Atlas',      url: 'medichain.mongodb.net',         status: 'operational', latency: '23ms' },
-              { service: 'IPFS (Pinata)',      url: 'api.pinata.cloud',              status: 'operational', latency: '180ms' },
-              { service: 'Ethereum (Sepolia)', url: 'sepolia.infura.io',             status: 'operational', latency: '95ms' },
-              { service: 'Redis Cache',        url: 'localhost:6379',                status: 'optional',    latency: '—' },
-            ].map(({ service, url, status, latency }) => (
-              <div key={service} className="flex items-center justify-between p-4 bg-medichain-surface/30 border border-medichain-border rounded-xl hover:border-accent-cyan/20 transition-colors">
-                <div>
-                  <p className="text-sm text-white font-medium">{service}</p>
-                  <p className="text-[10px] text-text-secondary font-mono mt-0.5">{url}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full ${status === 'operational' ? 'bg-status-success animate-pulse' : 'bg-text-secondary'}`} />
-                    <span className={`text-xs font-mono ${status === 'operational' ? 'text-status-success' : 'text-text-secondary'} capitalize`}>{status}</span>
-                  </div>
-                  <span className="text-[10px] text-text-secondary font-mono">Latency: {latency}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <GlassCard>
+            <h2 className="text-lg font-display font-bold text-white">Service health</h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              Live checks for the AI service, IPFS gateway, blockchain RPC, and Redis are not implemented.
+              No operational status or latency is reported here.
+            </p>
+          </GlassCard>
         )}
       </div>
     </DashboardLayout>

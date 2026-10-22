@@ -8,6 +8,7 @@ const axios = require('axios');
 const { protect } = require('../middleware/auth');
 const User = require('../models/User');
 const HealthRiskReport = require('../models/HealthRiskReport');
+const { requirePatientAccess } = require('../middleware/patientAccess');
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
 
@@ -49,6 +50,7 @@ router.post('/assess', async (req, res) => {
     if (!patientUser) {
       return res.status(404).json({ error: 'Patient not found' });
     }
+    if (!(await requirePatientAccess(req, res, patientUser))) return;
 
     // 2. Prepare payload for AI Flask service
     const payload = {
@@ -123,21 +125,27 @@ router.post('/assess', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/history', async (req, res) => {
   try {
-    const patientId = req.query.patientId || (req.user.role === 'patient' ? req.user._id : null);
+    const patientId = req.user.role === 'patient' ? req.user._id : req.query.patientId;
     if (!patientId) {
       return res.status(400).json({ error: 'Patient ID is required' });
     }
+    if (!['patient', 'doctor', 'hospital'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const patient = await User.findById(patientId);
+    if (!patient) return res.status(404).json({ error: 'Patient not found' });
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    const reports = await HealthRiskReport.find({ patientId })
+    const reports = await HealthRiskReport.find({ patientId: patient._id })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await HealthRiskReport.countDocuments({ patientId });
+    const total = await HealthRiskReport.countDocuments({ patientId: patient._id });
 
     return res.status(200).json({
       reports,
@@ -158,13 +166,19 @@ router.get('/history', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/trends', async (req, res) => {
   try {
-    const patientId = req.query.patientId || (req.user.role === 'patient' ? req.user._id : null);
+    const patientId = req.user.role === 'patient' ? req.user._id : req.query.patientId;
     if (!patientId) {
       return res.status(400).json({ error: 'Patient ID is required' });
     }
+    if (!['patient', 'doctor', 'hospital'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const patient = await User.findById(patientId);
+    if (!patient) return res.status(404).json({ error: 'Patient not found' });
+    if (!(await requirePatientAccess(req, res, patient))) return;
 
     // Get trend logs ordered ascending by date (for rendering graphs left-to-right)
-    const assessments = await HealthRiskReport.find({ patientId })
+    const assessments = await HealthRiskReport.find({ patientId: patient._id })
       .select('overallHealthScore overallRiskScore createdAt')
       .sort({ createdAt: 1 });
 

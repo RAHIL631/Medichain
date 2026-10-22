@@ -52,6 +52,7 @@ const DoctorDashboard = () => {
 
     const [scanning, setScanning] = useState(false);
     const [scannedAddress, setScannedAddress] = useState('');
+    const [patientLookupError, setPatientLookupError] = useState('');
     
     const [patientData, setPatientData] = useState(null);
     const [riskProfile, setRiskProfile] = useState(null);
@@ -87,6 +88,7 @@ const DoctorDashboard = () => {
         const address = (typeof data === 'string' ? data : (data?.walletAddress || data?.address)) || '';
         if (address) {
             setScanning(false);
+            setPatientLookupError('');
             setScannedAddress(address);
             if (summary && summary.name) {
                 setPatientData(summary);
@@ -107,8 +109,10 @@ const DoctorDashboard = () => {
             fetchPatientRecords(address);
         } catch (err) {
             console.error('Failed to fetch patient data', err);
-            setPatientData({ name: 'Verified Patient', walletAddress: address });
-            fetchPatientRecords(address);
+            setPatientData(null);
+            setPatientRecords([]);
+            setRiskProfile(null);
+            setPatientLookupError(err.message || 'Patient access could not be verified.');
         }
     };
 
@@ -432,7 +436,7 @@ const DoctorDashboard = () => {
                             </h2>
                             {scannedAddress && (
                                 <button 
-                                    onClick={() => { setScannedAddress(''); setPatientData(null); setPatientRecords([]); }} 
+                                    onClick={() => { setScannedAddress(''); setPatientData(null); setPatientRecords([]); setPatientLookupError(''); }}
                                     className="text-xs text-hc-text-muted hover:text-hc-danger font-semibold"
                                 >
                                     Clear
@@ -464,6 +468,12 @@ const DoctorDashboard = () => {
                                     onError={(err) => console.error(err)} 
                                     onClose={() => setScanning(false)}
                                 />
+                            </div>
+                        )}
+
+                        {patientLookupError && (
+                            <div className="mt-3 p-3 rounded-xl bg-hc-danger-soft border border-hc-danger/20 text-xs text-hc-danger" role="alert">
+                                {patientLookupError}
                             </div>
                         )}
 
@@ -843,4 +853,3 @@ const DoctorDashboard = () => {
 };
 
 export default DoctorDashboard;
-

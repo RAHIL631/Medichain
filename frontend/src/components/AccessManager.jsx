@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useWalletContext }   from '../context/WalletContext';
+import { useAuth }            from '../context/AuthContext';
 import { useContract as useBlockchainContract } from '../hooks/useBlockchain';
 import WalletConnectionModal  from './WalletConnectionModal';
 import { isValidEthAddress }  from '../utils/web3';
@@ -11,7 +12,8 @@ import { Lock, AlertCircle, CheckCircle, ExternalLink, Wallet } from 'lucide-rea
 const TARGET_CHAIN_ID = Number(process.env.REACT_APP_TARGET_CHAIN_ID) || 11155111;
 
 const AccessManager = () => {
-  const { signer, isConnected, chainId } = useWalletContext();
+  const { signer, address, isConnected, chainId } = useWalletContext();
+  const { user } = useAuth();
   const contract = useBlockchainContract(signer);
 
   // wallet modal state
@@ -27,7 +29,9 @@ const AccessManager = () => {
   const [listLoading,         setListLoading]         = useState(false);
 
   const isOnCorrectNetwork = chainId === TARGET_CHAIN_ID;
-  const isReady = isConnected && isOnCorrectNetwork && !!contract;
+  const linkedWalletMatches = user?.walletVerified === true &&
+    user.walletAddress?.toLowerCase() === address?.toLowerCase();
+  const isReady = isConnected && isOnCorrectNetwork && linkedWalletMatches && !!contract;
 
   // ── Require wallet helper ──────────────────────────────────────────────────
   const requireWallet = useCallback((action) => {
@@ -35,9 +39,13 @@ const AccessManager = () => {
       action();
       return;
     }
+    if (isConnected && isOnCorrectNetwork && !linkedWalletMatches) {
+      setError('Link and verify the connected wallet in your profile before managing access.');
+      return;
+    }
     setPendingAction(() => action);
     setWalletModalOpen(true);
-  }, [isReady]);
+  }, [isReady, isConnected, isOnCorrectNetwork, linkedWalletMatches]);
 
   const handleWalletConnected = useCallback(() => {
     setWalletModalOpen(false);
@@ -53,7 +61,7 @@ const AccessManager = () => {
 
   // ── Fetch Authorized Doctors from Blockchain Events ───────────────────────
   const fetchAuthorizedDoctors = useCallback(async () => {
-    if (!contract || !isConnected) return;
+    if (!contract || !isConnected || !linkedWalletMatches) return;
 
     setListLoading(true);
     try {
@@ -81,10 +89,10 @@ const AccessManager = () => {
     } finally {
       setListLoading(false);
     }
-  }, [contract, isConnected]);
+  }, [contract, isConnected, linkedWalletMatches]);
 
   useEffect(() => {
-    if (!contract || !isConnected) return;
+    if (!contract || !isConnected || !linkedWalletMatches) return;
     fetchAuthorizedDoctors();
 
     const onGrant  = () => fetchAuthorizedDoctors();
@@ -95,7 +103,7 @@ const AccessManager = () => {
       contract.off('DoctorAccessGranted',  onGrant);
       contract.off('DoctorAccessRevoked',  onRevoke);
     };
-  }, [contract, isConnected, fetchAuthorizedDoctors]);
+  }, [contract, isConnected, linkedWalletMatches, fetchAuthorizedDoctors]);
 
   // ── Grant Access ──────────────────────────────────────────────────────────
   const doGrantAccess = useCallback(async () => {
@@ -177,6 +185,15 @@ const AccessManager = () => {
                 submit a transaction. Click <strong>Grant Access</strong> or <strong>Revoke</strong> to connect.
               </p>
             </div>
+          </div>
+        )}
+
+        {isConnected && !linkedWalletMatches && (
+          <div className="p-3.5 sm:p-4 rounded-xl bg-hc-warning-soft border border-hc-warning/20 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-hc-warning flex-shrink-0 mt-0.5" />
+            <p className="text-xs sm:text-sm text-hc-text-muted">
+              Link and verify this wallet in your profile before managing access. The connected wallet must match your verified MediChain account wallet.
+            </p>
           </div>
         )}
 
@@ -273,6 +290,10 @@ const AccessManager = () => {
           {!isConnected ? (
             <p className="text-xs sm:text-sm text-hc-text-muted italic">
               Connect your wallet to see which doctors currently have blockchain access to your records.
+            </p>
+          ) : !linkedWalletMatches ? (
+            <p className="text-xs sm:text-sm text-hc-text-muted italic">
+              Access status is unavailable until your verified account wallet is connected.
             </p>
           ) : listLoading ? (
             <div className="space-y-2.5 sm:space-y-3">
