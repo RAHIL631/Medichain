@@ -66,38 +66,83 @@ function Stat({ icon: Icon, label, value, sub, loading, variant = 'blue', to }) 
 }
 
 function RecordRow({ record }) {
+  const [viewLoading, setViewLoading] = useState(false);
+  const [viewError, setViewError] = useState('');
   const type = record.recordType || 'other';
   const thumb = getRecordTypeImage(type);
 
+  const handleView = async () => {
+    const previewWindow = window.open('about:blank', '_blank');
+    if (!previewWindow) {
+      setViewError('Allow pop-ups to view this medical record.');
+      return;
+    }
+
+    previewWindow.opener = null;
+    setViewLoading(true);
+    setViewError('');
+    try {
+      const { data, headers } = await api.get(
+        `/patient/record/${record._id}/download`,
+        { responseType: 'blob' }
+      );
+      const blob = new Blob([data], {
+        type: headers?.['content-type'] || record.fileMimeType || 'application/octet-stream',
+      });
+      const blobUrl = URL.createObjectURL(blob);
+      previewWindow.location.replace(blobUrl);
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (err) {
+      previewWindow.close();
+      let message = err.message || 'Unable to open this medical record.';
+      if (err.response?.data instanceof Blob) {
+        try {
+          const responseBody = JSON.parse(await err.response.data.text());
+          message = responseBody.error || message;
+        } catch {
+          // Keep the request error when the response is not a JSON error payload.
+        }
+      }
+      setViewError(message);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-hc-border-light last:border-0 min-w-0">
-      {/* Real High Quality Medical Image Thumbnail */}
-      <img
-        src={thumb}
-        alt={type}
-        className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover flex-shrink-0 border border-hc-border-light shadow-xs"
-        loading="lazy"
-      />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs sm:text-sm font-semibold text-hc-text truncate">
-          {record.description || TYPE_LABEL[type] || 'Medical Record'}
-        </p>
-        <p className="text-[10px] sm:text-xs text-hc-text-muted mt-0.5 truncate">
-          {record.createdAt ? new Date(record.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
-        </p>
+    <div className="border-b border-hc-border-light last:border-0">
+      <div className="flex items-center gap-3 py-3 min-w-0">
+        {/* Real High Quality Medical Image Thumbnail */}
+        <img
+          src={thumb}
+          alt={type}
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover flex-shrink-0 border border-hc-border-light shadow-xs"
+          loading="lazy"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-semibold text-hc-text truncate">
+            {record.description || TYPE_LABEL[type] || 'Medical Record'}
+          </p>
+          <p className="text-[10px] sm:text-xs text-hc-text-muted mt-0.5 truncate">
+            {record.createdAt ? new Date(record.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+          </p>
+        </div>
+        <span className={`hc-badge text-[10px] sm:text-xs flex-shrink-0 ${TYPE_COLOR[type] || 'hc-badge-neutral'}`}>
+          {TYPE_LABEL[type] || type}
+        </span>
+        {record._id && (
+          <button
+            type="button"
+            onClick={handleView}
+            disabled={viewLoading}
+            className="text-xs text-hc-blue hover:underline font-bold flex-shrink-0 px-1 py-1 disabled:opacity-60"
+          >
+            {viewLoading ? 'Opening...' : 'View'}
+          </button>
+        )}
       </div>
-      <span className={`hc-badge text-[10px] sm:text-xs flex-shrink-0 ${TYPE_COLOR[type] || 'hc-badge-neutral'}`}>
-        {TYPE_LABEL[type] || type}
-      </span>
-      {(record.ipfsURL || record.ipfsCID || record.ipfsHash) && (
-        <a
-          href={record.ipfsURL || `https://gateway.pinata.cloud/ipfs/${record.ipfsCID || record.ipfsHash}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-hc-blue hover:underline font-bold flex-shrink-0 px-1 py-1"
-        >
-          View
-        </a>
+      {viewError && (
+        <p role="alert" className="pb-2 text-xs text-hc-danger">{viewError}</p>
       )}
     </div>
   );
