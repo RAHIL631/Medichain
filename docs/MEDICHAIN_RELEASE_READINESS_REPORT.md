@@ -3,8 +3,8 @@
 **Assessment date:** October 20, 2026
 **Product version:** `1.0.0` (root `package.json`)
 **Branch:** `main`
-**Base commit:** `06eaec5543abe6d6b875cdd7a5bd4852942fd0ed`
-**Candidate state:** Local working-tree modifications, not committed
+**Base commit:** `59712931fa4c49856902e07c85f6b6b7e7851b89`
+**Candidate state:** Stage 6 safeguards committed locally; not pushed. Stage 7 documentation changes are uncommitted.
 **Final status:** **BLOCKED**
 
 ## Decision
@@ -15,7 +15,7 @@ This is separate from clinical or commercial readiness. MediChain has no demonst
 
 ## Release Candidate
 
-The candidate is based on the Stage 5 commit above. At the start of this assessment, `main` was clean and matched `origin/main`. Source edits and the modified checklist are uncommitted; the product brief and readiness report are new untracked files. They are preserved locally; no commit, tag, push, merge, deployment, production setting change, or production-data operation was performed.
+The candidate includes the Stage 6 safeguards committed in `5971293`. At the start of Stage 7, `main` was clean and one commit ahead of `origin/main`. Stage 7 documentation changes are uncommitted; no commit, tag, push, merge, deployment, production setting change, or production-data operation was performed.
 
 Changed source files:
 
@@ -28,7 +28,7 @@ Changed source files:
 - `frontend/src/components/Navbar.jsx`
 - `frontend/src/pages/DoctorDashboard.jsx`
 
-Changes address request-log credential redaction, production email fallback, production encryption configuration, AI-unavailable prescription handling, test-only synthetic CIDs, doctor upload status accuracy, clinical notes sent to a public contract, and build hygiene. The regression tests cover the new backend failure guards. `06eaec5` is the latest committed baseline, not a fully verified release: the Stage 5 report only records a frontend smoke test, and its backend, contract, and AI suites were not rerun then. The current candidate changes still need normal review and commit discipline.
+Changes address request-log credential redaction, production email fallback, production encryption configuration, AI-unavailable prescription handling, test-only synthetic CIDs, doctor upload status accuracy, clinical notes sent to a public contract, and build hygiene. The regression tests cover the new backend failure guards. `5971293` is the latest local commit; it is not pushed and the candidate remains blocked. Stage 6 reran backend, contract, AI, frontend, and build checks before committing, but did not verify a full user-facing workflow.
 
 ## Verified Functional Workflows
 
@@ -125,7 +125,7 @@ The frontend production bundle builds successfully. This is not a deployment. No
 
 ## Changes Since Last Verified Version
 
-Stage 5 documentation says only the frontend smoke test was rerun during productization; backend, contract, and AI suites were not rerun in that pass. The current assessment reran all four suites and the production build, then made and tested local changes. No later commit exists. The current working tree must be treated as a new, uncommitted candidate, not as a previously verified release.
+Stage 5 documentation says only the frontend smoke test was rerun during productization. Stage 6 reran all four suites and the production build, then committed the tested safeguards as `5971293`. Stage 7 has not changed application source; its documentation edits are uncommitted. Automated tests still do not establish successful real-service integration or safe consent enforcement.
 
 ## Recommended Next Action
 

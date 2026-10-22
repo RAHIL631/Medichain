@@ -4,7 +4,9 @@
 **Demonstration Target Duration:** 8 to 12 Minutes  
 **Target Audience:** Academic Review Panel, External Evaluators, Technical Project Committee  
 **Evaluation Mode:** Production Cloud Staging OR Offline Local Development  
-**Readiness Status:** **VERIFIED & OPERATIONAL**
+**Readiness Status:** HISTORICAL — NOT VERIFIED FOR CURRENT DEMONSTRATION
+
+> **Superseded:** The patient/doctor, consent, IPFS, and transaction flows described below are not verified end to end. Do not follow this procedure for live data. Use [MEDICHAIN_FINAL_DEMO_SCRIPT.md](MEDICHAIN_FINAL_DEMO_SCRIPT.md) and [MEDICHAIN_STAGE_7_DEMO_READINESS.md](MEDICHAIN_STAGE_7_DEMO_READINESS.md).
 
 ---
 
@@ -18,8 +20,8 @@
 3. **Wallet Setup:**
    - MetaMask unlocked, connected to **Sepolia Testnet** (Chain ID: `11155111`) or **Hardhat Local** (Chain ID: `31337`).
 4. **Demo Accounts:**
-   - Patient: `patient@medichain.example` / `Password123!` (or registered live).
-   - Doctor: `doctor@medichain.example` / `Password123!` (or registered live).
+  - Patient: dedicated synthetic account not verified; do not store credentials in this document.
+  - Doctor: dedicated synthetic account not verified; do not use until the consent authorization blocker is fixed.
 
 ---
 
@@ -81,7 +83,7 @@
 - **Exact Page / Feature:** Login Page (`/login`).
 - **Action to Perform:**
   1. Select role **Patient**.
-  2. Enter credentials: `patient@medichain.example` / `Password123!`.
+  2. Do not log into a patient account during the current rehearsal; use the evidence walkthrough instead.
   3. Click **Sign In**.
 - **Expected Result:**
   - Login processes in < 300ms.
@@ -170,7 +172,7 @@
 - **Action to Perform:**
   1. Switch to the incognito window.
   2. Select role **Doctor**.
-  3. Enter credentials: `doctor@medichain.example` / `Password123!`.
+  3. Do not log into a doctor account during the current rehearsal; the access-control gate is blocked.
   4. Click **Sign In**.
 - **Expected Result:**
   - Authenticates as Doctor.

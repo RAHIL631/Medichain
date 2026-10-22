@@ -3,7 +3,9 @@
 **Project:** MediChain — Decentralized Electronic Health Record & Clinical Decision Support System  
 **Purpose:** Step-by-Step Practical Demonstration Protocol for Academic Examination / Project Defense  
 **Target Environment:** Local Full-Stack OR Live Cloud Staging  
-**Status:** **VERIFIED & READY FOR DEMONSTRATION**
+**Status:** HISTORICAL — NOT VERIFIED FOR CURRENT DEMONSTRATION
+
+> **Superseded:** This guide contains unverified workflow claims. Do not use its patient/doctor login, upload, consent, or revoke sequence. The current gate is **NOT READY** because API authorization does not follow the UI-managed chain consent. Use [MEDICHAIN_FINAL_DEMO_SCRIPT.md](MEDICHAIN_FINAL_DEMO_SCRIPT.md), [MEDICHAIN_DEMO_RECOVERY_CHECKLIST.md](MEDICHAIN_DEMO_RECOVERY_CHECKLIST.md), and [MEDICHAIN_STAGE_7_DEMO_READINESS.md](MEDICHAIN_STAGE_7_DEMO_READINESS.md).
 
 ---
 
@@ -114,7 +116,7 @@ MediChain is a patient-controlled Electronic Health Record (EHR) ecosystem that 
 ### Step 2: Patient Registration & Login
 - **Action:**
   1. Navigate to `/register` or `/login`.
-  2. Log in with a patient account (e.g. `patient@medichain.example` / `Password123!`).
+  2. A dedicated account was not verified for this assessment. Do not use credentials printed in old materials.
 - **Expected Result:**
   - Authenticates immediately.
   - JWT tokens stored securely.
@@ -154,7 +156,7 @@ MediChain is a patient-controlled Electronic Health Record (EHR) ecosystem that 
 
 ### Step 5: Doctor Login & Patient Record Lookup
 - **Action:**
-  1. Open an incognito window or log out, then log in as the Doctor (`doctor@medichain.example` / `Password123!`).
+  1. Do not perform a doctor login for the current rehearsal; the access-control gate is blocked.
   2. In the Doctor Dashboard (`/doctor-dashboard`), navigate to patient lookup.
   3. Enter the patient's wallet address or scanned patient ID.
 - **Expected Result:**

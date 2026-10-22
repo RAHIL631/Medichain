@@ -5,6 +5,8 @@
 **Target Audience:** Prospective Evaluators, Product Stakeholders, and Technical Committees  
 **Testing Rule:** **Never use real Protected Health Information (PHI). Use strictly isolated demonstration accounts and synthetic clinical fixtures.**
 
+> **Superseded:** The account availability, successful record access, and revoke-denial steps below have not been verified and conflict with current authorization findings. Do not use this runbook for a live patient/doctor demonstration. Use [MEDICHAIN_FINAL_DEMO_SCRIPT.md](MEDICHAIN_FINAL_DEMO_SCRIPT.md), [MEDICHAIN_DEMO_RECOVERY_CHECKLIST.md](MEDICHAIN_DEMO_RECOVERY_CHECKLIST.md), and [MEDICHAIN_STAGE_7_DEMO_READINESS.md](MEDICHAIN_STAGE_7_DEMO_READINESS.md). Credentials previously listed here have been removed; use no account unless it is separately provisioned and verified in isolated staging.
+
 ---
 
 ## 1. Demonstration Environment Setup
@@ -27,11 +29,11 @@ MediChain supports two demonstration modalities:
 
 ## 2. Dedicated Synthetic Demonstration Accounts
 
-| Role | Email Address | Password | Synthetic Identity & Purpose |
-|---|---|---|---|
-| **Patient** | `demo.patient@medichain.example` | `Password123!` | Synthetic Patient ("Alex Mercer"), Age 48, Blood Group O+, Mild Hypertension. |
-| **Doctor** | `demo.doctor@medichain.example` | `Password123!` | Dr. Sarah Jenkins, MD, Board Certified Cardiologist, License #`MD-2026-9941`. |
-| **Admin** | `demo.admin@medichain.example` | `Password123!` | System Quality & Security Auditor. |
+| Role | Account status | Safe-use condition |
+|---|---|---|
+| **Patient** | NOT VERIFIED | Use only a separately provisioned synthetic account in isolated staging. |
+| **Doctor** | NOT VERIFIED | Do not test patient lookup or access until the consent blocker is fixed. |
+| **Admin** | NOT TESTED | No administrator session was exercised. |
 
 *(Note: If demonstration accounts are not present in a fresh database, they can be created in 15 seconds through the standard `/register` route with 0 configuration changes).*
 

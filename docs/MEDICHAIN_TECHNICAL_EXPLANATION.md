@@ -5,6 +5,8 @@
 **Version:** 3.0.0 (Production Release Candidate)  
 **Date:** October 2026  
 
+> **Historical technical description:** Some claims below, including authoritative on-chain consent enforcement and retrieval-time CID verification, are not supported by the current implementation. Use [MEDICHAIN_FINAL_REVIEW_QA.md](MEDICHAIN_FINAL_REVIEW_QA.md) and [MEDICHAIN_STAGE_7_DEMO_READINESS.md](MEDICHAIN_STAGE_7_DEMO_READINESS.md) for current, evidence-bounded explanations. Current demonstration status: **NOT READY**.
+
 ---
 
 ## 1. System Architecture

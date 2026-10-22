@@ -4,16 +4,16 @@
 **Release Candidate ID:** `RC-1.0.0-academic`
 **Product version:** `1.0.0` (root `package.json`; no separate release version scheme found)
 **Candidate label:** `RC-1.0.0-academic` (existing project label)
-**Base commit:** `06eaec5543abe6d6b875cdd7a5bd4852942fd0ed` on `main`
+**Base commit:** `59712931fa4c49856902e07c85f6b6b7e7851b89` on `main` (`origin/main` is one commit behind)
 **Assessment date:** October 20, 2026
-**Candidate state:** Local, uncommitted changes; no tag, push, merge, or deployment performed
+**Candidate state:** Stage 6 safeguards committed locally; not pushed. Stage 7 documentation changes are uncommitted.
 **Decision:** **BLOCKED** for patient/doctor workflow demonstration until access-control defects are corrected.
 
 ---
 
 ## 1. Release Candidate Scope & Working Tree State
 
-The base commit is the Stage 5 productization commit. This checklist supersedes the older checklist based on commit `5b9559a`; its live-integration passes are not current evidence. Current candidate changes are local and uncommitted:
+Commit `5971293` contains the Stage 6 source safeguards listed below. This checklist supersedes the older checklist based on commit `5b9559a`; its live-integration passes are not current evidence. The Stage 7 documentation changes are local and uncommitted:
 
 - `backend/server.js`: Authorization-header redaction in request logs.
 - `backend/services/emailService.js`: Production email fallback now fails closed instead of logging verification codes.
@@ -23,7 +23,7 @@ The base commit is the Stage 5 productization commit. This checklist supersedes 
 - `frontend/src/pages/DoctorDashboard.jsx`: Medication check requirement, distinct chain/API statuses, and no clinical notes sent to the public contract.
 - `frontend/src/components/Navbar.jsx`: Removed unused icon import reported by the production build.
 
-These changes have not been committed and are not included in the base commit.
+The listed source safeguards are already included in the base commit; only the current Stage 7 documentation changes remain uncommitted.
 
 ---
 
@@ -61,7 +61,7 @@ These changes have not been committed and are not included in the base commit.
 
 ## 4. Preservation and Governance
 
-- The candidate is the current local working tree based on commit `06eaec5`; it is not committed.
-- Preserve the last committed version and all user work. No commit, tag, push, merge, deployment, production-data change, or secret change was performed.
+- The Stage 6 candidate is commit `5971293` on local `main`, one commit ahead of `origin/main`. Stage 7 documentation changes remain uncommitted.
+- Preserve the committed candidate and all user work. No Stage 7 commit, tag, push, merge, deployment, production-data change, or secret change was performed.
 - Use synthetic identities and medical files for any further testing.
 - Do not call this candidate ready until API authorization has a single enforced source of truth, patient lookup is consent-gated, revocation invalidates API reads, and a full isolated grant/upload/revoke/download-denial workflow passes.

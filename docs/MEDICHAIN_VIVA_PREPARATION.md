@@ -4,6 +4,8 @@
 **Target:** Academic Oral Defense, External Technical Review & Viva Voce  
 **Format:** Direct Question & Concise Spoken-Ready Answer  
 
+> **Historical Q&A — do not repeat unverified claims:** The consent, retrieval-integrity, dataset, metric, deployment, and test-count answers below are not current evidence. Use [MEDICHAIN_FINAL_REVIEW_QA.md](MEDICHAIN_FINAL_REVIEW_QA.md) and [MEDICHAIN_STAGE_7_DEMO_READINESS.md](MEDICHAIN_STAGE_7_DEMO_READINESS.md). Current demonstration status: **NOT READY**.
+
 ---
 
 ### Q1: What is the core problem MediChain solves?
