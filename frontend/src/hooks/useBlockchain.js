@@ -24,10 +24,21 @@ import {
   useState,
   useEffect,
   useCallback,
-  useMemo,
   useRef,
 } from 'react';
-import { ethers } from 'ethers';
+
+let ethersPromise;
+const loadEthers = () => {
+  if (!ethersPromise) {
+    ethersPromise = import('ethers')
+      .then(({ ethers }) => ethers)
+      .catch((err) => {
+        ethersPromise = undefined;
+        throw err;
+      });
+  }
+  return ethersPromise;
+};
 
 // ── Contract artifact (written by hardhat deploy script) ──────────────────────
 // Graceful fallback so the app compiles even before the first `npx hardhat run`.
@@ -116,6 +127,7 @@ export const useWallet = () => {
 
   /** Loads provider + signer + balance without triggering MetaMask popup */
   const _hydrateFromProvider = useCallback(async (ethProvider, addr) => {
+    const ethers = await loadEthers();
     const net     = await ethProvider.getNetwork();
     const cId     = Number(net.chainId);
     const sig     = await ethProvider.getSigner(addr);
@@ -148,6 +160,7 @@ export const useWallet = () => {
         );
 
         if (stillConnected) {
+          const ethers = await loadEthers();
           const ethProvider = new ethers.BrowserProvider(window.ethereum);
           await _hydrateFromProvider(ethProvider, accounts[0]);
         } else {
@@ -179,6 +192,7 @@ export const useWallet = () => {
       }
       // Account switched — silently re-hydrate with new account
       try {
+        const ethers = await loadEthers();
         const ethProvider = new ethers.BrowserProvider(window.ethereum);
         await _hydrateFromProvider(ethProvider, accounts[0]);
       } catch (e) {
@@ -215,6 +229,7 @@ export const useWallet = () => {
     setError(null);
 
     try {
+      const ethers = await loadEthers();
       const ethProvider = new ethers.BrowserProvider(window.ethereum);
 
       // This line triggers the MetaMask account-selection popup
@@ -342,31 +357,47 @@ export const useWallet = () => {
  *   await contract.addMedicalRecord(...);
  */
 export const useContract = (signer) => {
-  return useMemo(() => {
-    if (!signer) return null;
-    
+  const [contract, setContract] = useState(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+    setContract(null);
+    if (!signer) return () => { isCurrent = false; };
+
     // In production, prefer environment variable to avoid using local Hardhat address
     let contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
     if (!contractAddress) {
       // If targeting Sepolia but artifact is Hardhat, ignore the Hardhat address
       if (TARGET_CHAIN_ID === 11155111 && MediChainArtifact.chainId === 31337) {
         console.warn('[useContract] Production requires a Sepolia contract address via REACT_APP_CONTRACT_ADDRESS. Local Hardhat address ignored.');
-        return null;
+        return () => { isCurrent = false; };
       }
       contractAddress = MediChainArtifact.address;
     }
 
     if (!contractAddress) {
       console.warn('[useContract] Contract not deployed — no address found.');
-      return null;
+      return () => { isCurrent = false; };
     }
-    
-    return new ethers.Contract(
-      contractAddress,
-      MediChainArtifact.abi,
-      signer
-    );
+
+    loadEthers()
+      .then((ethers) => {
+        if (isCurrent) {
+          setContract(new ethers.Contract(
+            contractAddress,
+            MediChainArtifact.abi,
+            signer
+          ));
+        }
+      })
+      .catch((err) => {
+        console.error('[useContract] Failed to load ethers:', err);
+      });
+
+    return () => { isCurrent = false; };
   }, [signer]);
+
+  return contract;
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -415,16 +446,16 @@ export const usePatientRecords = (contract, patientAddress) => {
       return;
     }
 
-    // Basic Ethereum address validation
-    if (!ethers.isAddress(patientAddress)) {
-      setError(`Invalid Ethereum address: ${patientAddress}`);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
+      const ethers = await loadEthers();
+      if (!ethers.isAddress(patientAddress)) {
+        setError(`Invalid Ethereum address: ${patientAddress}`);
+        return;
+      }
+
       // Call the view function — no gas, no MetaMask popup
       const rawRecords = await contract.getMedicalRecords(patientAddress);
 
@@ -594,6 +625,14 @@ export const useAccessControl = (contract) => {
    * @returns {Promise<ethers.TransactionReceipt | null>}
    */
   const grantAccess = useCallback(async (doctorAddress) => {
+    let ethers;
+    try {
+      ethers = await loadEthers();
+    } catch (err) {
+      setTxError(err.message || 'Failed to load blockchain support.');
+      console.error('[useAccessControl] Failed to load ethers:', err);
+      return null;
+    }
     if (!ethers.isAddress(doctorAddress)) {
       setTxError(`Invalid doctor address: ${doctorAddress}`);
       return null;
@@ -610,6 +649,14 @@ export const useAccessControl = (contract) => {
    * @returns {Promise<ethers.TransactionReceipt | null>}
    */
   const revokeAccess = useCallback(async (doctorAddress) => {
+    let ethers;
+    try {
+      ethers = await loadEthers();
+    } catch (err) {
+      setTxError(err.message || 'Failed to load blockchain support.');
+      console.error('[useAccessControl] Failed to load ethers:', err);
+      return null;
+    }
     if (!ethers.isAddress(doctorAddress)) {
       setTxError(`Invalid doctor address: ${doctorAddress}`);
       return null;
@@ -628,11 +675,12 @@ export const useAccessControl = (contract) => {
    */
   const checkAccess = useCallback(async (patientAddress, doctorAddress) => {
     if (!contract) return false;
-    if (!ethers.isAddress(patientAddress) || !ethers.isAddress(doctorAddress)) {
-      console.warn('[useAccessControl] checkAccess: invalid address(es)');
-      return false;
-    }
     try {
+      const ethers = await loadEthers();
+      if (!ethers.isAddress(patientAddress) || !ethers.isAddress(doctorAddress)) {
+        console.warn('[useAccessControl] checkAccess: invalid address(es)');
+        return false;
+      }
       return await contract.hasAccess(patientAddress, doctorAddress);
     } catch (err) {
       console.error('[useAccessControl] checkAccess failed:', err.message);
@@ -664,4 +712,3 @@ export const useAccessControl = (contract) => {
 // ── Default export: all hooks as a named map (convenient for lazy imports) ─────
 const hooksMap = { useWallet, useContract, usePatientRecords, useAccessControl };
 export default hooksMap;
-

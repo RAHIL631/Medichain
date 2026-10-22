@@ -68,16 +68,14 @@ function Stat({ icon: Icon, label, value, sub, loading, variant = 'emerald', to 
 function RecordRow({ record }) {
   const [viewLoading, setViewLoading] = useState(false);
   const [viewError, setViewError] = useState('');
+  const [preview, setPreview] = useState(null);
   const type = record.recordType || 'other';
 
-  const handleView = async () => {
-    const previewWindow = window.open('about:blank', '_blank');
-    if (!previewWindow) {
-      setViewError('Allow pop-ups to view this medical record.');
-      return;
-    }
+  useEffect(() => () => {
+    if (preview?.url && URL.revokeObjectURL) URL.revokeObjectURL(preview.url);
+  }, [preview?.url]);
 
-    previewWindow.opener = null;
+  const handleView = async () => {
     setViewLoading(true);
     setViewError('');
     try {
@@ -88,11 +86,12 @@ function RecordRow({ record }) {
       const blob = new Blob([data], {
         type: headers?.['content-type'] || record.fileMimeType || 'application/octet-stream',
       });
-      const blobUrl = URL.createObjectURL(blob);
-      previewWindow.location.replace(blobUrl);
-      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      setPreview({
+        url: URL.createObjectURL(blob),
+        mimeType: blob.type,
+        fileName: record.fileName || `${record.description || 'medical-record'}`,
+      });
     } catch (err) {
-      previewWindow.close();
       let message = err.message || 'Unable to open this medical record.';
       if (err.response?.data instanceof Blob) {
         try {
@@ -138,6 +137,62 @@ function RecordRow({ record }) {
       </div>
       {viewError && (
         <p role="alert" className="pb-2 text-xs text-hc-danger">{viewError}</p>
+      )}
+      {preview && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-3 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preview ${preview.fileName}`}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setPreview(null);
+          }}
+        >
+          <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between gap-4 border-b border-hc-border-light px-4 py-3 sm:px-6">
+              <p className="min-w-0 truncate text-sm font-bold text-hc-text">{preview.fileName}</p>
+              <div className="flex flex-shrink-0 items-center gap-3">
+                <a
+                  href={preview.url}
+                  download={preview.fileName}
+                  className="text-xs font-bold text-hc-emerald hover:underline"
+                >
+                  Download
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreview(null)}
+                  className="rounded-lg p-2 text-hc-text-muted hover:bg-hc-bg-alt hover:text-hc-text"
+                  aria-label="Close preview"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+            <div className="min-h-[50vh] flex-1 bg-hc-bg-alt">
+              {preview.mimeType.toLowerCase().split(';', 1)[0].trim().startsWith('image/') ? (
+                <img
+                  src={preview.url}
+                  alt={preview.fileName}
+                  className="mx-auto max-h-[calc(92vh-4rem)] max-w-full object-contain"
+                />
+              ) : preview.mimeType.toLowerCase().split(';', 1)[0].trim() === 'application/pdf' ? (
+                <iframe
+                  title={`Preview ${preview.fileName}`}
+                  src={preview.url}
+                  className="h-[75vh] w-full border-0"
+                />
+              ) : (
+                <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 p-6 text-center">
+                  <FileText className="h-10 w-10 text-hc-emerald" aria-hidden="true" />
+                  <p className="text-sm text-hc-text-muted">
+                    Preview is not available for this file type. Download the record to view it.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

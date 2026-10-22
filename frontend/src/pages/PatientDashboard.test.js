@@ -1,6 +1,6 @@
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import api from '../utils/api';
 import PatientDashboard from './PatientDashboard';
 
@@ -67,14 +67,10 @@ test('shows an error instead of an empty-record state when loading fails', async
 });
 
 test('views a patient record through the authenticated decrypting endpoint', async () => {
-  const popup = {
-    close: jest.fn(),
-    location: { replace: jest.fn() },
-    opener: window,
-  };
-  const openSpy = jest.spyOn(window, 'open').mockReturnValue(popup);
   const originalCreateObjectURL = URL.createObjectURL;
+  const originalRevokeObjectURL = URL.revokeObjectURL;
   URL.createObjectURL = jest.fn(() => 'blob:synthetic-record');
+  URL.revokeObjectURL = jest.fn();
   api.get
     .mockResolvedValueOnce({
       data: {
@@ -83,6 +79,7 @@ test('views a patient record through the authenticated decrypting endpoint', asy
           _id: 'synthetic-record-1',
           recordType: 'prescription',
           description: 'Synthetic prescription',
+          fileName: 'prescription.pdf',
           fileMimeType: 'application/pdf',
         }],
       },
@@ -101,27 +98,27 @@ test('views a patient record through the authenticated decrypting endpoint', asy
 
     fireEvent.click(await screen.findByRole('button', { name: 'View' }));
 
-    await waitFor(() => {
-      expect(api.get).toHaveBeenLastCalledWith(
-        '/patient/record/synthetic-record-1/download',
-        { responseType: 'blob' }
-      );
-      expect(popup.location.replace).toHaveBeenCalledWith('blob:synthetic-record');
-    });
-    expect(openSpy).toHaveBeenCalledWith('about:blank', '_blank');
+    expect(await screen.findByRole('dialog', { name: 'Preview prescription.pdf' })).toBeInTheDocument();
+    expect(screen.getByTitle('Preview prescription.pdf')).toHaveAttribute('src', 'blob:synthetic-record');
+    expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute('download', 'prescription.pdf');
+    expect(api.get).toHaveBeenLastCalledWith(
+      '/patient/record/synthetic-record-1/download',
+      { responseType: 'blob' }
+    );
     expect(URL.createObjectURL).toHaveBeenCalledWith(expect.objectContaining({
       type: 'application/pdf',
     }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close preview' }));
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:synthetic-record');
   } finally {
-    openSpy.mockRestore();
     if (originalCreateObjectURL) URL.createObjectURL = originalCreateObjectURL;
     else delete URL.createObjectURL;
+    if (originalRevokeObjectURL) URL.revokeObjectURL = originalRevokeObjectURL;
+    else delete URL.revokeObjectURL;
   }
 });
 
-test('shows an error and closes the preview if a record cannot be opened', async () => {
-  const popup = { close: jest.fn(), location: { replace: jest.fn() } };
-  const openSpy = jest.spyOn(window, 'open').mockReturnValue(popup);
+test('shows an error when a record cannot be opened', async () => {
   api.get
     .mockResolvedValueOnce({
       data: {
@@ -135,18 +132,13 @@ test('shows an error and closes the preview if a record cannot be opened', async
     })
     .mockRejectedValueOnce(new Error('Synthetic preview failure'));
 
-  try {
-    render(
-      <MemoryRouter>
-        <PatientDashboard />
-      </MemoryRouter>
-    );
+  render(
+    <MemoryRouter>
+      <PatientDashboard />
+    </MemoryRouter>
+  );
 
-    fireEvent.click(await screen.findByRole('button', { name: 'View' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'View' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Synthetic preview failure');
-    expect(popup.close).toHaveBeenCalled();
-  } finally {
-    openSpy.mockRestore();
-  }
+  expect(await screen.findByRole('alert')).toHaveTextContent('Synthetic preview failure');
 });

@@ -8,11 +8,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // ── Eagerly loaded (critical path) ───────────────────────────────────────────
 import LandingPage     from './pages/LandingPage';
-import Login           from './pages/Login';
-import Register        from './pages/Register';
-import HelpPage        from './pages/HelpPage';
 
 // ── Lazily loaded (code-split for optimal initial bundle) ──────────────────────
+const Login                 = lazy(() => import('./pages/Login'));
+const Register              = lazy(() => import('./pages/Register'));
+const HelpPage              = lazy(() => import('./pages/HelpPage'));
 const PatientDashboard     = lazy(() => import('./pages/PatientDashboard'));
 const DoctorDashboard      = lazy(() => import('./pages/DoctorDashboard'));
 const HospitalDashboard    = lazy(() => import('./pages/HospitalDashboard'));
