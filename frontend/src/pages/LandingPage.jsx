@@ -4,6 +4,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import {
+  TARGET_CHAIN_ID,
+  TARGET_NETWORK_NAME,
+} from '../hooks/useBlockchain';
+import {
   HOSPITAL_IMAGES, MEDICINE_IMAGES, MEDICAL_IMAGES
 } from '../utils/images';
 import {
@@ -93,7 +97,7 @@ export default function LandingPage() {
     { Icon: Lock,        title: 'Patient-Controlled Access',    desc: 'You decide who sees your health data. Grant or revoke access through the consent workflow.',   accent: 'forest',  num: 2, image: EDIT_IMG1 },
     { Icon: Brain,       title: 'AI Health Insights',           desc: 'Advisory clinical AI screens health patterns and prescription risks to support clinician judgment — not a diagnosis.', accent: 'warm', num: 3, image: MEDICAL_IMAGES.mri },
     { Icon: Pill,        title: 'Drug & Dosage Safety',         desc: 'Real-time multi-drug interaction checking to catch conflicting prescriptions instantly.',        accent: 'success', num: 4, image: MEDICINE_IMAGES.pills },
-    { Icon: Activity,    title: 'Blockchain Integrity',         desc: 'Record integrity can be checked against its cryptographic proof anchored on Ethereum Sepolia.',   accent: 'emerald', num: 5, image: MEDICAL_IMAGES.blood_test },
+    { Icon: Activity,    title: 'Blockchain Integrity',         desc: `Record integrity can be checked against its cryptographic proof anchored on ${TARGET_NETWORK_NAME}.`, accent: 'emerald', num: 5, image: MEDICAL_IMAGES.blood_test },
     { Icon: Database,    title: 'Decentralized Storage',        desc: 'Encrypted record content is stored off-chain on IPFS, separate from the integrity proof.', accent: 'forest', num: 6, image: MEDICAL_IMAGES.xray },
   ];
 
@@ -101,7 +105,7 @@ export default function LandingPage() {
     { Icon: Lock,     label: 'Patient-controlled access',  sub: 'You decide who sees data'      },
     { Icon: Shield,   label: 'Secure records',              sub: 'Encrypted end-to-end'          },
     { Icon: Brain,    label: 'AI-assisted insights',        sub: 'Advisory decision support'     },
-    { Icon: Activity, label: 'Blockchain integrity',        sub: 'Ethereum Sepolia verified'     },
+    { Icon: Activity, label: 'Blockchain integrity',        sub: `Configured network · ${TARGET_NETWORK_NAME}` },
   ];
 
   const steps = [
@@ -209,8 +213,8 @@ export default function LandingPage() {
                   <Activity className="w-4 h-4 text-hc-emerald-dark" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] sm:text-xs font-bold text-hc-text leading-none truncate">Blockchain Verified</p>
-                    <p className="text-[9px] sm:text-[10px] text-hc-text-muted mt-0.5 truncate">Ethereum Sepolia · 11155111</p>
+                    <p className="text-[10px] sm:text-xs font-bold text-hc-text leading-none truncate">Blockchain Network</p>
+                    <p className="text-[9px] sm:text-[10px] text-hc-text-muted mt-0.5 truncate">{TARGET_NETWORK_NAME} · {TARGET_CHAIN_ID}</p>
                   </div>
                   <div className="w-2 h-2 rounded-full bg-hc-success ml-1 flex-shrink-0 animate-pulse" />
                 </div>
@@ -412,14 +416,14 @@ export default function LandingPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-hc-text truncate">Integrity & access model</p>
-                  <p className="text-xs text-hc-text-muted truncate">Ethereum Sepolia · IPFS · App auth</p>
+                  <p className="text-xs text-hc-text-muted truncate">{TARGET_NETWORK_NAME} · IPFS · App auth</p>
                 </div>
               </div>
               <div className="space-y-2.5">
                 {[
                   'Email/password login (wallet optional)',
                   'Encrypted documents stored off-chain (IPFS)',
-                  'Hashes / consent can be anchored on Sepolia',
+                  `Hashes / consent can be anchored on ${TARGET_NETWORK_NAME}`,
                   'Patient grant/revoke controls doctor access',
                 ].map(item => (
                   <div key={item} className="flex items-center gap-2.5 p-3 rounded-xl bg-hc-bg-alt">
@@ -470,7 +474,7 @@ export default function LandingPage() {
               <Link to="/login" className="text-xs sm:text-sm text-hc-text-muted hover:text-hc-text transition-colors">Sign In</Link>
             </div>
             <p className="text-[11px] sm:text-xs text-hc-text-muted">
-              © {new Date().getFullYear()} MediChain. Ethereum Sepolia · Chain ID 11155111
+              © {new Date().getFullYear()} MediChain. {TARGET_NETWORK_NAME} · Chain ID {TARGET_CHAIN_ID}
             </p>
           </div>
         </div>

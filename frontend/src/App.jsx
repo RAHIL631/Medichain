@@ -93,7 +93,7 @@ const PublicRoute = ({ children }) => {
 //
 // Architecture: Two complementary authentication layers
 //   Layer 1 (Primary):  Email + Password → JWT/Session  [always required]
-//   Layer 2 (Optional): MetaMask → Sepolia → SmartContract [only for blockchain ops]
+//   Layer 2 (Optional): MetaMask → configured network → SmartContract [only for blockchain ops]
 //
 // NetworkGuard is intentionally removed as a global wrapper.
 // Network checks now happen only inside WalletConnectionModal when a

@@ -4,7 +4,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import GlassCard from '../components/GlassCard';
 import FuturisticButton from '../components/FuturisticButton';
 import api from '../utils/api';
-import useBlockchain from '../hooks/useBlockchain';
+import useBlockchain, { TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
 import { useWalletContext } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
 import { cidToGatewayUrl } from '../utils/web3';
@@ -74,7 +74,7 @@ const UploadReport = () => {
                             : `/patient/record/${recordId}/txhash`;
                         await api.patch(patchEndpoint, { txHash: tx.hash }).catch(() => {});
                     }
-                    setSuccess('Laboratory report successfully uploaded to IPFS and anchored to Ethereum Sepolia.');
+                    setSuccess(`Laboratory report successfully uploaded to IPFS and anchored to ${TARGET_NETWORK_NAME}.`);
                 } catch (chainErr) {
                     console.warn('[UploadReport] Blockchain anchoring warning:', chainErr);
                     setSuccess('Laboratory report successfully uploaded to IPFS & saved to database.');

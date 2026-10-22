@@ -38,7 +38,7 @@ const DOCTOR_NAV = [
 
 export default function MobileHeader() {
   const { user, logout } = useAuth();
-  const { isConnected, shortAddress } = useWalletContext();
+  const { isConnected, shortAddress, network } = useWalletContext();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerRef = useRef(null);
@@ -178,7 +178,7 @@ export default function MobileHeader() {
               <div className="flex items-center gap-1.5 text-xs text-hc-success font-semibold">
                 <div className="w-1.5 h-1.5 rounded-full bg-hc-success" />
                 <span className="font-mono">{shortAddress}</span>
-                <span className="text-hc-text-muted font-normal">· Sepolia</span>
+                <span className="text-hc-text-muted font-normal">· {network?.name || 'Unknown network'}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 text-xs text-hc-text-muted">

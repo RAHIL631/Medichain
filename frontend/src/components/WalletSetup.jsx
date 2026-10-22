@@ -9,9 +9,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useWalletContext } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
+import {
+  TARGET_CHAIN_ID,
+  TARGET_NETWORK_NAME,
+} from '../hooks/useBlockchain';
 import { CheckCircle, AlertCircle, Shield, ArrowLeft } from 'lucide-react';
-
-const TARGET = Number(process.env.REACT_APP_TARGET_CHAIN_ID) || 11155111;
 
 export default function WalletSetup({ backPath = '/patient-dashboard' }) {
   const {
@@ -26,7 +28,7 @@ export default function WalletSetup({ backPath = '/patient-dashboard' }) {
   const [linked,    setLinked]    = useState(false);
   const [linkError, setLinkError] = useState('');
 
-  const isCorrectNetwork = chainId === TARGET;
+  const isCorrectNetwork = chainId === TARGET_CHAIN_ID;
   const networkName = network?.name || (chainId ? `Chain ${chainId}` : 'Unknown');
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function WalletSetup({ backPath = '/patient-dashboard' }) {
         <div className="flex-1">
           <p className="text-sm font-semibold text-hc-text">Healthcare identity verified</p>
           <p className="text-xs text-hc-text-muted font-mono mt-0.5">
-            {address?.slice(0,6)}…{address?.slice(-4)} &middot; Sepolia ({TARGET})
+            {address?.slice(0,6)}…{address?.slice(-4)} &middot; {TARGET_NETWORK_NAME} ({TARGET_CHAIN_ID})
           </p>
         </div>
         <span className="hc-badge hc-badge-success">Verified</span>
@@ -108,7 +110,7 @@ export default function WalletSetup({ backPath = '/patient-dashboard' }) {
           <div>
             <p className="text-sm font-semibold text-hc-text">Wrong network</p>
             <p className="text-xs text-hc-text-muted mt-0.5">
-              Switch to <strong>Sepolia Testnet</strong> (Chain ID {TARGET}).
+              Switch to <strong>{TARGET_NETWORK_NAME}</strong> (Chain ID {TARGET_CHAIN_ID}).
               Currently on: {networkName}.
             </p>
           </div>
@@ -130,8 +132,8 @@ export default function WalletSetup({ backPath = '/patient-dashboard' }) {
           {connecting ? 'Connecting…' : 'Connect MetaMask Wallet'}
         </button>
       ) : !isCorrectNetwork ? (
-        <button onClick={() => switchNetwork(TARGET)} className="hc-btn hc-btn-primary w-full" id="wallet-setup-switch-btn">
-          <Shield className="w-4 h-4" /> Switch to Sepolia Testnet
+        <button onClick={() => switchNetwork(TARGET_CHAIN_ID)} className="hc-btn hc-btn-primary w-full" id="wallet-setup-switch-btn">
+          <Shield className="w-4 h-4" /> Switch to {TARGET_NETWORK_NAME}
         </button>
       ) : !linked ? (
         <button onClick={handleLink} disabled={linking} className="hc-btn hc-btn-primary w-full" id="wallet-setup-link-btn">

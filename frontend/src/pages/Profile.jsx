@@ -4,6 +4,10 @@ import React, { useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
 import { useWalletContext } from '../context/WalletContext';
+import {
+  TARGET_CHAIN_ID,
+  TARGET_NETWORK_NAME,
+} from '../hooks/useBlockchain';
 import { formatAddress } from '../utils/web3';
 import {
   User, Mail, Calendar, Shield, Wallet, CheckCircle,
@@ -37,7 +41,14 @@ function InfoRow({ label, value, icon: Icon }) {
 
 export default function Profile() {
   const { user, updateWallet } = useAuth();
-  const { address: account, signer, isConnected: connected, connectWallet: connect } = useWalletContext();
+  const {
+    address: account,
+    signer,
+    isConnected: connected,
+    chainId,
+    network,
+    connectWallet: connect,
+  } = useWalletContext();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -57,6 +68,10 @@ export default function Profile() {
   const navItems = user?.role === 'patient' ? NAV_PATIENT : NAV_DOCTOR;
   const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() : 'U';
   const roleLabel = { patient: 'Patient', doctor: 'Doctor', hospital: 'Hospital', admin: 'Administrator' }[user?.role] || user?.role;
+  const displayedNetworkName = connected
+    ? network?.name || (chainId ? `Chain ${chainId}` : TARGET_NETWORK_NAME)
+    : TARGET_NETWORK_NAME;
+  const displayedChainId = connected && chainId ? chainId : TARGET_CHAIN_ID;
 
   return (
     <DashboardLayout navItems={navItems}>
@@ -85,16 +100,16 @@ export default function Profile() {
               )}
             </div>
 
-            {/* Sepolia info */}
+            {/* Configured blockchain network */}
             <div className="hc-card p-4 space-y-2">
               <p className="text-[10px] sm:text-xs font-bold text-hc-text-muted uppercase tracking-wide mb-2.5">Blockchain Identity</p>
               <div className="flex items-center gap-2 text-xs">
                 <Activity className="w-3.5 h-3.5 text-hc-terracotta flex-shrink-0" />
-                <span className="text-hc-text-muted">Network: <span className="font-bold text-hc-text">Sepolia</span></span>
+                <span className="text-hc-text-muted">Network: <span className="font-bold text-hc-text">{displayedNetworkName}</span></span>
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <Shield className="w-3.5 h-3.5 text-hc-terracotta flex-shrink-0" />
-                <span className="text-hc-text-muted">Chain ID: <span className="font-bold text-hc-text">11155111</span></span>
+                <span className="text-hc-text-muted">Chain ID: <span className="font-bold text-hc-text">{displayedChainId}</span></span>
               </div>
             </div>
           </div>

@@ -78,10 +78,13 @@ router.get('/system-health', async (req, res) => {
 
     const services = { database, blockchain, aiService, ipfs, redis };
     const criticalOk = database.status === 'ok';
-    const allOk = Object.values(services).every((s) => s.status === 'ok' || s.status === 'degraded');
+    const requiredServices = [database, blockchain, aiService, ipfs];
+    const allRequiredHealthy = requiredServices.every(
+      (service) => service.status === 'ok' || service.status === 'degraded'
+    );
 
     return res.json({
-      status: criticalOk ? (allOk ? 'healthy' : 'degraded') : 'unhealthy',
+      status: criticalOk ? (allRequiredHealthy ? 'healthy' : 'degraded') : 'unhealthy',
       services,
       checkedAt: new Date().toISOString(),
       uptimeSeconds: Math.floor(process.uptime()),

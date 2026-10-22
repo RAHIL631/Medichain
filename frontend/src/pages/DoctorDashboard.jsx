@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api, { aiApi } from '../utils/api';
 import useWallet from '../hooks/useWallet';
+import { TARGET_NETWORK, TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
 import { getContract, formatAddress } from '../utils/web3';
 
 import DashboardLayout from '../components/DashboardLayout';
@@ -38,7 +39,8 @@ const getRiskBadge = (level) => {
 
 const DoctorDashboard = () => {
     const { user, logout } = useAuth();
-    const { account, connected, connect, signer, error: walletError } = useWallet();
+    const { account, connected, connect, signer, network, error: walletError } = useWallet();
+    const displayedNetworkName = connected ? network?.name || TARGET_NETWORK_NAME : TARGET_NETWORK_NAME;
     const navigate = useNavigate();
 
     const navItems = [
@@ -327,7 +329,7 @@ const DoctorDashboard = () => {
                         patientAddress: patientAddr || scannedAddress,
                         recordType,
                     });
-                    setUploadStatus('✅ Prescription securely stored on IPFS & Ethereum Sepolia');
+                    setUploadStatus(`✅ Prescription securely stored on IPFS & ${displayedNetworkName}`);
                 } catch (chainErr) {
                     console.warn('[DoctorDashboard] Blockchain anchoring note:', chainErr);
                     setTxStatus(chainErr.chainConfirmed ? 'confirmed' : 'failed');
@@ -399,7 +401,7 @@ const DoctorDashboard = () => {
                         <div className="flex items-center gap-2 px-3.5 py-1.5 bg-hc-success-soft border border-hc-success/20 rounded-full">
                             <span className="w-2 h-2 rounded-full bg-hc-success animate-pulse" />
                             <span className="text-xs font-mono font-semibold text-hc-success">{formatAddress(account)}</span>
-                            <span className="text-[10px] text-hc-success uppercase font-bold tracking-wider ml-1">Sepolia</span>
+                            <span className="text-[10px] text-hc-success uppercase font-bold tracking-wider ml-1">{network?.shortName || TARGET_NETWORK_NAME}</span>
                         </div>
                     ) : (
                         <button onClick={connect} className="hc-btn hc-btn-primary hc-btn-sm flex items-center gap-2">
@@ -739,7 +741,7 @@ const DoctorDashboard = () => {
                                                         txHash={txHash}
                                                         blockNumber={blockNumber}
                                                         txStatus={txStatus}
-                                                        networkName="sepolia"
+                                                        networkName={TARGET_NETWORK?.shortName || ''}
                                                     />
                                                 </div>
                                             )}
@@ -839,7 +841,7 @@ const DoctorDashboard = () => {
                                 <li>Scan or enter the patient&apos;s QR Health ID (identification only).</li>
                                 <li>Confirm the patient has granted you access before expecting records.</li>
                                 <li>Run the drug-interaction check before uploading a prescription.</li>
-                                <li>Upload stores the file on IPFS; MetaMask anchors integrity on Sepolia when connected.</li>
+                                <li>Upload stores the file on IPFS; MetaMask anchors integrity on {TARGET_NETWORK_NAME} when connected.</li>
                             </ol>
                             <p className="mt-3 text-[11px] text-hc-text-muted leading-relaxed border-t border-hc-border-light pt-3">
                                 AI screening is advisory decision support — not a medical diagnosis. Verify results clinically before prescribing.

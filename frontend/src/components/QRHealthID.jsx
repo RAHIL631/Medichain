@@ -6,6 +6,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 import { Copy, Check, Download, Printer, Share2, Shield } from 'lucide-react';
+import {
+  TARGET_CHAIN_ID,
+  TARGET_NETWORK_NAME,
+} from '../hooks/useBlockchain';
 
 const QRHealthID = ({ 
   user,
@@ -140,7 +144,7 @@ const QRHealthID = ({
 
       ctx.fillStyle = '#68766e';
       ctx.font = '16px monospace';
-      ctx.fillText('Verified on Sepolia Ethereum &bull; Chain ID 11155111', size / 2, 960);
+      ctx.fillText(`MediChain network: ${TARGET_NETWORK_NAME} · Chain ID ${TARGET_CHAIN_ID}`, size / 2, 960);
 
       // 6. Trigger Download
       const dataUrl = canvas.toDataURL('image/png');
@@ -299,7 +303,7 @@ const QRHealthID = ({
           </div>
           <div className="text-right">
             <span className="text-hc-text-light block text-[9px] uppercase">Blockchain</span>
-            <strong className="text-hc-text font-mono">Sepolia 11155111</strong>
+            <strong className="text-hc-text font-mono">{TARGET_NETWORK_NAME} {TARGET_CHAIN_ID}</strong>
           </div>
         </div>
       </div>

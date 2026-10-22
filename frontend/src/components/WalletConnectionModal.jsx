@@ -4,10 +4,11 @@
 
 import React, { useState, useCallback } from 'react';
 import { useWalletContext } from '../context/WalletContext';
+import {
+  TARGET_CHAIN_ID,
+  TARGET_NETWORK_NAME,
+} from '../hooks/useBlockchain';
 import { Wallet, Shield, AlertCircle, X, ChevronRight, Loader } from 'lucide-react';
-
-const TARGET_CHAIN_ID = Number(process.env.REACT_APP_TARGET_CHAIN_ID) || 11155111;
-const SEPOLIA_NAME    = 'Sepolia Testnet';
 
 export default function WalletConnectionModal({
   isOpen,
@@ -107,7 +108,7 @@ export default function WalletConnectionModal({
         <div className="flex items-center gap-2 mb-5 sm:mb-6">
           {[
             { n: 1, label: 'Connect',    done: step > 1 },
-            { n: 2, label: 'Sepolia',    done: step > 2 },
+            { n: 2, label: 'Network',    done: step > 2 },
             { n: 3, label: 'Ready',      done: step >= 3 },
           ].map(({ n, label, done }, i, arr) => (
             <React.Fragment key={n}>
@@ -177,7 +178,7 @@ export default function WalletConnectionModal({
             <div className="p-3 rounded-xl bg-hc-warning-soft border border-hc-warning/20 text-xs text-hc-text-muted flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-hc-warning flex-shrink-0 mt-0.5" />
               <span>
-                Wrong network detected. MediChain requires <strong className="text-hc-text">Sepolia Testnet</strong> (Chain ID {TARGET_CHAIN_ID}) for blockchain operations.
+                Wrong network detected. MediChain requires <strong className="text-hc-text">{TARGET_NETWORK_NAME}</strong> (Chain ID {TARGET_CHAIN_ID}) for blockchain operations.
               </span>
             </div>
             <button
@@ -189,7 +190,7 @@ export default function WalletConnectionModal({
               {switching ? (
                 <><Loader className="w-4 h-4 animate-spin" /> Switching…</>
               ) : (
-                <><Shield className="w-4 h-4" /> Switch to {SEPOLIA_NAME}</>
+                <><Shield className="w-4 h-4" /> Switch to {TARGET_NETWORK_NAME}</>
               )}
             </button>
           </div>
@@ -199,7 +200,7 @@ export default function WalletConnectionModal({
           <div className="space-y-3">
             <div className="p-3 rounded-xl bg-hc-success-soft border border-hc-success/20 text-xs text-hc-success flex items-center gap-2">
               <Shield className="w-4 h-4 flex-shrink-0" />
-              <span>Wallet connected on Sepolia. Ready to proceed.</span>
+              <span>Wallet connected on {TARGET_NETWORK_NAME}. Ready to proceed.</span>
             </div>
             <button
               onClick={handleProceed}

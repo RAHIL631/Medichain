@@ -4,8 +4,7 @@
 import React, { useState } from 'react';
 import useContract from '../../hooks/useContract';
 import useWallet from '../../hooks/useWallet';
-
-const ETHERSCAN_BASE = 'https://sepolia.etherscan.io';
+import { TARGET_EXPLORER_URL } from '../../hooks/useBlockchain';
 
 function HashDisplay({ label, value, link }) {
   const [copied, setCopied] = useState(false);
@@ -214,7 +213,7 @@ export default function BlockchainProof({
         <HashDisplay
           label="Blockchain Transaction Hash"
           value={txHash}
-          link={`${ETHERSCAN_BASE}/tx/${txHash}`}
+          link={TARGET_EXPLORER_URL ? `${TARGET_EXPLORER_URL}/tx/${txHash}` : null}
         />
       )}
 

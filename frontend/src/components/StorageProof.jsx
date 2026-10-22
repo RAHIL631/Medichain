@@ -38,7 +38,7 @@ const etherscanBase = (networkName) => {
     sepolia:  'https://sepolia.etherscan.io',
     localhost: null, // no explorer for local Hardhat
   };
-  return map[networkName] ?? map.sepolia;
+  return map[networkName] ?? null;
 };
 
 // ── Copy-to-clipboard button ──────────────────────────────────────────────────

@@ -6,7 +6,10 @@ import GlassCard from '../components/GlassCard';
 import FuturisticButton from '../components/FuturisticButton';
 import CDSSAlertBanner from '../components/cdss/CDSSAlertBanner';
 import api from '../utils/api';
-import useBlockchain from '../hooks/useBlockchain';
+import useBlockchain, {
+  TARGET_CHAIN_ID,
+  TARGET_NETWORK_NAME,
+} from '../hooks/useBlockchain';
 import { useWalletContext } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
 import { cidToGatewayUrl } from '../utils/web3';
@@ -98,7 +101,7 @@ const UploadPrescription = () => {
                             : `/patient/record/${recordId}/txhash`;
                         await api.patch(patchEndpoint, { txHash: tx.hash }).catch(() => {});
                     }
-                    setSuccess('Prescription securely uploaded to IPFS and anchored on Ethereum Sepolia.');
+                    setSuccess(`Prescription securely uploaded to IPFS and anchored on ${TARGET_NETWORK_NAME}.`);
                 } catch (chainErr) {
                     console.warn('[UploadPrescription] Blockchain anchoring warning:', chainErr);
                     setSuccess('Prescription securely uploaded to IPFS and saved to database. (Blockchain anchoring skipped)');
@@ -282,7 +285,7 @@ const UploadPrescription = () => {
                             <div className="p-3 rounded-lg bg-medichain-surface border border-medichain-border text-xs">
                                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-text-secondary">
                                     <span>Target Network</span>
-                                    <span className="text-hc-emerald font-bold">Ethereum Sepolia (11155111)</span>
+                                    <span className="text-hc-emerald font-bold">{TARGET_NETWORK_NAME} ({TARGET_CHAIN_ID})</span>
                                 </div>
                             </div>
                         </div>

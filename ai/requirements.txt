@@ -14,7 +14,8 @@ gunicorn==21.2.0
 python-dotenv==1.0.0
 
 # ── ML Core ───────────────────────────────────────────────────────────────────
-scikit-learn>=1.5.0
+# Checked-in scikit-learn models are aligned to this runtime version.
+scikit-learn==1.8.0
 pandas>=2.2.0
 numpy==2.0.0
 joblib>=1.4.0

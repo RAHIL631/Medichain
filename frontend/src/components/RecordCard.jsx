@@ -3,6 +3,10 @@ import { getRecordTypeImage } from '../utils/images';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import {
+  TARGET_EXPLORER_URL,
+  TARGET_NETWORK_NAME,
+} from '../hooks/useBlockchain';
+import {
   ExternalLink, CheckCircle, Copy, Check,
   Clock, User, Paperclip, Loader2, Lock
 } from 'lucide-react';
@@ -214,17 +218,25 @@ const RecordCard = ({ record }) => {
             <span className="w-3 h-3 border-2 border-hc-warning border-t-transparent rounded-full animate-spin" />
             <span>Pending</span>
           </span>
-        ) : (
+        ) : TARGET_EXPLORER_URL ? (
           <a 
-            href={`https://sepolia.etherscan.io/tx/${record.blockchainTxHash}`}
+            href={`${TARGET_EXPLORER_URL}/tx/${record.blockchainTxHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="min-h-[44px] flex items-center justify-center gap-1 text-hc-success hover:bg-hc-success-soft transition-colors"
-            title="View Sepolia transaction"
+            title={`View ${TARGET_NETWORK_NAME} transaction`}
           >
             <CheckCircle className="w-3.5 h-3.5" />
             <span>Verified</span>
           </a>
+        ) : (
+          <span
+            className="min-h-[44px] flex items-center justify-center gap-1 text-hc-success"
+            title={`Transaction confirmed on ${TARGET_NETWORK_NAME}`}
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span>Verified</span>
+          </span>
         )}
 
         {/* Copy CID */}

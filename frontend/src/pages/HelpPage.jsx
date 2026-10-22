@@ -4,6 +4,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import {
+  TARGET_CHAIN_ID,
+  TARGET_NETWORK_NAME,
+} from '../hooks/useBlockchain';
+import {
   HelpCircle, QrCode, FileText, Lock, Wallet, Brain, Shield, ArrowRight
 } from 'lucide-react';
 
@@ -56,18 +60,18 @@ export default function HelpPage() {
           </Section>
 
           <Section icon={FileText} title="Medical documents">
-            <p>Authorized doctors upload PDF/JPG/PNG records. Files are stored via IPFS; integrity may be anchored on Ethereum Sepolia when a wallet is connected.</p>
+            <p>Authorized doctors upload PDF/JPG/PNG records. Files are stored via IPFS; integrity may be anchored on {TARGET_NETWORK_NAME} when a wallet is connected.</p>
             <p>If upload fails, confirm patient consent, file size/type, and that storage services are available. Success is shown only after the server accepts the upload.</p>
           </Section>
 
           <Section icon={Shield} title="Permissions (grant & revoke)">
             <p>Patients control who can view their records. Granting access authorizes a doctor; revoking removes that authorization for subsequent requests.</p>
-            <p>On-chain consent signing needs MetaMask on Sepolia. App login itself does not require a wallet.</p>
+            <p>On-chain consent signing needs MetaMask on {TARGET_NETWORK_NAME}. App login itself does not require a wallet.</p>
           </Section>
 
           <Section icon={Wallet} title="Wallet & network">
             <p>Connect MetaMask only when you need on-chain consent or record anchoring.</p>
-            <p>Select the Ethereum Sepolia test network (chain ID 11155111). Wrong network or rejected signatures will show a failure state — retry after correcting the network.</p>
+            <p>Select {TARGET_NETWORK_NAME} (chain ID {TARGET_CHAIN_ID}). Wrong network or rejected signatures will show a failure state — retry after correcting the network.</p>
           </Section>
 
           <Section icon={Brain} title="AI results">

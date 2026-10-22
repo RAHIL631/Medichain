@@ -4,12 +4,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useWalletContext }   from '../context/WalletContext';
 import { useAuth }            from '../context/AuthContext';
-import { useContract as useBlockchainContract } from '../hooks/useBlockchain';
+import {
+  TARGET_CHAIN_ID,
+  TARGET_EXPLORER_URL,
+  TARGET_NETWORK_NAME,
+  useContract as useBlockchainContract,
+} from '../hooks/useBlockchain';
 import WalletConnectionModal  from './WalletConnectionModal';
 import { isValidEthAddress }  from '../utils/web3';
 import { Lock, AlertCircle, CheckCircle, ExternalLink, Wallet } from 'lucide-react';
-
-const TARGET_CHAIN_ID = Number(process.env.REACT_APP_TARGET_CHAIN_ID) || 11155111;
 
 const AccessManager = () => {
   const { signer, address, isConnected, chainId } = useWalletContext();
@@ -201,7 +204,7 @@ const AccessManager = () => {
           <div className="p-3.5 sm:p-4 rounded-xl bg-hc-warning-soft border border-hc-warning/20 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-hc-warning flex-shrink-0 mt-0.5" />
             <p className="text-xs sm:text-sm text-hc-text-muted">
-              Wrong network. Switch to <strong className="text-hc-text">Sepolia Testnet</strong> to perform blockchain transactions.
+              Wrong network. Switch to <strong className="text-hc-text">{TARGET_NETWORK_NAME}</strong> to perform blockchain transactions.
             </p>
           </div>
         )}
@@ -260,9 +263,9 @@ const AccessManager = () => {
               <CheckCircle className="w-4 h-4 flex-shrink-0" />
               <span className="font-bold">{successMsg}</span>
             </div>
-            {txHash && (
+            {txHash && TARGET_EXPLORER_URL && (
               <a
-                href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                href={`${TARGET_EXPLORER_URL}/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 ml-6 text-xs text-hc-success hover:underline font-bold"
