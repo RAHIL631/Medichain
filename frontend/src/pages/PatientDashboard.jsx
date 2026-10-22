@@ -177,31 +177,31 @@ export default function PatientDashboard() {
   const [toast, setToast]                     = useState(null);
 
   const [records, setRecords]               = useState([]);
-  const [recordCount, setRecordCount]       = useState(0);
+  const [recordCount, setRecordCount]       = useState(null);
   const [recordsLoading, setRecordsLoading] = useState(true);
   const [statsLoading, setStatsLoading]     = useState(true);
+  const [dashboardError, setDashboardError] = useState('');
 
-  const fetchRecords = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => {
     setRecordsLoading(true);
+    setStatsLoading(true);
+    setDashboardError('');
     try {
-      const { data } = await api.get('/patient/records');
+      const { data } = await api.get('/patient/records', { params: { limit: 5 } });
       setRecords(data.records || []);
-    } catch { /* silent */ }
-    finally { setRecordsLoading(false); }
-  }, []);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const { data } = await api.get('/patient/stats');
-      setRecordCount(data.totalRecords || 0);
+      setRecordCount(data.total ?? null);
     } catch (err) {
-      console.error('Failed to fetch patient statistics:', err.message);
+      console.error('Failed to fetch patient dashboard data:', err.message);
+      setRecords([]);
+      setRecordCount(null);
+      setDashboardError(err.message || 'Patient dashboard data is unavailable.');
     } finally {
+      setRecordsLoading(false);
       setStatsLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchRecords(); fetchStats(); }, [fetchRecords, fetchStats]);
+  useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
 
   const handleDismiss = useCallback(() => {
     localStorage.setItem(DISMISS_KEY, 'true');
@@ -266,7 +266,7 @@ export default function PatientDashboard() {
             </button>
           )}
           <button
-            onClick={() => { fetchRecords(); fetchStats(); }}
+            onClick={fetchDashboardData}
             className="p-2 rounded-xl text-hc-text-muted hover:bg-hc-bg-alt transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
             aria-label="Refresh"
           >
@@ -285,7 +285,7 @@ export default function PatientDashboard() {
 
       {/* ── Stats row ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <Stat icon={FileText}   label="Health Records"    value={statsLoading ? null : recordCount} sub="Active records"              loading={statsLoading} variant="blue"    to="/records" />
+        <Stat icon={FileText}   label="Health Records"    value={statsLoading ? null : (recordCount ?? 'Unavailable')} sub="Active records" loading={statsLoading} variant="blue" to="/records" />
         <Stat icon={Lock}       label="Doctor Access"     value="Manage"                              sub="View on-chain grants"         loading={false}        variant="teal"    to="/access"  />
         <Stat icon={Brain}      label="AI Insights"       value="Available"                            sub="CDSS ready"                   loading={false}        variant="violet"  to="/ai-dashboard" />
         <Stat icon={Activity}   label="Blockchain"        value={walletLinked ? 'Verified' : isConnected ? 'Connected' : 'Optional'} sub={walletLinked ? 'Confirmed' : isConnected ? 'Active' : 'Enhanced security'} loading={false} variant={walletLinked || isConnected ? 'success' : 'blue'} />
@@ -298,7 +298,7 @@ export default function PatientDashboard() {
         <div className="space-y-3 sm:space-y-4">
           <h2 className="text-xs sm:text-sm font-bold text-hc-text uppercase tracking-wide">Quick Actions</h2>
           {[
-            { Icon: FileText, label: 'View all records',   sub: `${recordCount} records`, path: '/records',       color: 'text-hc-blue' },
+            { Icon: FileText, label: 'View all records',   sub: recordCount === null ? 'Records unavailable' : `${recordCount} records`, path: '/records', color: 'text-hc-blue' },
             { Icon: Lock,     label: 'Manage access',      sub: 'Review on-chain grants', path: '/access',        color: 'text-hc-teal' },
             { Icon: Brain,    label: 'AI Health Insights', sub: 'CDSS analysis',             path: '/ai-dashboard',  color: 'text-hc-violet' },
             { Icon: QrCode,   label: 'My Health QR',       sub: 'ID only — not record access', path: '/qr-id',       color: 'text-hc-success' },
@@ -409,9 +409,13 @@ export default function PatientDashboard() {
                     </div>
                   ))}
                 </div>
+              ) : dashboardError ? (
+                <div role="alert" className="py-6 text-center text-xs text-hc-danger">
+                  {dashboardError}
+                </div>
               ) : records.length > 0 ? (
                 <div className="divide-y divide-hc-border-light">
-                  {records.slice(0, 5).map(r => <RecordRow key={r._id} record={r} />)}
+                  {records.map(r => <RecordRow key={r._id} record={r} />)}
                 </div>
               ) : (
                 <div className="py-8 sm:py-10 text-center max-w-md mx-auto">

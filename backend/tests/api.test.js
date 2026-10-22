@@ -337,6 +337,31 @@ describe("Patient Routes (protected)", () => {
     expect(res.body.records.length).toBe(0);
   });
 
+  it('returns the requested patient record page and its total in one response', async () => {
+    const patient = await User.findOne({ email: patientCreds.email });
+    await MedicalRecord.insertMany(Array.from({ length: 7 }, (_, index) => ({
+      patientId: patient._id,
+      patientWalletAddress: '0x1111111111111111111111111111111111111111',
+      ipfsCID: `synthetic-patient-dashboard-${index}`,
+      ipfsURL: `https://gateway.example.test/ipfs/synthetic-patient-dashboard-${index}`,
+      recordType: 'lab_report',
+      fileName: `synthetic-report-${index}.pdf`,
+      fileMimeType: 'application/pdf',
+      fileSize: 100 + index,
+      isActive: true,
+      createdAt: new Date(Date.now() - index * 1000),
+    })));
+
+    const res = await request(app)
+      .get('/api/patient/records?limit=5')
+      .set('Authorization', `Bearer ${patientToken}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.records).toHaveLength(5);
+    expect(res.body.total).toBe(7);
+    expect(res.body.totalPages).toBe(2);
+  });
+
   it("GET /api/patient/profile → 200, full profile", async () => {
     const res = await request(app)
       .get('/api/patient/profile')
