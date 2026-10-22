@@ -166,7 +166,7 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
     // Only run for prescriptions with medications listed.
     let cdssAnalysis = null;
 
-    if (medicationList.length > 0 && recordType === 'prescription') {
+    if (medicationList.length > 0 && normalizedRecordType === 'prescription') {
       try {
         // Build patient profile from DB
         const patientFullDoc = await User.findById(patient._id)

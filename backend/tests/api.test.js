@@ -663,4 +663,28 @@ describe("Doctor Routes (protected)", () => {
       postSpy.mockRestore();
     }
   });
+
+  it('applies prescription CDSS when the record type defaults to prescription', async () => {
+    accessSpy.mockResolvedValue(true);
+    const postSpy = jest.spyOn(axios, 'post').mockRejectedValue(new Error('AI service unavailable'));
+
+    try {
+      const res = await request(app)
+        .post('/api/doctor/upload-record')
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .field('patientWalletAddress', '0x1111111111111111111111111111111111111111')
+        .field('medications', 'SyntheticMedication')
+        .attach('file', Buffer.from('%PDF-1.4\nSynthetic prescription\n%%EOF'), {
+          filename: 'synthetic-prescription.pdf',
+          contentType: 'application/pdf',
+        });
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(res.statusCode).toBe(503);
+      expect(res.body.error).toMatch(/prescription was not uploaded/i);
+      expect(await MedicalRecord.countDocuments()).toBe(0);
+    } finally {
+      postSpy.mockRestore();
+    }
+  });
 });

@@ -128,12 +128,35 @@ describe('MediChain Stage 5 — Blockchain Integration & Smart Contract Tests', 
     });
 
     it('11.3 Validates IPFS CID structure and format', async () => {
-      const testCid = 'QmZtmD2qt8fJv3CLnsE1Vp7CWnvbjKU4wZwISm29CV84Z1';
+      const testCid = `bafy${'a'.repeat(55)}`;
       const patientAddr = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 
       const result = await blockchainService.verifyRecordIntegrity(patientAddr, testCid);
       expect(result.validFormat).toBe(true);
       expect(result.ipfsCID).toBe(testCid);
+    });
+
+    it('only verifies a CID that exactly matches a patient record event', async () => {
+      const patientAddr = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+      const testCid = `bafy${'a'.repeat(55)}`;
+      const queryFilter = jest.fn()
+        .mockResolvedValueOnce([{ args: { ipfsCID: `${testCid}different` } }])
+        .mockResolvedValueOnce([{ args: { ipfsCID: testCid } }]);
+      const getContractSpy = jest.spyOn(blockchainService, 'getContract').mockReturnValue({
+        filters: { RecordAdded: jest.fn(() => 'patient-record-filter') },
+        queryFilter,
+      });
+
+      try {
+        const unmatched = await blockchainService.verifyRecordIntegrity(patientAddr, testCid);
+        const matched = await blockchainService.verifyRecordIntegrity(patientAddr, testCid);
+
+        expect(unmatched.onChainVerified).toBe(false);
+        expect(matched.onChainVerified).toBe(true);
+        expect(queryFilter).toHaveBeenCalledWith('patient-record-filter');
+      } finally {
+        getContractSpy.mockRestore();
+      }
     });
   });
 

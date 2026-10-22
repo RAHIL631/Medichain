@@ -211,20 +211,35 @@ class BlockchainService {
   }
 
   /**
-   * Validates medical record integrity between IPFS CID and on-chain records
+   * Verifies that the exact IPFS CID was anchored in a patient record event.
    */
   async verifyRecordIntegrity(patientAddress, ipfsCID, callerAddress = null) {
-    const validFormat = /^Qm[1-9A-HJ-NP-Za-km-z]{44,}|bafy[a-z0-9]{50,}/.test(ipfsCID) || (typeof ipfsCID === 'string' && ipfsCID.length > 10);
+    const validFormat = typeof ipfsCID === 'string' && (
+      /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(ipfsCID) ||
+      /^bafy[a-z2-7]{50,}$/.test(ipfsCID)
+    );
+
+    if (!validFormat) {
+      return {
+        patientAddress,
+        ipfsCID,
+        validFormat: false,
+        onChainVerified: false,
+      };
+    }
+
     try {
       const contract = this.getContract();
-      const count = await contract.getRecordCount(patientAddress);
+      const filter = contract.filters.RecordAdded(patientAddress);
+      const events = await contract.queryFilter(filter);
+      const cidAnchored = events.some((event) => event.args?.ipfsCID === ipfsCID);
       
       return {
         patientAddress,
         ipfsCID,
         validFormat,
-        onChainRecordCount: Number(count),
-        onChainVerified: true,
+        onChainRecordCount: events.length,
+        onChainVerified: cidAnchored,
       };
     } catch (err) {
       return {
