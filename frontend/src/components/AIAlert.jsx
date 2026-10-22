@@ -29,28 +29,28 @@ const AIAlert = ({ alerts, interactions, onDismiss }) => {
     switch (severity?.toUpperCase()) {
       case 'HIGH':
         return {
-          wrapper: 'bg-red-900/20 border-red-500/50 shadow-red-900/20',
-          iconBg: 'bg-red-500/20 text-red-400',
-          badge: 'bg-red-500/20 text-red-400 border-red-500/30',
-          text: 'text-red-200',
-          title: 'text-red-400'
+          wrapper: 'bg-hc-danger-soft border-hc-danger shadow-hc-card',
+          iconBg: 'bg-hc-danger-soft text-hc-danger',
+          badge: 'bg-hc-danger-soft text-hc-danger border-hc-danger',
+          text: 'text-hc-text',
+          title: 'text-hc-danger'
         };
       case 'MODERATE':
         return {
-          wrapper: 'bg-orange-900/20 border-orange-500/50 shadow-orange-900/20',
-          iconBg: 'bg-orange-500/20 text-orange-400',
-          badge: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-          text: 'text-orange-200',
-          title: 'text-orange-400'
+          wrapper: 'bg-hc-terracotta-soft border-hc-terracotta shadow-hc-card',
+          iconBg: 'bg-hc-terracotta-soft text-hc-danger',
+          badge: 'bg-hc-terracotta-soft text-hc-danger border-hc-terracotta',
+          text: 'text-hc-text',
+          title: 'text-hc-danger'
         };
       case 'LOW':
       default:
         return {
-          wrapper: 'bg-yellow-900/20 border-yellow-500/50 shadow-yellow-900/20',
-          iconBg: 'bg-yellow-500/20 text-yellow-400',
-          badge: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-          text: 'text-yellow-200',
-          title: 'text-yellow-400'
+          wrapper: 'bg-hc-warning-soft border-hc-warning shadow-hc-card',
+          iconBg: 'bg-hc-warning-soft text-hc-warning',
+          badge: 'bg-hc-warning-soft text-hc-warning border-hc-warning',
+          text: 'text-hc-text',
+          title: 'text-hc-warning'
         };
     }
   };
@@ -86,7 +86,7 @@ const AIAlert = ({ alerts, interactions, onDismiss }) => {
                 {alert.drug1} <span className="opacity-60">+</span> {alert.drug2}
               </p>
               
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className="text-xs text-hc-text-light leading-relaxed">
                 {alert.description}
               </p>
             </div>
@@ -95,7 +95,7 @@ const AIAlert = ({ alerts, interactions, onDismiss }) => {
             {onDismiss && (
               <button 
                 onClick={() => onDismiss(index)}
-                className="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                className="absolute top-3 right-3 p-1.5 text-hc-text-muted hover:text-hc-text hover:bg-hc-surface rounded-lg transition-colors"
                 title="Dismiss alert"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@ const AIAlert = ({ alerts, interactions, onDismiss }) => {
         );
       })}
       <div className="flex items-center gap-2 p-2 rounded-lg bg-medichain-surface/50 border border-medichain-border/40 text-[10px] text-text-muted">
-        <span className="font-semibold text-accent-cyan">⚠️ Clinical Advisory:</span>
+        <span className="font-semibold text-accent-emerald-dark">⚠️ Clinical Advisory:</span>
         <span>Algorithmic decision support. Not a standalone medical diagnosis. Prescriptions must be independently verified by a licensed clinician.</span>
       </div>
     </div>

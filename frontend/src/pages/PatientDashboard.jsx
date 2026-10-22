@@ -6,7 +6,7 @@ import { useAuth }           from '../context/AuthContext';
 import { useWalletContext }  from '../context/WalletContext';
 import api                   from '../utils/api';
 import { formatAddress }     from '../utils/web3';
-import { getRecordTypeImage, MEDICINE_IMAGES } from '../utils/images';
+import { MEDICINE_IMAGES } from '../utils/images';
 import DashboardLayout       from '../components/DashboardLayout';
 import WalletConnectionModal from '../components/WalletConnectionModal';
 import QRHealthID            from '../components/QRHealthID';
@@ -27,8 +27,8 @@ const TYPE_LABEL = {
 
 const TYPE_COLOR = {
   prescription: 'hc-badge-primary', 'lab-report': 'hc-badge-info',
-  diagnosis: 'hc-badge-warning', imaging: 'hc-badge-violet',
-  vaccination: 'hc-badge-teal',
+  diagnosis: 'hc-badge-warning', imaging: 'hc-badge-warm',
+  vaccination: 'hc-badge-emerald-dark',
 };
 
 function greeting() {
@@ -38,14 +38,14 @@ function greeting() {
   return 'Good evening';
 }
 
-function Stat({ icon: Icon, label, value, sub, loading, variant = 'blue', to }) {
+function Stat({ icon: Icon, label, value, sub, loading, variant = 'emerald', to }) {
   const bg = {
-    blue:   'bg-hc-blue-soft    text-hc-blue',
-    teal:   'bg-hc-teal-soft    text-hc-teal',
-    violet: 'bg-hc-violet-soft  text-hc-violet',
+    emerald:'bg-hc-emerald-soft    text-hc-emerald',
+    teal:   'bg-hc-emerald-dark-soft    text-hc-emerald-dark',
+    violet: 'bg-hc-terracotta-soft  text-hc-terracotta',
     success:'bg-hc-success-soft text-hc-success',
     warning:'bg-hc-warning-soft text-hc-warning',
-  }[variant] || 'bg-hc-blue-soft text-hc-blue';
+  }[variant] || 'bg-hc-emerald-soft text-hc-emerald';
 
   const inner = (
     <div className="hc-card p-3.5 sm:p-5 flex items-start gap-3 sm:gap-4 h-full">
@@ -69,7 +69,6 @@ function RecordRow({ record }) {
   const [viewLoading, setViewLoading] = useState(false);
   const [viewError, setViewError] = useState('');
   const type = record.recordType || 'other';
-  const thumb = getRecordTypeImage(type);
 
   const handleView = async () => {
     const previewWindow = window.open('about:blank', '_blank');
@@ -112,13 +111,9 @@ function RecordRow({ record }) {
   return (
     <div className="border-b border-hc-border-light last:border-0">
       <div className="flex items-center gap-3 py-3 min-w-0">
-        {/* Real High Quality Medical Image Thumbnail */}
-        <img
-          src={thumb}
-          alt={type}
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover flex-shrink-0 border border-hc-border-light shadow-xs"
-          loading="lazy"
-        />
+        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-hc-emerald-soft text-hc-emerald-dark flex items-center justify-center flex-shrink-0 border border-hc-border-light">
+          <FileText className="w-5 h-5" aria-hidden="true" />
+        </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm font-semibold text-hc-text truncate">
             {record.description || TYPE_LABEL[type] || 'Medical Record'}
@@ -135,7 +130,7 @@ function RecordRow({ record }) {
             type="button"
             onClick={handleView}
             disabled={viewLoading}
-            className="text-xs text-hc-blue hover:underline font-bold flex-shrink-0 px-1 py-1 disabled:opacity-60"
+            className="text-xs text-hc-emerald hover:underline font-bold flex-shrink-0 px-1 py-1 disabled:opacity-60"
           >
             {viewLoading ? 'Opening...' : 'View'}
           </button>
@@ -163,7 +158,7 @@ const NAV = [
 // ── Optional blockchain identity card ────────────────────────────────────────
 function BlockchainIdentityCard({ onDismiss, onConnect }) {
   return (
-    <div className="mb-6 hc-card p-4 sm:p-5 border border-hc-blue/20 bg-gradient-to-r from-hc-blue-soft to-hc-violet-soft relative">
+    <div className="mb-6 hc-card p-4 sm:p-5 border border-hc-emerald/20 bg-gradient-to-r from-hc-emerald-soft to-hc-terracotta-soft relative">
       <button
         onClick={onDismiss}
         className="absolute top-3 right-3 p-1 rounded-md text-hc-text-light hover:text-hc-text-muted hover:bg-hc-bg-alt transition-colors"
@@ -172,8 +167,8 @@ function BlockchainIdentityCard({ onDismiss, onConnect }) {
         <X className="w-4 h-4" />
       </button>
       <div className="flex items-start gap-3 sm:gap-4">
-        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-hc-blue flex items-center justify-center flex-shrink-0 shadow-sm">
-          <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-hc-emerald flex items-center justify-center flex-shrink-0 shadow-sm">
+          <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-hc-text" />
         </div>
         <div className="flex-1 min-w-0 pr-5">
           <h3 className="text-xs sm:text-sm font-bold text-hc-text">Secure your healthcare identity</h3>
@@ -269,7 +264,7 @@ export default function PatientDashboard() {
       {toast && (
         <div className="fixed top-4 right-4 z-50 hc-badge hc-badge-info px-4 py-3 text-sm shadow-hc-card-md animate-slide-up" role="alert">
           {toast}
-          <button onClick={() => setToast(null)} className="ml-3 text-hc-blue hover:opacity-70" aria-label="Dismiss">×</button>
+          <button onClick={() => setToast(null)} className="ml-3 text-hc-emerald hover:opacity-70" aria-label="Dismiss">×</button>
         </div>
       )}
 
@@ -330,10 +325,10 @@ export default function PatientDashboard() {
 
       {/* ── Stats row ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <Stat icon={FileText}   label="Health Records"    value={statsLoading ? null : (recordCount ?? 'Unavailable')} sub="Active records" loading={statsLoading} variant="blue" to="/records" />
+        <Stat icon={FileText}   label="Health Records"    value={statsLoading ? null : (recordCount ?? 'Unavailable')} sub="Active records" loading={statsLoading} variant="emerald" to="/records" />
         <Stat icon={Lock}       label="Doctor Access"     value="Manage"                              sub="View on-chain grants"         loading={false}        variant="teal"    to="/access"  />
         <Stat icon={Brain}      label="AI Insights"       value="Available"                            sub="CDSS ready"                   loading={false}        variant="violet"  to="/ai-dashboard" />
-        <Stat icon={Activity}   label="Blockchain"        value={walletLinked ? 'Verified' : isConnected ? 'Connected' : 'Optional'} sub={walletLinked ? 'Confirmed' : isConnected ? 'Active' : 'Enhanced security'} loading={false} variant={walletLinked || isConnected ? 'success' : 'blue'} />
+        <Stat icon={Activity}   label="Blockchain"        value={walletLinked ? 'Verified' : isConnected ? 'Connected' : 'Optional'} sub={walletLinked ? 'Confirmed' : isConnected ? 'Active' : 'Enhanced security'} loading={false} variant={walletLinked || isConnected ? 'success' : 'emerald'} />
       </div>
 
       {/* ── Quick actions + Recent records ─────────────────────────── */}
@@ -343,9 +338,9 @@ export default function PatientDashboard() {
         <div className="space-y-3 sm:space-y-4">
           <h2 className="text-xs sm:text-sm font-bold text-hc-text uppercase tracking-wide">Quick Actions</h2>
           {[
-            { Icon: FileText, label: 'View all records',   sub: recordCount === null ? 'Records unavailable' : `${recordCount} records`, path: '/records', color: 'text-hc-blue' },
-            { Icon: Lock,     label: 'Manage access',      sub: 'Review on-chain grants', path: '/access',        color: 'text-hc-teal' },
-            { Icon: Brain,    label: 'AI Health Insights', sub: 'CDSS analysis',             path: '/ai-dashboard',  color: 'text-hc-violet' },
+            { Icon: FileText, label: 'View all records',   sub: recordCount === null ? 'Records unavailable' : `${recordCount} records`, path: '/records', color: 'text-hc-emerald' },
+            { Icon: Lock,     label: 'Manage access',      sub: 'Review on-chain grants', path: '/access',        color: 'text-hc-emerald-dark' },
+            { Icon: Brain,    label: 'AI Health Insights', sub: 'CDSS analysis',             path: '/ai-dashboard',  color: 'text-hc-terracotta' },
             { Icon: QrCode,   label: 'My Health QR',       sub: 'ID only — not record access', path: '/qr-id',       color: 'text-hc-success' },
           ].map(({ Icon, label, sub, path, color }) => (
             <Link key={path} to={path} className="hc-card p-3.5 sm:p-4 flex items-center gap-3 hover:shadow-hc-card-md hover:-translate-y-0.5 transition-all duration-200 min-h-[52px]">
@@ -364,10 +359,10 @@ export default function PatientDashboard() {
           <div className="hc-card p-4 bg-gradient-to-br from-hc-surface to-hc-bg-alt border border-hc-border space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <QrCode className="w-4 h-4 text-hc-teal" />
+                <QrCode className="w-4 h-4 text-hc-emerald-dark" />
                 <span className="text-xs font-bold text-hc-text uppercase tracking-wider">MediChain Health ID</span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-hc-teal bg-hc-teal-soft px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-mono font-bold text-hc-emerald-dark bg-hc-emerald-dark-soft px-2 py-0.5 rounded-full">
                 Universal ID
               </span>
             </div>
@@ -388,7 +383,7 @@ export default function PatientDashboard() {
                   setCopiedId(true);
                   setTimeout(() => setCopiedId(false), 2500);
                 }}
-                className="px-2.5 py-1 rounded-lg bg-hc-surface border border-hc-border text-[11px] font-bold text-hc-text hover:text-hc-teal transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2.5 py-1 rounded-lg bg-hc-surface border border-hc-border text-[11px] font-bold text-hc-text hover:text-hc-emerald-dark transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {copiedId ? 'Copied!' : 'Copy'}
               </button>
@@ -401,7 +396,7 @@ export default function PatientDashboard() {
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setShowQRModal(true)}
-                className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-hc-blue to-hc-teal text-white font-bold text-xs shadow-xs hover:opacity-95 text-center"
+                className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-hc-emerald to-hc-emerald-dark text-hc-text font-bold text-xs shadow-xs hover:opacity-95 text-center"
               >
                 Generate Patient QR
               </button>
@@ -417,7 +412,7 @@ export default function PatientDashboard() {
           {/* Quick-start guidance */}
           <div className="hc-card p-4 bg-gradient-to-br from-hc-surface to-hc-bg-alt border border-hc-border space-y-3">
             <div className="flex items-center gap-2">
-              <Stethoscope className="w-4 h-4 text-hc-teal" />
+              <Stethoscope className="w-4 h-4 text-hc-emerald-dark" />
               <span className="text-xs font-bold text-hc-text uppercase tracking-wider">Patient quick start</span>
             </div>
             <ol className="space-y-2 text-[11px] sm:text-xs text-hc-text-muted list-decimal list-inside leading-relaxed">
@@ -425,7 +420,7 @@ export default function PatientDashboard() {
               <li>Grant access under Manage Access before they can open records.</li>
               <li>Authorized doctors upload encrypted records to your timeline.</li>
             </ol>
-            <Link to="/help" className="text-[11px] font-bold text-hc-blue hover:underline inline-flex items-center gap-1">
+            <Link to="/help" className="text-[11px] font-bold text-hc-emerald hover:underline inline-flex items-center gap-1">
               Open product help <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
@@ -439,7 +434,7 @@ export default function PatientDashboard() {
                 <h2 className="text-xs sm:text-sm font-bold text-hc-text">Verified Diagnostic & Health Records</h2>
                 <span className="hc-badge hc-badge-primary text-[10px]">Real-Time IPFS</span>
               </div>
-              <Link to="/records" className="text-xs text-hc-blue hover:underline font-bold">View all</Link>
+              <Link to="/records" className="text-xs text-hc-emerald hover:underline font-bold">View all</Link>
             </div>
             <div className="px-4 sm:px-6">
               {recordsLoading ? (
@@ -464,7 +459,7 @@ export default function PatientDashboard() {
                 </div>
               ) : (
                 <div className="py-8 sm:py-10 text-center max-w-md mx-auto">
-                  <div className="w-14 h-14 rounded-2xl bg-hc-blue-soft border border-hc-blue/20 flex items-center justify-center mx-auto mb-3.5 text-hc-blue">
+                  <div className="w-14 h-14 rounded-2xl bg-hc-emerald-soft border border-hc-emerald/20 flex items-center justify-center mx-auto mb-3.5 text-hc-emerald">
                     <FileText className="w-7 h-7" />
                   </div>
                   <h3 className="text-sm sm:text-base font-bold text-hc-text mb-1">No medical records yet</h3>
@@ -498,14 +493,14 @@ export default function PatientDashboard() {
           </div>
 
           {/* Active Medication Safety Pill */}
-          <div className="hc-card p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gradient-to-r from-hc-teal-soft/40 to-hc-surface border border-hc-teal/20">
+          <div className="hc-card p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-gradient-to-r from-hc-emerald-dark-soft/40 to-hc-surface border border-hc-emerald-dark/20">
             <img
               src={MEDICINE_IMAGES.pills}
               alt="Medication Safety"
               className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover flex-shrink-0 border border-hc-border shadow-xs"
             />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-hc-teal mb-0.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-hc-emerald-dark mb-0.5">
                 <Pill className="w-3.5 h-3.5" />
                 <span>Drug Interaction & Dosage Protection</span>
               </div>
@@ -514,7 +509,7 @@ export default function PatientDashboard() {
                 All newly prescribed medications are cross-referenced with your active prescriptions for severe drug-drug interactions.
               </p>
             </div>
-            <Link to="/ai-dashboard" className="hc-btn hc-btn-teal hc-btn-sm flex-shrink-0 w-full sm:w-auto justify-center">
+            <Link to="/ai-dashboard" className="hc-btn hc-btn-emerald-dark hc-btn-sm flex-shrink-0 w-full sm:w-auto justify-center">
               Check Safety
             </Link>
           </div>
@@ -522,9 +517,9 @@ export default function PatientDashboard() {
       </div>
 
       {/* ── AI insights note ────────────────────────────────────────── */}
-      <div className="mt-6 p-4 rounded-xl bg-hc-violet-soft border border-hc-violet/20 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="mt-6 p-4 rounded-xl bg-hc-terracotta-soft border border-hc-terracotta/20 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="flex items-center gap-2.5">
-          <Brain className="w-5 h-5 text-hc-violet flex-shrink-0" />
+          <Brain className="w-5 h-5 text-hc-terracotta flex-shrink-0" />
           <div>
             <p className="text-xs sm:text-sm font-bold text-hc-text">AI Health Insights available</p>
             <p className="text-[11px] sm:text-xs text-hc-text-muted mt-0.5">
@@ -547,10 +542,10 @@ export default function PatientDashboard() {
       {/* ── Patient Health QR Modal ─────────────────────────────────── */}
       {showQRModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in print:p-0 print:bg-white">
-          <div className="relative w-full max-w-md bg-medichain-bg-dark border border-medichain-border rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto print:max-w-none print:border-none print:p-0 print:bg-transparent">
+          <div className="relative w-full max-w-md bg-medichain-bg-ivory border border-medichain-border rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto print:max-w-none print:border-none print:p-0 print:bg-transparent">
             <button
               onClick={() => setShowQRModal(false)}
-              className="absolute top-4 right-4 text-text-secondary hover:text-white p-2 rounded-xl bg-medichain-surface border border-medichain-border transition-colors print:hidden"
+              className="absolute top-4 right-4 text-text-secondary hover:text-hc-text p-2 rounded-xl bg-medichain-surface border border-medichain-border transition-colors print:hidden"
               aria-label="Close"
             >
               <X className="w-4 h-4" />

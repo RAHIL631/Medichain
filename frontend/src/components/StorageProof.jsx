@@ -66,7 +66,7 @@ const CopyButton = ({ text }) => {
         padding: '2px 6px',
         borderRadius: '4px',
         fontSize: '11px',
-        color: copied ? '#22c55e' : '#94a3b8',
+        color: copied ? '#16866a' : '#68766e',
         transition: 'color 0.2s',
       }}
     >
@@ -82,13 +82,13 @@ const ProofRow = ({ label, value, href, copyText, mono = true }) => (
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '8px 12px',
-    background: 'rgba(255,255,255,0.03)',
+    background: '#FFFFFF',
     borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid #E4E9E2',
     gap: '8px',
     flexWrap: 'wrap',
   }}>
-    <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>
+    <span style={{ fontSize: '11px', color: '#68766e', textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>
       {label}
     </span>
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
@@ -100,7 +100,7 @@ const ProofRow = ({ label, value, href, copyText, mono = true }) => (
           style={{
             fontFamily: mono ? 'monospace' : 'inherit',
             fontSize: '12px',
-            color: '#38bdf8',
+            color: '#16866a',
             textDecoration: 'none',
             wordBreak: 'break-all',
           }}
@@ -111,7 +111,7 @@ const ProofRow = ({ label, value, href, copyText, mono = true }) => (
         <span style={{
           fontFamily: mono ? 'monospace' : 'inherit',
           fontSize: '12px',
-          color: '#e2e8f0',
+          color: '#26352e',
           wordBreak: 'break-all',
         }}>
           {value}
@@ -146,10 +146,10 @@ const ProofCard = ({ icon, title, accent, children }) => (
 // ── TX status badge ───────────────────────────────────────────────────────────
 const TxStatusBadge = ({ status }) => {
   const cfg = {
-    pending:   { label: '⏳ Pending…',   bg: '#78350f', color: '#fbbf24' },
-    confirmed: { label: '✅ Confirmed',   bg: '#052e16', color: '#22c55e' },
-    failed:    { label: '❌ Failed',      bg: '#450a0a', color: '#f87171' },
-  }[status] || { label: status, bg: '#1e293b', color: '#94a3b8' };
+    pending:   { label: '⏳ Pending…',   bg: '#FBF3DE', color: '#805B12' },
+    confirmed: { label: '✅ Confirmed',   bg: '#E9F4EC', color: '#0F6852' },
+    failed:    { label: '❌ Failed',      bg: '#F8E5DD', color: '#8D3A2D' },
+  }[status] || { label: status, bg: '#ffffff', color: '#68766e' };
 
   return (
     <span style={{
@@ -188,22 +188,21 @@ const StorageProof = ({
       gap: '12px',
       padding: '20px',
       borderRadius: '18px',
-      background: 'rgba(2, 6, 23, 0.85)',
-      border: '1px solid rgba(56, 189, 248, 0.15)',
-      backdropFilter: 'blur(16px)',
+      background: '#FFFFFF',
+      border: '1px solid #E4E9E2',
       fontFamily: 'system-ui, sans-serif',
     }}>
 
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.01em' }}>
+        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#26352E', letterSpacing: '-0.01em' }}>
           Storage Proof
         </h3>
         <TxStatusBadge status={txStatus} />
       </div>
 
       {/* ── PART 1: IPFS Proof ── */}
-      <ProofCard icon="📁" title="File stored on IPFS (Pinata)" accent="#38bdf8">
+      <ProofCard icon="📁" title="File stored on IPFS (Pinata)" accent="#16866a">
         <ProofRow
           label="CID"
           value={shorten(ipfsCID, 12, 8)}
@@ -226,7 +225,7 @@ const StorageProof = ({
       </ProofCard>
 
       {/* ── PART 2: Blockchain Proof ── */}
-      <ProofCard icon="⛓️" title="CID anchored on Ethereum Blockchain" accent="#a78bfa">
+      <ProofCard icon="⛓️" title="CID anchored on Ethereum Blockchain" accent="#B44736">
         {txHash ? (
           <>
             <ProofRow
@@ -249,7 +248,7 @@ const StorageProof = ({
             )}
           </>
         ) : (
-          <div style={{ fontSize: '12px', color: '#64748b', padding: '8px 12px' }}>
+          <div style={{ fontSize: '12px', color: '#68766e', padding: '8px 12px' }}>
             ⏳ Waiting for MetaMask confirmation…
           </div>
         )}
@@ -265,7 +264,7 @@ const StorageProof = ({
         flexDirection: 'column',
         gap: '6px',
       }}>
-        <span style={{ fontSize: '12px', fontWeight: 700, color: '#10b981', letterSpacing: '0.04em' }}>
+        <span style={{ fontSize: '12px', fontWeight: 700, color: '#16866a', letterSpacing: '0.04em' }}>
           🔍 HOW TO VERIFY THIS RECORD
         </span>
         <ol style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -275,7 +274,7 @@ const StorageProof = ({
             `Download the file from IPFS and compute its hash — it must equal the on-chain CID.`,
             `If even one byte is changed, the CID changes, making tampering immediately detectable.`,
           ].map((step, i) => (
-            <li key={i} style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>
+            <li key={i} style={{ fontSize: '11px', color: '#68766e', lineHeight: '1.5' }}>
               {step}
             </li>
           ))}

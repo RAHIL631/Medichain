@@ -22,20 +22,20 @@ const CustomTooltip = ({ active, payload }) => {
   const d = payload[0]?.payload;
   return (
     <div style={{
-      background: '#0f172a',
-      border: '1px solid #334155',
+      background: '#faf8f1',
+      border: '1px solid #e9f4ec',
       borderRadius: '8px',
       padding: '10px 14px',
       fontFamily: "'Inter', sans-serif",
       fontSize: '12px',
     }}>
-      <div style={{ color: '#f1f5f9', fontWeight: 700, marginBottom: '4px' }}>
+      <div style={{ color: '#e9f4ec', fontWeight: 700, marginBottom: '4px' }}>
         {ORGAN_ICONS[d?.key] || '🏥'} {d?.organ}
       </div>
-      <div style={{ color: '#7dd3fc' }}>
+      <div style={{ color: '#b9d8c5' }}>
         Risk Score: <strong>{d?.value?.toFixed(1)}%</strong>
       </div>
-      <div style={{ color: '#94a3b8', marginTop: '2px' }}>
+      <div style={{ color: '#68766e', marginTop: '2px' }}>
         Level: {d?.risk_level}
       </div>
     </div>
@@ -52,7 +52,7 @@ const CustomAngleAxis = ({ payload, x, y, cx, cy }) => {
         y={y}
         textAnchor="middle"
         dominantBaseline="middle"
-        fill="#94a3b8"
+        fill="#68766e"
         fontSize="11"
         fontFamily="Inter, sans-serif"
       >
@@ -66,7 +66,7 @@ export default function RiskRadarChart({ organRisks = {} }) {
   if (!organRisks || Object.keys(organRisks).length === 0) {
     return (
       <div style={{
-        color: '#64748b', textAlign: 'center', padding: '40px',
+        color: '#68766e', textAlign: 'center', padding: '40px',
         fontFamily: "'Inter', sans-serif",
       }}>
         <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏥</div>
@@ -89,8 +89,8 @@ export default function RiskRadarChart({ organRisks = {} }) {
         <RadarChart data={data} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
           <defs>
             <linearGradient id="radarFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#3b82f6" stopOpacity={0.4} />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity={0.1} />
+              <stop offset="0%"   stopColor="#16866a" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="#d97860" stopOpacity={0.1} />
             </linearGradient>
           </defs>
 
@@ -109,7 +109,7 @@ export default function RiskRadarChart({ organRisks = {} }) {
             angle={90}
             domain={[0, 100]}
             tickCount={5}
-            tick={{ fontSize: 9, fill: '#475569' }}
+            tick={{ fontSize: 9, fill: '#68766e' }}
             axisLine={false}
             tickLine={false}
           />
@@ -117,11 +117,11 @@ export default function RiskRadarChart({ organRisks = {} }) {
           <Radar
             name="Risk Score"
             dataKey="value"
-            stroke="#3b82f6"
+            stroke="#16866a"
             fill="url(#radarFill)"
             strokeWidth={2}
-            dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
-            activeDot={{ r: 6, fill: '#60a5fa' }}
+            dot={{ r: 4, fill: '#16866a', strokeWidth: 0 }}
+            activeDot={{ r: 6, fill: '#16866a' }}
           />
 
           <Tooltip content={<CustomTooltip />} />
@@ -133,15 +133,15 @@ export default function RiskRadarChart({ organRisks = {} }) {
         {data.map((d) => (
           <div key={d.key} style={{
             display: 'flex', alignItems: 'center', gap: '6px',
-            fontSize: '12px', color: '#94a3b8',
+            fontSize: '12px', color: '#68766e',
           }}>
             <div style={{
               width: 8, height: 8, borderRadius: '50%',
-              background: d.color || '#3b82f6',
+              background: d.color || '#16866a',
             }} />
             <span>{ORGAN_ICONS[d.key]} {d.organ}</span>
             <span style={{
-              color: d.color || '#3b82f6', fontWeight: 700,
+              color: d.color || '#16866a', fontWeight: 700,
               fontSize: '11px',
             }}>
               {d.value?.toFixed(0)}%

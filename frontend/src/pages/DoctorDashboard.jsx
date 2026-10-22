@@ -383,7 +383,7 @@ const DoctorDashboard = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-6 border-b border-hc-border mb-8 gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-hc-blue-soft text-hc-blue flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 rounded-2xl bg-hc-emerald-soft text-hc-emerald flex items-center justify-center shadow-sm">
                         <Stethoscope className="w-6 h-6" />
                     </div>
                     <div>
@@ -431,7 +431,7 @@ const DoctorDashboard = () => {
                     <div className="hc-card p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-base font-bold text-hc-text flex items-center gap-2">
-                                <QrCode className="w-5 h-5 text-hc-blue" />
+                                <QrCode className="w-5 h-5 text-hc-emerald" />
                                 Patient Access Portal
                             </h2>
                             {scannedAddress && (
@@ -446,7 +446,7 @@ const DoctorDashboard = () => {
 
                         {!scannedAddress && !scanning && (
                             <div className="text-center py-8 px-4 bg-hc-bg-alt rounded-xl border border-hc-border border-dashed">
-                                <div className="w-12 h-12 rounded-xl bg-hc-blue-soft text-hc-blue flex items-center justify-center mx-auto mb-3">
+                                <div className="w-12 h-12 rounded-xl bg-hc-emerald-soft text-hc-emerald flex items-center justify-center mx-auto mb-3">
                                     <QrCode className="w-6 h-6" />
                                 </div>
                                 <h3 className="text-sm font-semibold text-hc-text mb-1">Scan Patient QR Health ID</h3>
@@ -460,7 +460,7 @@ const DoctorDashboard = () => {
                         )}
 
                         {scanning && (
-                            <div className="relative rounded-xl overflow-hidden border-2 border-hc-blue">
+                            <div className="relative rounded-xl overflow-hidden border-2 border-hc-emerald">
                                 <QRScanner 
                                     autoStart={true}
                                     onScan={handleScanSuccess} 
@@ -480,7 +480,7 @@ const DoctorDashboard = () => {
                         {scannedAddress && patientData && (
                             <div className="p-4 bg-hc-bg-alt rounded-xl border border-hc-border space-y-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-hc-blue flex items-center justify-center text-white font-bold text-sm">
+                                    <div className="w-10 h-10 rounded-full bg-hc-emerald-soft flex items-center justify-center text-hc-emerald-dark font-bold text-sm">
                                         {patientData.name?.charAt(0) || 'P'}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -496,14 +496,14 @@ const DoctorDashboard = () => {
                                     {patientData.patientId && (
                                         <div className="flex justify-between py-2">
                                             <span className="text-hc-text-muted">Patient ID</span>
-                                            <span className="font-mono font-bold text-hc-teal text-xs">
+                                            <span className="font-mono font-bold text-hc-emerald-dark text-xs">
                                                 {patientData.patientId}
                                             </span>
                                         </div>
                                     )}
                                     <div className="flex justify-between py-2">
                                         <span className="text-hc-text-muted">Blood Group</span>
-                                        <span className={`font-bold px-2 py-0.5 rounded ${isNonOBlood ? 'bg-hc-danger-soft text-hc-danger' : 'bg-hc-blue-soft text-hc-blue'}`}>
+                                        <span className={`font-bold px-2 py-0.5 rounded ${isNonOBlood ? 'bg-hc-danger-soft text-hc-danger' : 'bg-hc-emerald-soft text-hc-emerald'}`}>
                                             {patientData.bloodGroup || 'Unknown'}
                                         </span>
                                     </div>
@@ -532,12 +532,12 @@ const DoctorDashboard = () => {
                     {scannedAddress && patientData && (
                         <div className="hc-card p-6">
                             <h2 className="text-base font-bold text-hc-text flex items-center gap-2 mb-4">
-                                <Brain className="w-5 h-5 text-hc-violet" />
+                                <Brain className="w-5 h-5 text-hc-terracotta" />
                                 AI Clinical Risk Summary
                             </h2>
                             {riskLoading ? (
                                 <div className="flex flex-col items-center justify-center py-6 text-hc-text-muted">
-                                    <div className="w-6 h-6 border-2 border-hc-violet border-t-transparent rounded-full animate-spin mb-2" />
+                                    <div className="w-6 h-6 border-2 border-hc-terracotta border-t-transparent rounded-full animate-spin mb-2" />
                                     <span className="text-xs">Computing CDSS profile…</span>
                                 </div>
                             ) : riskProfile ? (
@@ -580,7 +580,7 @@ const DoctorDashboard = () => {
                         {/* Clinical Upload Card */}
                         <div className="hc-card p-6">
                             <h2 className="text-base font-bold text-hc-text flex items-center gap-2 mb-6">
-                                <Upload className="w-5 h-5 text-hc-blue" />
+                                <Upload className="w-5 h-5 text-hc-emerald" />
                                 Prescribe & Upload Medical Record
                             </h2>
 
@@ -605,7 +605,7 @@ const DoctorDashboard = () => {
                                     <div>
                                         <label className="hc-label">Medical Attachment (PDF / Image)</label>
                                         <div 
-                                            className="border-2 border-dashed border-hc-border hover:border-hc-blue transition-colors rounded-xl p-5 text-center cursor-pointer bg-hc-bg-alt"
+                                            className="border-2 border-dashed border-hc-border hover:border-hc-emerald transition-colors rounded-xl p-5 text-center cursor-pointer bg-hc-bg-alt"
                                             onClick={() => fileInputRef.current?.click()}
                                         >
                                             <input 
@@ -616,13 +616,13 @@ const DoctorDashboard = () => {
                                                 accept=".pdf,.png,.jpg,.jpeg"
                                             />
                                             {file ? (
-                                                <div className="text-hc-blue text-sm font-semibold flex items-center justify-center gap-2 break-all">
+                                                <div className="text-hc-emerald text-sm font-semibold flex items-center justify-center gap-2 break-all">
                                                     <FileText className="w-4 h-4 flex-shrink-0" />
                                                     {file.name}
                                                 </div>
                                             ) : (
                                                 <div className="text-hc-text-muted text-xs">
-                                                    <span className="text-hc-blue font-semibold">Click to select</span> or drag file here<br/>
+                                                    <span className="text-hc-emerald font-semibold">Click to select</span> or drag file here<br/>
                                                     <span className="text-[10px] text-hc-text-light mt-1 block">PDF, JPG, PNG up to 10MB</span>
                                                 </div>
                                             )}
@@ -664,7 +664,7 @@ const DoctorDashboard = () => {
                                                 medications.map((m, i) => (
                                                     <span key={i} className="hc-badge hc-badge-primary flex items-center gap-1.5">
                                                         {m}
-                                                        <button onClick={() => removeMedication(m)} className="text-hc-blue hover:text-hc-danger text-xs font-bold">×</button>
+                                                        <button onClick={() => removeMedication(m)} className="text-hc-emerald hover:text-hc-danger text-xs font-bold">×</button>
                                                     </span>
                                                 ))
                                             )}
@@ -723,7 +723,7 @@ const DoctorDashboard = () => {
                                                         ? 'bg-hc-success-soft text-hc-success border border-hc-success/30'
                                                         : uploadStatus.startsWith('❌')
                                                         ? 'bg-hc-danger-soft text-hc-danger border border-hc-danger/30'
-                                                        : 'bg-hc-blue-soft text-hc-blue border border-hc-blue-mid animate-pulse'
+                                                        : 'bg-hc-emerald-soft text-hc-emerald border border-hc-emerald-mid animate-pulse'
                                                 }`}>
                                                     {uploadStatus}
                                                 </div>
@@ -752,12 +752,12 @@ const DoctorDashboard = () => {
                         {/* Patient Medical History */}
                         <div className="hc-card p-6">
                             <h2 className="text-base font-bold text-hc-text flex items-center gap-2 mb-4">
-                                <Database className="w-5 h-5 text-hc-teal" />
+                                <Database className="w-5 h-5 text-hc-emerald-dark" />
                                 Authorized Patient Records
                             </h2>
                             {recordsLoading ? (
                                 <div className="text-center py-8">
-                                    <div className="w-6 h-6 border-2 border-hc-blue border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                                    <div className="w-6 h-6 border-2 border-hc-emerald border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                                     <p className="text-xs text-hc-text-muted">Loading authorized records…</p>
                                 </div>
                             ) : patientRecords.length > 0 ? (
@@ -783,12 +783,12 @@ const DoctorDashboard = () => {
                 ) : (
                     <div className="lg:col-span-2 space-y-6">
                         {/* Clinical Consultation Workstation Banner */}
-                        <div className="hc-card p-6 relative overflow-hidden bg-gradient-to-br from-hc-surface to-hc-blue-soft/30 border border-hc-border">
+                        <div className="hc-card p-6 relative overflow-hidden bg-gradient-to-br from-hc-surface to-hc-emerald-soft/30 border border-hc-border">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="w-2 h-2 rounded-full bg-hc-success animate-pulse" />
-                                        <span className="text-xs font-bold text-hc-blue uppercase tracking-wider">Clinical Station Ready</span>
+                                        <span className="text-xs font-bold text-hc-emerald uppercase tracking-wider">Clinical Station Ready</span>
                                     </div>
                                     <h3 className="text-xl font-bold text-hc-text">Patient Diagnostic & Prescription Station</h3>
                                     <p className="text-xs text-hc-text-muted mt-0.5">

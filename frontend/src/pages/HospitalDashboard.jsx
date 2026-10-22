@@ -24,14 +24,14 @@ const Icons = {
 };
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
-const StatCard = ({ icon, label, value, sub, color = 'accent-cyan', loading }) => (
-  <GlassCard className="flex items-center gap-4 hover:border-accent-cyan/20 transition-colors">
+const StatCard = ({ icon, label, value, sub, color = 'accent-emerald-dark', loading }) => (
+  <GlassCard className="flex items-center gap-4 hover:border-accent-emerald-dark/20 transition-colors">
     <div className={`w-12 h-12 rounded-xl bg-${color}/10 border border-${color}/20 flex items-center justify-center text-${color} flex-shrink-0`}>
       {icon}
     </div>
     <div className="min-w-0">
       <p className="text-[10px] uppercase tracking-widest text-text-secondary">{label}</p>
-      <p className="text-2xl font-display font-bold text-white mt-0.5">
+      <p className="text-2xl font-display font-bold text-hc-text mt-0.5">
         {loading ? <span className="inline-block w-16 h-6 bg-medichain-surface rounded animate-pulse" /> : value}
       </p>
       {sub && <p className="text-[10px] text-text-secondary mt-0.5">{sub}</p>}
@@ -84,7 +84,7 @@ const HospitalDashboard = () => {
         todayUploads: data.todayUploads ?? 0,
       });
       setChartData(Array.isArray(data.weeklyUploads) ? data.weeklyUploads : []);
-      const colors = ['#38BDF8', '#22D3EE', '#818CF8', '#22C55E', '#F59E0B', '#EC4899'];
+      const colors = ['#16866a', '#16866a', '#d97860', '#16866a', '#ebcb82', '#d97860'];
       setTypeData(Array.isArray(data.typeBreakdown)
         ? data.typeBreakdown.map((entry, index) => ({ ...entry, fill: colors[index % colors.length] }))
         : []);
@@ -110,24 +110,24 @@ const HospitalDashboard = () => {
             className="w-full h-48 sm:h-56 object-cover"
             onError={(e) => { e.target.src = HOSPITAL_IMAGES.default; }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-medichain-bg-dark/95 via-medichain-bg-dark/70 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-medichain-bg-dark/90 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-medichain-bg-ivory/95 via-medichain-bg-ivory/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-medichain-bg-ivory/90 via-transparent to-transparent" />
           <div className="absolute inset-0 p-6 flex flex-col justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-slate-400" />
-              <span className="text-xs font-mono text-slate-300 uppercase tracking-wider font-bold">Hospital workspace</span>
+              <span className="w-2 h-2 rounded-full bg-hc-bg-alt" />
+              <span className="text-xs font-mono text-hc-text-muted uppercase tracking-wider font-bold">Hospital workspace</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">{user?.name || 'Hospital account'}</h1>
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-hc-text">{user?.name || 'Hospital account'}</h1>
                 <p className="text-text-secondary mt-1 text-xs sm:text-sm">Workspace metrics are limited to records uploaded by this account.</p>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-sm border border-white/20 rounded-xl text-white hover:bg-black/70 transition-all text-xs font-semibold">
+                <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 bg-white/95 border border-hc-border rounded-xl text-hc-emerald-dark hover:bg-white transition-all text-xs font-semibold shadow-hc-card">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                   Refresh
                 </button>
-                <Link to="/upload-report" className="px-5 py-2.5 bg-gradient-to-r from-accent-blue to-accent-cyan rounded-xl text-white text-xs font-bold hover:opacity-90 transition-opacity shadow-lg shadow-accent-cyan/20">
+                <Link to="/upload-report" className="px-5 py-2.5 bg-hc-emerald-dark rounded-xl text-white text-xs font-bold hover:bg-hc-forest transition-colors shadow-hc-card">
                   + Upload Diagnostic Report
                 </Link>
               </div>
@@ -145,9 +145,9 @@ const HospitalDashboard = () => {
 
         {/* ── Stat Cards ────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={Icons.records}  label="Uploaded Records"       value={stats.records}        sub="Active records"  color="accent-cyan"     loading={loading} />
-          <StatCard icon={Icons.patients} label="Patients Served"        value={stats.patientsServed} sub="Unique Accounts" color="accent-blue"     loading={loading} />
-          <StatCard icon={Icons.upload}   label="Today's Uploads"        value={stats.todayUploads}   sub="Last 24 hours"  color="accent-indigo"   loading={loading} />
+          <StatCard icon={Icons.records}  label="Uploaded Records"       value={stats.records}        sub="Active records"  color="accent-emerald-dark"     loading={loading} />
+          <StatCard icon={Icons.patients} label="Patients Served"        value={stats.patientsServed} sub="Unique Accounts" color="accent-emerald"     loading={loading} />
+          <StatCard icon={Icons.upload}   label="Today's Uploads"        value={stats.todayUploads}   sub="Last 24 hours"  color="accent-terracotta"   loading={loading} />
           <StatCard icon={Icons.records}  label="Pending TX Hash"        value={stats.pendingSync}    sub="Saved records only" color="status-warning" loading={loading} />
         </div>
 
@@ -158,21 +158,21 @@ const HospitalDashboard = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-xs uppercase tracking-widest text-text-secondary">Weekly Record Uploads</p>
-                <p className="text-lg font-display font-bold text-white mt-0.5">Saved records from this account</p>
+                <p className="text-lg font-display font-bold text-hc-text mt-0.5">Saved records from this account</p>
               </div>
               <span className="text-xs text-text-secondary">Based on record timestamps</span>
             </div>
             {chartData.length ? <ResponsiveContainer width="100%" height={180}>
               <BarChart data={chartData} barSize={20}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="day" tick={{ fill: '#94A3B8', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#94A3B8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="day" tick={{ fill: '#68766e', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#68766e', fontSize: 10 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} />
                 <Bar dataKey="uploads" fill="url(#barGrad)" radius={[4,4,0,0]} />
                 <defs>
                   <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.4" />
+                    <stop offset="0%" stopColor="#16866a" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#16866a" stopOpacity="0.4" />
                   </linearGradient>
                 </defs>
               </BarChart>
@@ -182,7 +182,7 @@ const HospitalDashboard = () => {
           {/* Record type pie chart */}
           <GlassCard>
             <p className="text-xs uppercase tracking-widest text-text-secondary mb-1">Record Type Distribution</p>
-            <p className="text-lg font-display font-bold text-white mb-4">By Category</p>
+            <p className="text-lg font-display font-bold text-hc-text mb-4">By Category</p>
             {typeData.length ? <ResponsiveContainer width="100%" height={160}>
               <PieChart>
                 <Pie data={typeData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
@@ -200,7 +200,7 @@ const HospitalDashboard = () => {
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fill }} />
                     <span className="text-text-secondary">{name}</span>
                   </div>
-                  <span className="text-white font-mono">{value}%</span>
+                  <span className="text-hc-text font-mono">{value}%</span>
                 </div>
               ))}
             </div>
@@ -211,31 +211,31 @@ const HospitalDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Patient details are intentionally not listed outside an access-checked workflow. */}
           <GlassCard>
-            <p className="text-sm font-display font-bold text-white">Patient record access</p>
+            <p className="text-sm font-display font-bold text-hc-text">Patient record access</p>
             <p className="mt-2 text-sm text-text-secondary">
               Patient identifiers and record details are shown only after current on-chain access is verified.
             </p>
-            <Link to="/scan" className="text-accent-cyan text-xs hover:underline mt-4 inline-block font-semibold">Identify a patient by QR or ID →</Link>
+            <Link to="/scan" className="text-accent-emerald-dark text-xs hover:underline mt-4 inline-block font-semibold">Identify a patient by QR or ID →</Link>
           </GlassCard>
 
           {/* Quick Actions & Network Status */}
           <div className="space-y-4">
-            <GlassCard className="border-accent-cyan/20 bg-accent-cyan/5">
+            <GlassCard className="border-accent-emerald-dark/20 bg-accent-emerald-dark/5">
               <p className="text-xs uppercase tracking-widest text-text-secondary mb-4 font-bold">Facility Workflows</p>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: 'Upload Lab Report',  path: '/upload-report',        icon: Icons.upload,   color: 'bg-accent-cyan' },
-                  { label: 'Scan Patient QR',    path: '/scan',                 icon: Icons.scanner,  color: 'bg-accent-blue' },
-                  { label: 'Patient Registry',   path: '/registry',             icon: Icons.patients, color: 'bg-accent-indigo' },
+                  { label: 'Upload Lab Report',  path: '/upload-report',        icon: Icons.upload,   color: 'bg-accent-emerald-dark' },
+                  { label: 'Scan Patient QR',    path: '/scan',                 icon: Icons.scanner,  color: 'bg-accent-emerald' },
+                  { label: 'Patient Registry',   path: '/registry',             icon: Icons.patients, color: 'bg-accent-terracotta' },
                   { label: 'AI Health Audits',   path: '/ai-dashboard',         icon: Icons.ai,       color: 'bg-status-warning' },
                   { label: 'Throughput Trends',  path: '/analytics',            icon: Icons.records,  color: 'bg-status-success' },
                   { label: 'Facility Profile',   path: '/profile',              icon: Icons.dashboard, color: 'bg-medichain-surface' },
                 ].map(({ label, path, icon, color }) => (
-                  <Link key={path} to={path} className="flex flex-col items-center gap-2 p-3 bg-medichain-bg-dark/60 border border-medichain-border rounded-xl hover:border-accent-cyan/30 hover:-translate-y-0.5 transition-all group">
-                    <div className={`w-8 h-8 rounded-lg ${color}/20 flex items-center justify-center text-white group-hover:scale-110 transition-transform`}>
+                  <Link key={path} to={path} className="flex flex-col items-center gap-2 p-3 bg-medichain-bg-ivory/60 border border-medichain-border rounded-xl hover:border-accent-emerald-dark/30 hover:-translate-y-0.5 transition-all group">
+                    <div className={`w-8 h-8 rounded-lg ${color}/20 flex items-center justify-center text-hc-text group-hover:scale-110 transition-transform`}>
                       {icon}
                     </div>
-                    <span className="text-[10px] text-text-secondary text-center leading-tight group-hover:text-white transition-colors">{label}</span>
+                    <span className="text-[10px] text-text-secondary text-center leading-tight group-hover:text-hc-text transition-colors">{label}</span>
                   </Link>
                 ))}
               </div>

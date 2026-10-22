@@ -4,12 +4,12 @@
 import React, { useState } from 'react';
 
 const SEV_STYLE = {
-  NONE:     { bg: 'rgba(34,197,94,0.12)',  color: '#22c55e',  label: '✓' },
-  LOW:      { bg: 'rgba(234,179,8,0.15)',  color: '#eab308',  label: 'L' },
-  MODERATE: { bg: 'rgba(249,115,22,0.15)', color: '#f97316',  label: 'M' },
-  HIGH:     { bg: 'rgba(239,68,68,0.15)',  color: '#ef4444',  label: 'H' },
-  CRITICAL: { bg: 'rgba(168,85,247,0.2)',  color: '#a855f7',  label: '!' },
-  UNKNOWN:  { bg: 'rgba(100,116,139,0.1)', color: '#64748b',  label: '?' },
+  NONE:     { bg: '#E9F4EC', color: '#0F6852', label: '✓' },
+  LOW:      { bg: '#FBF3DE', color: '#805B12', label: 'L' },
+  MODERATE: { bg: '#F8E5DD', color: '#8D3A2D', label: 'M' },
+  HIGH:     { bg: '#F8E5DD', color: '#8D3A2D', label: 'H' },
+  CRITICAL: { bg: '#F8E5DD', color: '#8D3A2D', label: '!' },
+  UNKNOWN:  { bg: 'rgba(100,116,139,0.1)', color: '#68766e',  label: '?' },
 };
 
 function MatrixCell({ severity, tooltip, onClick }) {
@@ -73,7 +73,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
 
   if (!medications.length) {
     return (
-      <p style={{ color: '#4b5563', textAlign: 'center', padding: '32px', fontSize: '13px' }}>
+      <p style={{ color: '#68766e', textAlign: 'center', padding: '32px', fontSize: '13px' }}>
         No medications to display interaction matrix.
       </p>
     );
@@ -81,7 +81,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
 
   if (medications.length === 1) {
     return (
-      <p style={{ color: '#4b5563', textAlign: 'center', padding: '32px', fontSize: '13px' }}>
+      <p style={{ color: '#68766e', textAlign: 'center', padding: '32px', fontSize: '13px' }}>
         At least 2 medications required for interaction analysis.
       </p>
     );
@@ -112,7 +112,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
           <div style={{
             padding: '6px 14px', borderRadius: '20px',
             background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
-            color: '#22c55e', fontSize: '12px', fontWeight: 700,
+            color: '#16866a', fontSize: '12px', fontWeight: 700,
           }}>✅ No interactions detected</div>
         )}
       </div>
@@ -125,7 +125,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
             <div /> {/* empty top-left */}
             {medications.map((m, i) => (
               <div key={i} style={{
-                color: '#6b7280', fontSize: '9px', fontWeight: 700,
+                color: '#68766e', fontSize: '9px', fontWeight: 700,
                 textAlign: 'center', padding: '2px', lineHeight: 1.2,
                 whiteSpace: 'nowrap', overflow: 'hidden',
                 textOverflow: 'ellipsis', maxWidth: '36px',
@@ -140,7 +140,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
               return (
                 <React.Fragment key={rowIdx}>
                   <div style={{
-                    color: '#9ca3af', fontSize: '10px', fontWeight: 600,
+                    color: '#68766e', fontSize: '10px', fontWeight: 600,
                     display: 'flex', alignItems: 'center',
                     paddingRight: '8px', overflow: 'hidden', textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -156,7 +156,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
                           background: 'rgba(255,255,255,0.04)',
                           borderRadius: '6px',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: '#374151', fontSize: '14px',
+                          color: '#26352e', fontSize: '14px',
                         }}>•</div>
                       );
                     }
@@ -191,7 +191,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '8px', color: SEV_STYLE[sev].color, fontWeight: 800,
                 }}>{SEV_STYLE[sev].label}</div>
-                <span style={{ color: '#6b7280', fontSize: '10px' }}>{sev}</span>
+                <span style={{ color: '#68766e', fontSize: '10px' }}>{sev}</span>
               </div>
             ))}
           </div>
@@ -208,15 +208,15 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
           marginBottom: '16px',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '13px' }}>
+            <span style={{ color: '#b44736', fontWeight: 700, fontSize: '13px' }}>
               {selected.drug1} ↔ {selected.drug2}
             </span>
             <button
               onClick={() => setSelected(null)}
-              style={{ background: 'none', border: 'none', color: '#4b5563', cursor: 'pointer', fontSize: '14px' }}
+              style={{ background: 'none', border: 'none', color: '#68766e', cursor: 'pointer', fontSize: '14px' }}
             >✕</button>
           </div>
-          <p style={{ color: '#d1d5db', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
+          <p style={{ color: '#68766e', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
             {selected.description}
           </p>
         </div>
@@ -225,7 +225,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
       {/* Conflict list */}
       {conflicts.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <h4 style={{ color: '#9ca3af', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px' }}>
+          <h4 style={{ color: '#68766e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px' }}>
             Detected Conflicts
           </h4>
           {conflicts.map((c, i) => {
@@ -247,7 +247,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
                     color: s.color, fontSize: '10px', fontWeight: 700,
                   }}>{c.severity}</span>
                 </div>
-                <p style={{ color: '#9ca3af', fontSize: '11px', lineHeight: 1.5, margin: 0 }}>
+                <p style={{ color: '#68766e', fontSize: '11px', lineHeight: 1.5, margin: 0 }}>
                   {c.description}
                 </p>
               </div>
@@ -259,7 +259,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
       {/* Combination analysis */}
       {combos.length > 0 && (
         <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <h4 style={{ color: '#9ca3af', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px' }}>
+          <h4 style={{ color: '#68766e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px' }}>
             Combination Warnings
           </h4>
           {combos.map((combo, i) => {
@@ -273,7 +273,7 @@ export default function InteractionMatrix({ medications = [], interactions = {} 
                 <div style={{ color: s.color, fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>
                   ⚡ {combo.name}
                 </div>
-                <p style={{ color: '#9ca3af', fontSize: '11px', lineHeight: 1.5, margin: 0 }}>
+                <p style={{ color: '#68766e', fontSize: '11px', lineHeight: 1.5, margin: 0 }}>
                   {combo.description}
                 </p>
               </div>

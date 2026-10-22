@@ -5,12 +5,12 @@
 import React, { useState } from 'react';
 
 const SEVERITY_COLORS = {
-  CRITICAL: { bg: '#7e22ce', text: '#f3e8ff', label: 'CRITICAL' },
-  HIGH:     { bg: '#dc2626', text: '#fef2f2', label: 'HIGH' },
-  MODERATE: { bg: '#ea580c', text: '#fff7ed', label: 'MODERATE' },
-  LOW:      { bg: '#ca8a04', text: '#fefce8', label: 'LOW' },
-  NONE:     { bg: '#1e3a5f', text: '#bfdbfe', label: 'NONE' },
-  UNKNOWN:  { bg: '#334155', text: '#94a3b8', label: '?' },
+  CRITICAL: { bg: '#d97860', text: '#f8e5dd', label: 'CRITICAL' },
+  HIGH:     { bg: '#b44736', text: '#f8e5dd', label: 'HIGH' },
+  MODERATE: { bg: '#b44736', text: '#f8e5dd', label: 'MODERATE' },
+  LOW:      { bg: '#805b12', text: '#fbf3de', label: 'LOW' },
+  NONE:     { bg: '#E9F4EC', text: '#0F6852', label: 'NONE' },
+  UNKNOWN:  { bg: '#e9f4ec', text: '#68766e', label: '?' },
 };
 
 export default function DrugInteractionMatrix({ medications = [], interactionMatrix = {}, conflicts = [] }) {
@@ -19,7 +19,7 @@ export default function DrugInteractionMatrix({ medications = [], interactionMat
   if (!medications || medications.length < 2) {
     return (
       <div style={{
-        color: '#64748b', textAlign: 'center', padding: '32px',
+        color: '#68766e', textAlign: 'center', padding: '32px',
         fontFamily: "'Inter', sans-serif", fontSize: '14px'
       }}>
         <div style={{ fontSize: '32px', marginBottom: '8px' }}>💊</div>
@@ -52,7 +52,7 @@ export default function DrugInteractionMatrix({ medications = [], interactionMat
       {/* Legend */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
         {Object.entries(SEVERITY_COLORS).filter(([k]) => k !== 'UNKNOWN').map(([sev, conf]) => (
-          <div key={sev} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#94a3b8' }}>
+          <div key={sev} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#68766e' }}>
             <div style={{ width: 14, height: 14, borderRadius: 3, background: conf.bg, border: `1px solid ${conf.bg}88` }} />
             {conf.label}
           </div>
@@ -68,7 +68,7 @@ export default function DrugInteractionMatrix({ medications = [], interactionMat
               width: cellSize,
               textAlign: 'center',
               fontSize: '10px',
-              color: '#94a3b8',
+              color: '#68766e',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -87,7 +87,7 @@ export default function DrugInteractionMatrix({ medications = [], interactionMat
             <div style={{
               width: cellSize,
               fontSize: '10px',
-              color: '#94a3b8',
+              color: '#68766e',
               textAlign: 'right',
               paddingRight: '8px',
               overflow: 'hidden',
@@ -107,12 +107,12 @@ export default function DrugInteractionMatrix({ medications = [], interactionMat
                     height: cellSize - 4,
                     margin: '2px',
                     borderRadius: '6px',
-                    background: 'linear-gradient(135deg, #1e40af22, #0f172a)',
-                    border: '1px solid #334155',
+                    background: 'linear-gradient(135deg, #E9F4EC, #FAF8F1)',
+                    border: '1px solid #E4E9E2',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#475569',
+                    color: '#68766e',
                     fontSize: '18px',
                   }}>
                     ╲
@@ -140,15 +140,15 @@ export default function DrugInteractionMatrix({ medications = [], interactionMat
                     height: cellSize - 4,
                     margin: '2px',
                     borderRadius: '6px',
-                    background: hasConflict ? conf.bg + 'cc' : 'rgba(30, 41, 59, 0.5)',
-                    border: `1px solid ${hasConflict ? conf.bg : '#1e3a5f'}`,
+                    background: hasConflict ? conf.bg : '#E9F4EC',
+                    border: `1px solid ${hasConflict ? conf.bg : '#B9D8C5'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                     fontSize: '12px',
-                    color: hasConflict ? conf.text : '#334155',
+                    color: hasConflict ? conf.text : '#0F6852',
                     fontWeight: hasConflict ? 700 : 400,
                     boxShadow: hasConflict ? `0 2px 12px ${conf.bg}66` : 'none',
                   }}
@@ -167,35 +167,35 @@ export default function DrugInteractionMatrix({ medications = [], interactionMat
           position: 'fixed',
           left: Math.min(tooltip.x + 12, window.innerWidth - 280),
           top: tooltip.y + 12,
-          background: '#0f172a',
-          border: `1px solid ${SEVERITY_COLORS[tooltip.severity]?.bg || '#334155'}`,
+          background: '#faf8f1',
+          border: `1px solid ${SEVERITY_COLORS[tooltip.severity]?.bg || '#e9f4ec'}`,
           borderRadius: '10px',
           padding: '12px 16px',
           width: 260,
           zIndex: 9999,
           pointerEvents: 'none',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          boxShadow: '0 8px 24px rgba(38,53,46,0.12)',
         }}>
-          <div style={{ fontWeight: 700, color: '#f1f5f9', marginBottom: '6px', fontSize: '13px' }}>
+          <div style={{ fontWeight: 700, color: '#26352E', marginBottom: '6px', fontSize: '13px' }}>
             {tooltip.drug1} ↔ {tooltip.drug2}
           </div>
           <div style={{
             display: 'inline-block',
             padding: '2px 8px',
             borderRadius: '4px',
-            background: (SEVERITY_COLORS[tooltip.severity]?.bg || '#334155') + '33',
-            color: SEVERITY_COLORS[tooltip.severity]?.bg || '#94a3b8',
+            background: (SEVERITY_COLORS[tooltip.severity]?.bg || '#e9f4ec') + '33',
+            color: SEVERITY_COLORS[tooltip.severity]?.bg || '#68766e',
             fontSize: '11px',
             fontWeight: 700,
             marginBottom: '8px',
           }}>
             {tooltip.severity}
           </div>
-          <p style={{ color: '#94a3b8', fontSize: '12px', margin: 0, lineHeight: '1.5' }}>
+          <p style={{ color: '#68766e', fontSize: '12px', margin: 0, lineHeight: '1.5' }}>
             {tooltip.description}
           </p>
           {tooltip.source && (
-            <div style={{ color: '#475569', fontSize: '10px', marginTop: '6px' }}>
+            <div style={{ color: '#68766e', fontSize: '10px', marginTop: '6px' }}>
               Source: {tooltip.source}
             </div>
           )}
@@ -211,7 +211,7 @@ export default function DrugInteractionMatrix({ medications = [], interactionMat
           border: '1px solid rgba(239,68,68,0.3)',
           borderRadius: '8px',
           fontSize: '12px',
-          color: '#fca5a5',
+          color: '#8D3A2D',
         }}>
           <strong>⚡ {conflicts.length} interaction{conflicts.length > 1 ? 's' : ''} detected</strong>
           {' — hover over colored cells for details'}

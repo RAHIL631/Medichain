@@ -23,8 +23,8 @@ export default function ValidationPipeline({ currentStep, isComplete, error }) {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #0d1117 0%, #111827 100%)',
-      border: '1px solid rgba(6,182,212,0.15)',
+      background: 'linear-gradient(135deg, #FAF8F1 0%, #E9F4EC 100%)',
+      border: '1px solid rgba(22,134,106,0.15)',
       borderRadius: '16px',
       padding: '28px 24px',
       fontFamily: "'Inter', sans-serif",
@@ -34,28 +34,28 @@ export default function ValidationPipeline({ currentStep, isComplete, error }) {
         {error ? (
           <>
             <div style={{ fontSize: '36px', marginBottom: '8px' }}>❌</div>
-            <p style={{ color: '#ef4444', fontWeight: 700, fontSize: '15px', margin: 0 }}>Validation Failed</p>
-            <p style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>{error}</p>
+            <p style={{ color: '#b44736', fontWeight: 700, fontSize: '15px', margin: 0 }}>Validation Failed</p>
+            <p style={{ color: '#68766e', fontSize: '12px', marginTop: '4px' }}>{error}</p>
           </>
         ) : isComplete ? (
           <>
             <div style={{ fontSize: '36px', marginBottom: '8px', animation: 'none' }}>✅</div>
-            <p style={{ color: '#22c55e', fontWeight: 700, fontSize: '15px', margin: 0 }}>Validation Complete</p>
+            <p style={{ color: '#16866a', fontWeight: 700, fontSize: '15px', margin: 0 }}>Validation Complete</p>
           </>
         ) : (
           <>
             <div style={{
               width: '40px', height: '40px',
-              border: '3px solid rgba(6,182,212,0.3)',
-              borderTop: '3px solid #06b6d4',
+              border: '3px solid rgba(22,134,106,0.3)',
+              borderTop: '3px solid #16866a',
               borderRadius: '50%',
               animation: 'spin 1s linear infinite',
               margin: '0 auto 12px',
             }} />
-            <p style={{ color: '#06b6d4', fontWeight: 700, fontSize: '15px', margin: 0 }}>
+            <p style={{ color: '#16866a', fontWeight: 700, fontSize: '15px', margin: 0 }}>
               Running AI Validation Pipeline…
             </p>
-            <p style={{ color: '#6b7280', fontSize: '11px', marginTop: '4px' }}>
+            <p style={{ color: '#68766e', fontSize: '11px', marginTop: '4px' }}>
               {currentStep >= 0 && currentStep < STEPS.length
                 ? `Step ${currentStep + 1} of ${STEPS.length}: ${STEPS[currentStep].label}`
                 : 'Initialising…'}
@@ -81,12 +81,12 @@ export default function ValidationPipeline({ currentStep, isComplete, error }) {
                 padding: '10px 14px',
                 borderRadius: '10px',
                 background: isRunning
-                  ? 'rgba(6,182,212,0.08)'
+                  ? 'rgba(22,134,106,0.08)'
                   : isDone
                   ? 'rgba(34,197,94,0.05)'
                   : 'transparent',
                 border: isRunning
-                  ? '1px solid rgba(6,182,212,0.3)'
+                  ? '1px solid rgba(22,134,106,0.3)'
                   : isDone
                   ? '1px solid rgba(34,197,94,0.15)'
                   : '1px solid transparent',
@@ -104,19 +104,19 @@ export default function ValidationPipeline({ currentStep, isComplete, error }) {
                 background: isDone
                   ? 'rgba(34,197,94,0.2)'
                   : isRunning
-                  ? 'rgba(6,182,212,0.15)'
-                  : 'rgba(255,255,255,0.05)',
+                  ? 'rgba(22,134,106,0.15)'
+                  : '#FAF8F1',
                 border: isDone
                   ? '1px solid rgba(34,197,94,0.4)'
                   : isRunning
-                  ? '1px solid rgba(6,182,212,0.4)'
-                  : '1px solid rgba(255,255,255,0.1)',
+                  ? '1px solid rgba(22,134,106,0.4)'
+                  : '1px solid #E4E9E2',
               }}>
                 {isDone ? '✓' : isRunning ? (
                   <div style={{
                     width: '10px', height: '10px',
                     borderRadius: '50%',
-                    background: '#06b6d4',
+                    background: '#16866a',
                     animation: 'pulse 1s ease-in-out infinite',
                   }} />
                 ) : `${idx + 1}`}
@@ -130,10 +130,10 @@ export default function ValidationPipeline({ currentStep, isComplete, error }) {
                     fontSize: '13px',
                     fontWeight: isRunning ? 700 : 500,
                     color: isDone
-                      ? '#22c55e'
+                      ? '#16866a'
                       : isRunning
-                      ? '#06b6d4'
-                      : '#6b7280',
+                      ? '#16866a'
+                      : '#68766e',
                   }}>
                     {step.label}
                   </span>
@@ -141,7 +141,7 @@ export default function ValidationPipeline({ currentStep, isComplete, error }) {
                 {(isRunning || isDone) && (
                   <p style={{
                     fontSize: '10px',
-                    color: '#4b5563',
+                    color: '#68766e',
                     margin: '2px 0 0',
                     lineHeight: 1.3,
                   }}>
@@ -155,14 +155,14 @@ export default function ValidationPipeline({ currentStep, isComplete, error }) {
                 <div style={{
                   width: '60px', height: '4px',
                   borderRadius: '2px',
-                  background: 'rgba(6,182,212,0.2)',
+                  background: 'rgba(22,134,106,0.2)',
                   overflow: 'hidden',
                   flexShrink: 0,
                 }}>
                   <div style={{
                     height: '100%',
                     width: '40%',
-                    background: '#06b6d4',
+                    background: '#16866a',
                     borderRadius: '2px',
                     animation: 'shimmer 1.2s ease-in-out infinite',
                   }} />

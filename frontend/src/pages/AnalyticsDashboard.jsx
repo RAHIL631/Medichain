@@ -66,12 +66,12 @@ export default function AnalyticsDashboard() {
         <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
           <div style={{
             width: '50px', height: '50px',
-            border: '4px solid rgba(6,182,212,0.2)',
-            borderTop: '4px solid #06b6d4',
+            border: '4px solid rgba(22,134,106,0.2)',
+            borderTop: '4px solid #16866a',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }} />
-          <p className="mt-4 text-accent-cyan font-bold tracking-widest uppercase text-xs animate-pulse">
+          <p className="mt-4 text-accent-emerald-dark font-bold tracking-widest uppercase text-xs animate-pulse">
             Loading persisted metrics...
           </p>
         </div>
@@ -99,7 +99,7 @@ export default function AnalyticsDashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-white flex items-center gap-2">
+            <h1 className="text-3xl font-display font-bold text-hc-text flex items-center gap-2">
               📊 MediChain Analytics
             </h1>
             <p className="text-text-secondary mt-1">
@@ -107,7 +107,7 @@ export default function AnalyticsDashboard() {
             </p>
           </div>
           <div className="flex gap-2">
-            <span className="px-3 py-1.5 bg-slate-500/10 border border-slate-500/30 text-slate-300 rounded-full text-[10px] uppercase font-bold tracking-widest">
+            <span className="px-3 py-1.5 bg-hc-bg-alt border border-hc-border text-hc-text-muted rounded-full text-[10px] uppercase font-bold tracking-widest">
               Persisted metrics
             </span>
           </div>
@@ -117,22 +117,22 @@ export default function AnalyticsDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <GlassCard className="flex flex-col justify-between py-4">
             <span className="text-[10px] text-text-secondary uppercase tracking-widest mb-1 block">Patient Accounts</span>
-            <span className="text-2xl font-bold text-white">{platformStats.totalPatients.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-hc-text">{platformStats.totalPatients.toLocaleString()}</span>
             <span className="text-[10px] text-text-secondary mt-1">Registered and active</span>
           </GlassCard>
           <GlassCard className="flex flex-col justify-between py-4">
             <span className="text-[10px] text-text-secondary uppercase tracking-widest mb-1 block">Records with TX hash</span>
-            <span className="text-2xl font-bold text-white">{blockchainStats.recordsWithTransactionHash.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-hc-text">{blockchainStats.recordsWithTransactionHash.toLocaleString()}</span>
             <span className="text-[10px] text-text-secondary mt-1">Stored transaction references</span>
           </GlassCard>
           <GlassCard className="flex flex-col justify-between py-4">
             <span className="text-[10px] text-text-secondary uppercase tracking-widest mb-1 block">Stored prescription analyses</span>
-            <span className="text-2xl font-bold text-white">{aiStats.storedPrescriptionAnalyses.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-hc-text">{aiStats.storedPrescriptionAnalyses.toLocaleString()}</span>
             <span className="text-[10px] text-text-secondary mt-1">Model accuracy is not measured</span>
           </GlassCard>
           <GlassCard className="flex flex-col justify-between py-4">
             <span className="text-[10px] text-text-secondary uppercase tracking-widest mb-1 block">Hospital Accounts</span>
-            <span className="text-2xl font-bold text-white">{platformStats.totalHospitals.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-hc-text">{platformStats.totalHospitals.toLocaleString()}</span>
             <span className="text-[10px] text-text-secondary mt-1">Registered and active</span>
           </GlassCard>
         </div>
@@ -140,7 +140,7 @@ export default function AnalyticsDashboard() {
         {/* ── TRANSACTION VELOCITY CHART ── */}
         <GlassCard>
           <div className="flex justify-between items-center mb-6">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-hc-text">
               📈 Medical Records Added (30 Days)
             </h4>
             <span className="text-[10px] text-text-secondary">Based on saved record timestamps</span>
@@ -149,18 +149,18 @@ export default function AnalyticsDashboard() {
             <AreaChart data={recordActivity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorTx" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#16866a" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#16866a" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 9 }} minTickGap={20} />
-              <YAxis stroke="#64748b" tick={{ fontSize: 9 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E4E9E2" vertical={false} />
+              <XAxis dataKey="date" stroke="#68766e" tick={{ fontSize: 9 }} minTickGap={20} />
+              <YAxis stroke="#68766e" tick={{ fontSize: 9 }} />
               <ChartTooltip 
-                contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid #334155', borderRadius: '8px', fontSize: '12px' }}
-                itemStyle={{ color: '#06b6d4', fontWeight: 'bold' }}
+                contentStyle={{ background: '#FAF8F1', border: '1px solid #E4E9E2', borderRadius: '8px', fontSize: '12px', color: '#26352E' }}
+                itemStyle={{ color: '#16866a', fontWeight: 'bold' }}
               />
-              <Area type="monotone" dataKey="records" stroke="#06b6d4" strokeWidth={2} fillOpacity={1} fill="url(#colorTx)" />
+              <Area type="monotone" dataKey="records" stroke="#16866a" strokeWidth={2} fillOpacity={1} fill="url(#colorTx)" />
             </AreaChart>
           </ResponsiveContainer>
         </GlassCard>
@@ -170,7 +170,7 @@ export default function AnalyticsDashboard() {
           
           {/* Disease Prevalence Pie Chart */}
           <GlassCard>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-6">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-hc-text mb-6">
               🦠 Disease Trends
             </h4>
             {diseaseTrends.length ? <div className="flex items-center">
@@ -187,7 +187,7 @@ export default function AnalyticsDashboard() {
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <ChartTooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px' }} />
+                  <ChartTooltip contentStyle={{ background: '#FAF8F1', border: '1px solid #E4E9E2', borderRadius: '8px', fontSize: '11px', color: '#26352E' }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="w-1/2 flex flex-col justify-center space-y-2">
@@ -197,7 +197,7 @@ export default function AnalyticsDashboard() {
                       <span className="w-2 h-2 rounded-full" style={{ background: item.fill }}></span>
                       {item.name}
                     </span>
-                    <strong className="text-white">{item.prevalence}%</strong>
+                    <strong className="text-hc-text">{item.prevalence}%</strong>
                   </div>
                 ))}
               </div>
@@ -206,15 +206,15 @@ export default function AnalyticsDashboard() {
 
           {/* Medicine Prescriptions Bar Chart */}
           <GlassCard>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-4">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-hc-text mb-4">
               💊 Medications in Saved Records
             </h4>
             {medicineTrends.length ? <ResponsiveContainer width="100%" height={220}>
               <BarChart layout="vertical" data={medicineTrends} margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" horizontal={false} />
-                <XAxis type="number" stroke="#64748b" tick={{ fontSize: 9 }} />
-                <YAxis dataKey="name" type="category" stroke="#94a3b8" tick={{ fontSize: 10, fill: '#cbd5e1' }} />
-                <ChartTooltip contentStyle={{ background: 'rgba(15,23,42,0.9)', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E4E9E2" horizontal={false} />
+                <XAxis type="number" stroke="#68766e" tick={{ fontSize: 9 }} />
+                <YAxis dataKey="name" type="category" stroke="#68766e" tick={{ fontSize: 10, fill: '#68766e' }} />
+                <ChartTooltip contentStyle={{ background: '#FAF8F1', border: '1px solid #E4E9E2', borderRadius: '8px', fontSize: '11px', color: '#26352E' }} />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
                   {medicineTrends.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -229,41 +229,41 @@ export default function AnalyticsDashboard() {
         {/* ── INFRASTRUCTURE NODES STATUS ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <GlassCard>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-accent-indigo mb-4 flex items-center gap-2">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-accent-terracotta mb-4 flex items-center gap-2">
               ⛓️ Blockchain Record References
             </h4>
             <div className="grid grid-cols-2 gap-y-4 text-sm">
               <div>
                 <span className="block text-[10px] text-text-secondary uppercase">Records with transaction hash</span>
-                <span className="font-mono text-white">{blockchainStats.recordsWithTransactionHash.toLocaleString()}</span>
+                <span className="font-mono text-hc-text">{blockchainStats.recordsWithTransactionHash.toLocaleString()}</span>
               </div>
               <div>
                 <span className="block text-[10px] text-text-secondary uppercase">Live network status</span>
-                <span className="font-mono text-white">{blockchainStats.networkStatus}</span>
+                <span className="font-mono text-hc-text">{blockchainStats.networkStatus}</span>
               </div>
             </div>
           </GlassCard>
 
           <GlassCard>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-accent-cyan mb-4 flex items-center gap-2">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-accent-emerald-dark mb-4 flex items-center gap-2">
               📦 IPFS Record References
             </h4>
             <div className="grid grid-cols-2 gap-y-4 text-sm">
               <div>
                 <span className="block text-[10px] text-text-secondary uppercase">Records with CID</span>
-                <span className="font-mono text-white">{ipfsStats.recordsWithCid.toLocaleString()}</span>
+                <span className="font-mono text-hc-text">{ipfsStats.recordsWithCid.toLocaleString()}</span>
               </div>
               <div>
                 <span className="block text-[10px] text-text-secondary uppercase">Recorded file sizes</span>
-                <span className="font-mono text-white">{ipfsStats.recordedFileBytes.toLocaleString()} bytes</span>
+                <span className="font-mono text-hc-text">{ipfsStats.recordedFileBytes.toLocaleString()} bytes</span>
               </div>
               <div>
                 <span className="block text-[10px] text-text-secondary uppercase">Gateway status</span>
-                <span className="font-mono text-white">{ipfsStats.gatewayStatus}</span>
+                <span className="font-mono text-hc-text">{ipfsStats.gatewayStatus}</span>
               </div>
               <div>
                 <span className="block text-[10px] text-text-secondary uppercase">Storage verification</span>
-                <span className="font-mono text-white">Not checked</span>
+                <span className="font-mono text-hc-text">Not checked</span>
               </div>
             </div>
           </GlassCard>

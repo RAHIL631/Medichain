@@ -15,10 +15,10 @@ const FuturisticButton = ({
   const baseStyles = 'relative inline-flex items-center justify-center font-display tracking-widest font-bold uppercase transition-all duration-300 rounded-lg overflow-hidden group';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-accent-blue to-accent-cyan text-white neon-glow-hover px-6 py-3',
-    secondary: 'bg-medichain-surface border border-accent-cyan/30 text-accent-cyan hover:bg-accent-cyan/10 hover:border-accent-cyan neon-glow-hover px-6 py-3',
+    primary: 'bg-gradient-to-r from-accent-emerald to-accent-emerald-dark text-hc-text neon-glow-hover px-6 py-3',
+    secondary: 'bg-medichain-surface border border-accent-emerald-dark/30 text-accent-emerald-dark hover:bg-accent-emerald-dark/10 hover:border-accent-emerald-dark neon-glow-hover px-6 py-3',
     danger: 'bg-medichain-surface border border-status-danger/30 text-status-danger hover:bg-status-danger/10 hover:border-status-danger hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] px-6 py-3',
-    wallet: 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] px-6 py-3'
+    wallet: 'bg-gradient-to-r from-orange-500 to-yellow-500 text-hc-text hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] px-6 py-3'
   };
 
   const widthStyle = fullWidth ? 'w-full' : 'w-auto';

@@ -4,12 +4,12 @@
 import React from 'react';
 
 const SEV_STYLE = {
-  NONE:     { bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.3)',  color: '#22c55e' },
-  LOW:      { bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.3)',  color: '#eab308' },
-  MODERATE: { bg: 'rgba(249,115,22,0.1)', border: 'rgba(249,115,22,0.3)', color: '#f97316' },
-  HIGH:     { bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.3)',  color: '#ef4444' },
-  CRITICAL: { bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.3)', color: '#a855f7' },
-  UNKNOWN:  { bg: 'rgba(100,116,139,0.1)',border: 'rgba(100,116,139,0.3)',color: '#64748b' },
+  NONE:     { bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.3)',  color: '#16866a' },
+  LOW:      { bg: '#FBF3DE', border: '#EBCB82', color: '#805B12' },
+  MODERATE: { bg: '#F8E5DD', border: '#D97860', color: '#8D3A2D' },
+  HIGH:     { bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.3)',  color: '#b44736' },
+  CRITICAL: { bg: '#F8E5DD', border: '#B44736', color: '#8D3A2D' },
+  UNKNOWN:  { bg: 'rgba(100,116,139,0.1)',border: 'rgba(100,116,139,0.3)',color: '#68766e' },
 };
 
 function Badge({ text, severity = 'NONE', small = false }) {
@@ -35,7 +35,7 @@ function Badge({ text, severity = 'NONE', small = false }) {
 export default function MedicineExtractTable({ medications = [], detectedDiseases = [], overdoseAlerts = [], duplicates = [] }) {
   if (!medications.length) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px 20px', color: '#4b5563', fontSize: '14px' }}>
+      <div style={{ textAlign: 'center', padding: '40px 20px', color: '#68766e', fontSize: '14px' }}>
         No medications extracted. Upload a prescription image or enter medicines manually.
       </div>
     );
@@ -69,17 +69,17 @@ export default function MedicineExtractTable({ medications = [], detectedDisease
         fontSize: '13px',
       }}>
         <thead>
-          <tr style={{ background: 'rgba(6,182,212,0.08)' }}>
+          <tr style={{ background: '#E9F4EC' }}>
             {['#', 'Drug Name', 'Dose', 'Frequency', 'Likely Indication', 'Flags'].map((h, i) => (
               <th key={i} style={{
                 padding: '10px 14px',
                 textAlign: 'left',
-                color: '#06b6d4',
+                color: '#16866a',
                 fontWeight: 700,
                 fontSize: '11px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.8px',
-                borderBottom: '1px solid rgba(6,182,212,0.2)',
+                borderBottom: '1px solid #B9D8C5',
                 whiteSpace: 'nowrap',
               }}>{h}</th>
             ))}
@@ -105,30 +105,30 @@ export default function MedicineExtractTable({ medications = [], detectedDisease
 
             return (
               <tr key={i} style={{
-                background: isEven ? 'rgba(255,255,255,0.02)' : 'transparent',
+                background: isEven ? '#FAF8F1' : '#FFFFFF',
                 transition: 'background 0.15s',
               }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(6,182,212,0.05)'}
-                onMouseLeave={e => e.currentTarget.style.background = isEven ? 'rgba(255,255,255,0.02)' : 'transparent'}
+                onMouseEnter={e => e.currentTarget.style.background = '#E9F4EC'}
+                onMouseLeave={e => e.currentTarget.style.background = isEven ? '#FAF8F1' : '#FFFFFF'}
               >
-                <td style={{ padding: '10px 14px', color: '#4b5563', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '12px' }}>
+                <td style={{ padding: '10px 14px', color: '#68766E', borderBottom: '1px solid #E4E9E2', fontSize: '12px' }}>
                   {i + 1}
                 </td>
-                <td style={{ padding: '10px 14px', color: '#f9fafb', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <td style={{ padding: '10px 14px', color: '#26352E', fontWeight: 600, borderBottom: '1px solid #E4E9E2' }}>
                   {drugName}
                 </td>
-                <td style={{ padding: '10px 14px', color: '#d1d5db', borderBottom: '1px solid rgba(255,255,255,0.04)', fontFamily: 'monospace', fontSize: '12px' }}>
+                <td style={{ padding: '10px 14px', color: '#26352E', borderBottom: '1px solid #E4E9E2', fontFamily: 'monospace', fontSize: '12px' }}>
                   {dose}
                 </td>
-                <td style={{ padding: '10px 14px', color: '#d1d5db', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <td style={{ padding: '10px 14px', color: '#26352E', borderBottom: '1px solid #E4E9E2' }}>
                   {freq}
                 </td>
-                <td style={{ padding: '10px 14px', color: '#9ca3af', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '11px' }}>
-                  {indications.length > 0 ? indications.slice(0, 2).join(', ') : <span style={{ color: '#374151' }}>—</span>}
+                <td style={{ padding: '10px 14px', color: '#68766E', borderBottom: '1px solid #E4E9E2', fontSize: '11px' }}>
+                  {indications.length > 0 ? indications.slice(0, 2).join(', ') : <span style={{ color: '#26352e' }}>—</span>}
                 </td>
-                <td style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <td style={{ padding: '10px 14px', borderBottom: '1px solid #E4E9E2' }}>
                   <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                    {flags.length > 0 ? flags : <span style={{ color: '#374151', fontSize: '11px' }}>None</span>}
+                    {flags.length > 0 ? flags : <span style={{ color: '#26352e', fontSize: '11px' }}>None</span>}
                   </div>
                 </td>
               </tr>

@@ -828,7 +828,7 @@ const QRScanner = ({
           onClick={() => { setActiveTab('scan'); setErrorMessage(''); }}
           className={`flex-1 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'scan'
-              ? 'text-hc-blue border-b-2 border-hc-blue bg-hc-surface'
+              ? 'text-hc-emerald border-b-2 border-hc-emerald bg-hc-surface'
               : 'text-hc-text-muted hover:text-hc-text'
           }`}
         >
@@ -840,7 +840,7 @@ const QRScanner = ({
           onClick={() => { setActiveTab('upload'); stopCamera(); setStatus('idle'); setErrorMessage(''); }}
           className={`flex-1 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'upload'
-              ? 'text-hc-blue border-b-2 border-hc-blue bg-hc-surface'
+              ? 'text-hc-emerald border-b-2 border-hc-emerald bg-hc-surface'
               : 'text-hc-text-muted hover:text-hc-text'
           }`}
         >
@@ -852,7 +852,7 @@ const QRScanner = ({
           onClick={() => { setActiveTab('manual'); stopCamera(); setStatus('idle'); setErrorMessage(''); }}
           className={`flex-1 py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'manual'
-              ? 'text-hc-blue border-b-2 border-hc-blue bg-hc-surface'
+              ? 'text-hc-emerald border-b-2 border-hc-emerald bg-hc-surface'
               : 'text-hc-text-muted hover:text-hc-text'
           }`}
         >
@@ -870,7 +870,7 @@ const QRScanner = ({
             {/* IDLE STATE */}
             {status === 'idle' && (
               <div className="text-center py-6 sm:py-8 w-full">
-                <div className="w-16 h-16 rounded-2xl bg-hc-blue-soft text-hc-blue flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <div className="w-16 h-16 rounded-2xl bg-hc-emerald-soft text-hc-emerald flex items-center justify-center mx-auto mb-4 shadow-sm">
                   <QrCode className="w-8 h-8" />
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-hc-text mb-1">Scan Patient QR Health ID</h3>
@@ -909,9 +909,9 @@ const QRScanner = ({
                 {/* Requesting overlay — shows spinner while stream is being acquired */}
                 {status === 'requesting' && (
                   <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center p-4 text-center z-10 space-y-3">
-                    <div className="w-10 h-10 border-[3px] border-hc-blue border-t-transparent rounded-full animate-spin mx-auto" />
-                    <p className="text-xs font-bold text-white">Requesting camera permission...</p>
-                    <p className="text-[11px] text-gray-300 max-w-[200px]">
+                    <div className="w-10 h-10 border-[3px] border-hc-emerald border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-xs font-bold text-hc-text">Requesting camera permission...</p>
+                    <p className="text-[11px] text-hc-text-muted max-w-[200px]">
                       Please click &quot;Allow&quot; if your browser prompts for camera access.
                     </p>
                   </div>
@@ -926,7 +926,7 @@ const QRScanner = ({
                       <div className="absolute -top-1 -right-1 w-4 h-4 border-t-[3px] border-r-[3px] border-hc-success" />
                       <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-[3px] border-l-[3px] border-hc-success" />
                       <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-[3px] border-r-[3px] border-hc-success" />
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-hc-success to-transparent shadow-[0_0_10px_#22c55e] animate-pulse" />
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-hc-success to-transparent shadow-[0_0_10px_#16866a] animate-pulse" />
                     </div>
                   </>
                 )}
@@ -956,7 +956,7 @@ const QRScanner = ({
 
                 {/* Bottom Status Banner */}
                 <div className="absolute bottom-2 left-2 right-2 px-3 py-1.5 rounded-xl bg-black/75 backdrop-blur-md text-center z-20">
-                  <p className="text-[11px] font-semibold text-white">
+                  <p className="text-[11px] font-semibold text-hc-text">
                     {status === 'verifying' 
                       ? 'Verifying patient identity...' 
                       : status === 'requesting'
@@ -980,7 +980,7 @@ const QRScanner = ({
                   </div>
                   <h4 className="text-sm font-bold text-hc-text truncate">{verifiedPatient.name || 'Verified Patient'}</h4>
                   <div className="mt-1 space-y-0.5">
-                    <p className="text-[11px] font-mono font-bold text-hc-teal">
+                    <p className="text-[11px] font-mono font-bold text-hc-emerald-dark">
                       Patient ID: {verifiedPatient.patientId || 'Verified'}
                     </p>
                     {verifiedPatient.walletAddress && (
@@ -1036,16 +1036,16 @@ const QRScanner = ({
 
             {/* DEV-ONLY DIAGNOSTIC PANEL */}
             {IS_DEV && (status === 'active' || status === 'requesting' || status === 'error') && (
-              <details className="w-full mt-3 text-[10px] font-mono bg-black/80 text-green-400 rounded-lg p-2 border border-green-900 cursor-pointer" open={status === 'error'}>
-                <summary className="text-green-300 font-bold text-[10px] cursor-pointer">🔧 Dev Diagnostics</summary>
+              <details className="w-full mt-3 text-[10px] font-mono bg-hc-surface text-hc-text rounded-lg p-2 border border-hc-border cursor-pointer" open={status === 'error'}>
+                <summary className="text-hc-emerald-dark font-bold text-[10px] cursor-pointer">🔧 Dev Diagnostics</summary>
                 <div className="mt-1 space-y-0.5">
-                  <div>Secure Context: <span className={diag.secureContext === 'YES' ? 'text-green-400' : 'text-red-400'}>{diag.secureContext}</span></div>
-                  <div>Camera API: <span className={diag.cameraAPI === 'YES' ? 'text-green-400' : 'text-red-400'}>{diag.cameraAPI}</span></div>
-                  <div>Permission: <span className={diag.permission === 'GRANTED' ? 'text-green-400' : diag.permission === 'DENIED' ? 'text-red-400' : 'text-yellow-400'}>{diag.permission}</span></div>
-                  <div>Stream: <span className={diag.stream === 'CONNECTED' ? 'text-green-400' : 'text-red-400'}>{diag.stream}</span></div>
-                  <div>Video Ready: <span className={diag.videoReady === 'YES' ? 'text-green-400' : 'text-yellow-400'}>{diag.videoReady}</span></div>
+                  <div>Secure Context: <span className={diag.secureContext === 'YES' ? 'text-green-400' : 'text-hc-danger'}>{diag.secureContext}</span></div>
+                  <div>Camera API: <span className={diag.cameraAPI === 'YES' ? 'text-green-400' : 'text-hc-danger'}>{diag.cameraAPI}</span></div>
+                  <div>Permission: <span className={diag.permission === 'GRANTED' ? 'text-green-400' : diag.permission === 'DENIED' ? 'text-hc-danger' : 'text-hc-warning'}>{diag.permission}</span></div>
+                  <div>Stream: <span className={diag.stream === 'CONNECTED' ? 'text-green-400' : 'text-hc-danger'}>{diag.stream}</span></div>
+                  <div>Video Ready: <span className={diag.videoReady === 'YES' ? 'text-green-400' : 'text-hc-warning'}>{diag.videoReady}</span></div>
                   <div>Video: {diag.videoWidth}×{diag.videoHeight}</div>
-                  <div>QR Decoder: <span className={diag.qrDecoder === 'RUNNING' ? 'text-green-400' : 'text-gray-400'}>{diag.qrDecoder}</span></div>
+                  <div>QR Decoder: <span className={diag.qrDecoder === 'RUNNING' ? 'text-green-400' : 'text-hc-text-light'}>{diag.qrDecoder}</span></div>
                 </div>
               </details>
             )}
@@ -1065,9 +1065,9 @@ const QRScanner = ({
 
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="w-full border-2 border-dashed border-hc-border hover:border-hc-blue rounded-2xl p-8 text-center cursor-pointer transition-all bg-hc-bg-alt hover:bg-hc-surface group"
+              className="w-full border-2 border-dashed border-hc-border hover:border-hc-emerald rounded-2xl p-8 text-center cursor-pointer transition-all bg-hc-bg-alt hover:bg-hc-surface group"
             >
-              <div className="w-14 h-14 rounded-2xl bg-hc-blue-soft text-hc-blue flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
+              <div className="w-14 h-14 rounded-2xl bg-hc-emerald-soft text-hc-emerald flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
                 <Upload className="w-7 h-7" />
               </div>
               <h4 className="text-sm font-bold text-hc-text mb-1">Select QR Code Image</h4>
@@ -1078,7 +1078,7 @@ const QRScanner = ({
 
             {status === 'verifying' && (
               <div className="text-center py-4 space-y-2">
-                <div className="w-8 h-8 border-2 border-hc-blue border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="w-8 h-8 border-2 border-hc-emerald border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="text-xs font-bold text-hc-text">Decoding QR &amp; Verifying Patient...</p>
               </div>
             )}
@@ -1094,7 +1094,7 @@ const QRScanner = ({
                     <span>✓ Patient Identified</span>
                   </div>
                   <h4 className="text-sm font-bold text-hc-text truncate">{verifiedPatient.name || 'Verified Patient'}</h4>
-                  <p className="text-[11px] font-mono font-bold text-hc-teal mt-0.5">
+                  <p className="text-[11px] font-mono font-bold text-hc-emerald-dark mt-0.5">
                     Patient ID: {verifiedPatient.patientId || 'Verified'}
                   </p>
                 </div>
@@ -1140,7 +1140,7 @@ const QRScanner = ({
                     <span>✓ Patient Identified</span>
                   </div>
                   <h4 className="text-sm font-bold text-hc-text truncate">{verifiedPatient.name || 'Verified Patient'}</h4>
-                  <p className="text-[11px] font-mono font-bold text-hc-teal mt-0.5">
+                  <p className="text-[11px] font-mono font-bold text-hc-emerald-dark mt-0.5">
                     Patient ID: {verifiedPatient.patientId || 'Verified'}
                   </p>
                 </div>

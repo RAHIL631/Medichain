@@ -50,7 +50,7 @@ const QRScannerPage = () => {
         <DashboardLayout role="Doctor" navItems={navItems}>
             <div className="max-w-4xl mx-auto py-10">
                 <div className="mb-10 text-center">
-                    <h2 className="text-3xl font-display font-bold text-white">Identity Verification</h2>
+                    <h2 className="text-3xl font-display font-bold text-hc-text">Identity Verification</h2>
                     <p className="text-text-secondary mt-2">Scan the patient's Health ID to access their medical trail.</p>
                 </div>
 
@@ -63,10 +63,10 @@ const QRScannerPage = () => {
                     />
                 ) : (
                     <div className="space-y-6 animate-fadeIn">
-                        <GlassCard glowBorder={true} className="border-accent-cyan/30">
+                        <GlassCard glowBorder={true} className="border-accent-emerald-dark/30">
                             {loading ? (
                                 <div className="py-10 text-center">
-                                    <div className="w-10 h-10 border-2 border-accent-cyan border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                                    <div className="w-10 h-10 border-2 border-accent-emerald-dark border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                                     <p className="text-sm text-text-secondary uppercase tracking-[0.2em]">Polling Blockchain...</p>
                                 </div>
                             ) : error ? (
@@ -76,24 +76,24 @@ const QRScannerPage = () => {
                                 </div>
                             ) : (
                                 <div className="flex flex-col md:flex-row items-center gap-8">
-                                    <div className="w-24 h-24 bg-accent-cyan/10 rounded-full flex items-center justify-center border border-accent-cyan/20">
+                                    <div className="w-24 h-24 bg-accent-emerald-dark/10 rounded-full flex items-center justify-center border border-accent-emerald-dark/20">
                                         <span className="text-4xl">👤</span>
                                     </div>
                                     <div className="flex-grow text-center md:text-left">
                                         <h3 className="text-2xl font-bold">{patientData?.name}</h3>
                                         {patientData?.patientId && (
-                                            <p className="text-accent-cyan font-mono font-bold text-sm mt-0.5">Patient ID: {patientData.patientId}</p>
+                                            <p className="text-accent-emerald-dark font-mono font-bold text-sm mt-0.5">Patient ID: {patientData.patientId}</p>
                                         )}
                                         <p className="text-text-secondary font-mono text-xs mt-0.5">{scannedAddress}</p>
                                         <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
                                             <div className="px-3 py-1 bg-medichain-surface rounded-lg border border-medichain-border text-xs">
                                                 <span className="text-text-secondary uppercase mr-2">Blood:</span>
-                                                <span className="text-accent-cyan font-bold">{patientData?.bloodGroup || 'O+'}</span>
+                                                <span className="text-accent-emerald-dark font-bold">{patientData?.bloodGroup || 'O+'}</span>
                                             </div>
                                             {patientData?.dateOfBirth && (
                                                 <div className="px-3 py-1 bg-medichain-surface rounded-lg border border-medichain-border text-xs">
                                                     <span className="text-text-secondary uppercase mr-2">DOB:</span>
-                                                    <span className="text-white font-bold">{new Date(patientData.dateOfBirth).toLocaleDateString()}</span>
+                                                    <span className="text-hc-text font-bold">{new Date(patientData.dateOfBirth).toLocaleDateString()}</span>
                                                 </div>
                                             )}
                                         </div>

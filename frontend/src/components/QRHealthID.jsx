@@ -66,20 +66,20 @@ const QRHealthID = ({
       ctx.fillRect(0, 0, size, size);
 
       // 2. Header banner
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#faf8f1';
       ctx.fillRect(0, 0, size, 160);
 
       // Logo icon & Title
-      ctx.fillStyle = '#22d3ee';
+      ctx.fillStyle = '#16866a';
       ctx.font = 'bold 44px sans-serif';
       ctx.fillText('MediChain Health ID', 180, 95);
 
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = '#68766e';
       ctx.font = '24px sans-serif';
       ctx.fillText('Decentralized Secure Patient Identity', 180, 135);
 
       // Draw cross logo icon
-      ctx.fillStyle = '#0284c7';
+      ctx.fillStyle = '#0f6852';
       ctx.beginPath();
       ctx.arc(100, 80, 48, 0, Math.PI * 2);
       ctx.fill();
@@ -106,8 +106,8 @@ const QRHealthID = ({
             const qrY = 210;
 
             // Light gray container for QR
-            ctx.fillStyle = '#f8fafc';
-            ctx.strokeStyle = '#e2e8f0';
+            ctx.fillStyle = '#faf8f1';
+            ctx.strokeStyle = '#26352e';
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.roundRect(qrX - 20, qrY - 20, qrSize + 40, qrSize + 40, 24);
@@ -124,21 +124,21 @@ const QRHealthID = ({
       }
 
       // 4. Patient ID Label & Card Details
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#faf8f1';
       ctx.font = 'bold 42px monospace';
       ctx.textAlign = 'center';
       ctx.fillText(patientId, size / 2, 830);
 
-      ctx.fillStyle = '#0284c7';
+      ctx.fillStyle = '#0f6852';
       ctx.font = 'bold 28px sans-serif';
       ctx.fillText(`Patient: ${name}`, size / 2, 875);
 
       // 5. Verification Notice & Footer
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = '#68766e';
       ctx.font = '20px sans-serif';
       ctx.fillText('Present this QR to an authorized MediChain healthcare provider.', size / 2, 925);
 
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = '#68766e';
       ctx.font = '16px monospace';
       ctx.fillText('Verified on Sepolia Ethereum &bull; Chain ID 11155111', size / 2, 960);
 
@@ -196,28 +196,28 @@ const QRHealthID = ({
       <div
         ref={cardRef}
         id="medichain-patient-health-card"
-        className="w-full bg-white text-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 p-6 flex flex-col items-center print:shadow-none print:border print:border-slate-300 print:w-[380px] print:mx-auto"
+        className="w-full bg-white text-hc-text rounded-3xl shadow-2xl overflow-hidden border border-hc-border p-6 flex flex-col items-center print:shadow-none print:border print:border-hc-border print:w-[380px] print:mx-auto"
       >
         {/* Card Header */}
-        <div className="w-full flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+        <div className="w-full flex items-center justify-between pb-4 border-b border-hc-border-light mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center text-white font-black text-sm shadow-md">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-600 flex items-center justify-center text-hc-text font-black text-sm shadow-md">
               M+
             </div>
             <div>
-              <span className="font-display font-bold text-slate-900 text-sm tracking-tight block">MediChain</span>
-              <span className="text-[10px] font-semibold text-slate-500 block">Universal Health Identity</span>
+              <span className="font-display font-bold text-hc-text text-sm tracking-tight block">MediChain</span>
+              <span className="text-[10px] font-semibold text-hc-text-muted block">Universal Health Identity</span>
             </div>
           </div>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-700 bg-cyan-50 border border-cyan-200 px-2.5 py-1 rounded-full">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
             Verified ID
           </span>
         </div>
 
         {/* Patient Identity Header */}
         <div className="text-center mb-4">
-          <h2 className="text-lg font-bold text-slate-900 leading-tight">{name}</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Your secure identity for authorized healthcare access</p>
+          <h2 className="text-lg font-bold text-hc-text leading-tight">{name}</h2>
+          <p className="text-xs text-hc-text-muted mt-0.5">Your secure identity for authorized healthcare access</p>
         </div>
 
         {/* High Resolution Scannable QR Code Frame */}
@@ -231,7 +231,7 @@ const QRHealthID = ({
         ) : (
           <div
             ref={qrWrapperRef}
-            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-inner flex items-center justify-center mb-4"
+            className="bg-white p-4 rounded-2xl border border-hc-border shadow-inner flex items-center justify-center mb-4"
           >
             {/* error correction M — cleaner, less dense, reliably scannable */}
             <QRCodeSVG
@@ -246,16 +246,16 @@ const QRHealthID = ({
         )}
 
         {/* Prominent Patient ID Display with Copy */}
-        <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-2 mb-4">
+        <div className="w-full bg-hc-bg border border-hc-border rounded-2xl p-3 flex items-center justify-between gap-2 mb-4">
           <div className="min-w-0">
-            <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Patient ID</span>
-            <span className="text-sm sm:text-base font-mono font-black text-cyan-800 tracking-wider truncate block" id="patient-id-display">
+            <span className="text-[9px] uppercase font-bold text-hc-text-light block tracking-wider">Patient ID</span>
+            <span className="text-sm sm:text-base font-mono font-black text-emerald-800 tracking-wider truncate block" id="patient-id-display">
               {patientId}
             </span>
           </div>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-xs flex-shrink-0"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-hc-border hover:bg-hc-bg-alt text-hc-text text-xs font-bold transition-all shadow-xs flex-shrink-0"
             title="Copy Patient ID"
           >
             {copied ? (
@@ -265,7 +265,7 @@ const QRHealthID = ({
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 text-slate-500" />
+                <Copy className="w-3.5 h-3.5 text-hc-text-muted" />
                 <span className="text-[11px]">Copy</span>
               </>
             )}
@@ -292,14 +292,14 @@ const QRHealthID = ({
         </div>
 
         {/* Card Footer Details */}
-        <div className="w-full grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 text-[11px]">
+        <div className="w-full grid grid-cols-2 gap-2 pt-3 border-t border-hc-border-light text-[11px]">
           <div>
-            <span className="text-slate-400 block text-[9px] uppercase">Blood Group</span>
-            <strong className="text-slate-700 font-mono">{bloodGroup}</strong>
+            <span className="text-hc-text-light block text-[9px] uppercase">Blood Group</span>
+            <strong className="text-hc-text font-mono">{bloodGroup}</strong>
           </div>
           <div className="text-right">
-            <span className="text-slate-400 block text-[9px] uppercase">Blockchain</span>
-            <strong className="text-slate-700 font-mono">Sepolia 11155111</strong>
+            <span className="text-hc-text-light block text-[9px] uppercase">Blockchain</span>
+            <strong className="text-hc-text font-mono">Sepolia 11155111</strong>
           </div>
         </div>
       </div>
@@ -310,7 +310,7 @@ const QRHealthID = ({
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold text-xs hover:opacity-90 transition-opacity shadow-md shadow-cyan-500/20"
+          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-600 text-hc-text font-bold text-xs hover:opacity-90 transition-opacity shadow-md shadow-emerald-500/20"
         >
           <Download className="w-3.5 h-3.5" />
           {downloading ? 'Exporting...' : 'Download QR'}
@@ -319,9 +319,9 @@ const QRHealthID = ({
         {/* Print */}
         <button
           onClick={handlePrint}
-          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-surface border border-medichain-border text-white font-bold text-xs hover:bg-medichain-border transition-colors"
+          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-surface border border-medichain-border text-hc-text font-bold text-xs hover:bg-medichain-border transition-colors"
         >
-          <Printer className="w-3.5 h-3.5 text-accent-cyan" />
+          <Printer className="w-3.5 h-3.5 text-accent-emerald-dark" />
           Print ID
         </button>
 
@@ -329,9 +329,9 @@ const QRHealthID = ({
         {canShare && (
           <button
             onClick={handleShare}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-surface border border-medichain-border text-white font-bold text-xs hover:bg-medichain-border transition-colors"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-surface border border-medichain-border text-hc-text font-bold text-xs hover:bg-medichain-border transition-colors"
           >
-            <Share2 className="w-3.5 h-3.5 text-accent-indigo" />
+            <Share2 className="w-3.5 h-3.5 text-accent-terracotta" />
             {shareSuccess ? 'Shared!' : 'Share QR'}
           </button>
         )}
@@ -340,7 +340,7 @@ const QRHealthID = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-bg-dark border border-medichain-border text-text-secondary font-bold text-xs hover:text-white transition-colors"
+            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-medichain-bg-ivory border border-medichain-border text-text-secondary font-bold text-xs hover:text-hc-text transition-colors"
           >
             Close
           </button>

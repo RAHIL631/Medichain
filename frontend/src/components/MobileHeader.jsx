@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useWalletContext } from '../context/WalletContext';
-import mediChainLogo from '../medichain-logo.png';
+import mediChainLogo from '../medichain-logo-green.svg';
 import {
   Menu, X, LogOut, Bell, User,
   Home, FileText, Lock, Brain, BarChart3,
@@ -108,7 +108,7 @@ export default function MobileHeader() {
           {/* Avatar */}
           <Link
             to="/profile"
-            className="w-10 h-10 rounded-full bg-hc-blue flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+            className="w-10 h-10 rounded-full bg-hc-emerald-soft flex items-center justify-center text-hc-emerald-dark text-xs font-bold flex-shrink-0"
             aria-label="My profile"
           >
             {initials}
@@ -130,7 +130,7 @@ export default function MobileHeader() {
       {/* ── Drawer overlay ───────────────────────────────────────────────── */}
       {drawerOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-hc-navy/40 backdrop-blur-sm animate-fade-in"
+          className="lg:hidden fixed inset-0 z-40 bg-hc-forest/40 backdrop-blur-sm animate-fade-in"
           onClick={closeDrawer}
           aria-hidden="true"
         />
@@ -163,7 +163,7 @@ export default function MobileHeader() {
         {/* User info */}
         <div className="px-4 py-4 border-b border-hc-border-light flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-hc-blue flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+            <div className="w-11 h-11 rounded-full bg-hc-emerald-soft flex items-center justify-center text-hc-emerald-dark text-sm font-bold flex-shrink-0">
               {initials}
             </div>
             <div className="min-w-0">
@@ -201,7 +201,7 @@ export default function MobileHeader() {
                   onClick={closeDrawer}
                   className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
                     isActive
-                      ? 'bg-hc-blue-soft text-hc-blue font-semibold'
+                      ? 'bg-hc-emerald-soft text-hc-emerald font-semibold'
                       : 'text-hc-text-muted hover:bg-hc-bg-alt hover:text-hc-text'
                   }`}
                   aria-current={isActive ? 'page' : undefined}

@@ -100,12 +100,12 @@ const RecordCard = ({ record }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute bottom-2.5 left-3.5 sm:left-4 flex items-center gap-2">
           <span className="text-base sm:text-lg">{getTypeIcon(record.recordType)}</span>
-          <span className="text-xs font-bold text-white capitalize drop-shadow-sm truncate max-w-[180px]">
+          <span className="text-xs font-bold text-hc-text capitalize drop-shadow-sm truncate max-w-[180px]">
             {recordTypeLabel}
           </span>
         </div>
         <div className="absolute top-2.5 right-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-hc-blue" />
+          <span className="w-1.5 h-1.5 rounded-full bg-hc-emerald" />
           <span className="text-[10px] text-hc-text font-mono font-semibold">IPFS</span>
         </div>
       </div>
@@ -126,7 +126,7 @@ const RecordCard = ({ record }) => {
 
         {/* Doctor Info */}
         <div className="bg-hc-bg-alt rounded-xl p-2.5 sm:p-3 mb-3 border border-hc-border-light flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-hc-blue-soft text-hc-blue flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-hc-emerald-soft text-hc-emerald flex items-center justify-center flex-shrink-0">
             <User className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -158,7 +158,7 @@ const RecordCard = ({ record }) => {
             {record.notes.length > 80 && (
               <button 
                 onClick={() => setShowFullNotes(!showFullNotes)}
-                className="text-xs text-hc-blue hover:underline mt-1 font-bold inline-block"
+                className="text-xs text-hc-emerald hover:underline mt-1 font-bold inline-block"
               >
                 {showFullNotes ? 'Show less' : 'Show more'}
               </button>
@@ -181,17 +181,17 @@ const RecordCard = ({ record }) => {
             type="button"
             onClick={handleView}
             disabled={downloading}
-            className="min-h-[44px] flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-blue hover:bg-hc-bg-alt transition-colors disabled:opacity-50"
+            className="min-h-[44px] flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-emerald hover:bg-hc-bg-alt transition-colors disabled:opacity-50"
             title="Decrypt and view medical file"
           >
             {downloading ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-hc-blue" />
-                <span className="text-hc-blue">Decrypting...</span>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-hc-emerald" />
+                <span className="text-hc-emerald">Decrypting...</span>
               </>
             ) : (
               <>
-                <Lock className="w-3.5 h-3.5 text-hc-blue" />
+                <Lock className="w-3.5 h-3.5 text-hc-emerald" />
                 <span>Decrypt & View</span>
               </>
             )}
@@ -201,7 +201,7 @@ const RecordCard = ({ record }) => {
             href={record.ipfsURL || `https://gateway.pinata.cloud/ipfs/${record.ipfsCID}`} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="min-h-[44px] flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-blue hover:bg-hc-bg-alt transition-colors"
+            className="min-h-[44px] flex items-center justify-center gap-1.5 text-hc-text-muted hover:text-hc-emerald hover:bg-hc-bg-alt transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             <span>View</span>

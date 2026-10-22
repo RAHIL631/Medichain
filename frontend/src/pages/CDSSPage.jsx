@@ -284,12 +284,12 @@ export default function CDSSPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-medichain-border">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full bg-accent-cyan animate-pulse" />
-              <span className="text-xs font-mono font-bold text-accent-cyan uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-accent-emerald-dark animate-pulse" />
+              <span className="text-xs font-mono font-bold text-accent-emerald-dark uppercase tracking-wider">
                 Authoritative RxNorm &bull; Deterministic Safety Engine
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-hc-text flex items-center gap-2">
               🧠 Clinical Decision Support System
             </h1>
             <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
@@ -300,7 +300,7 @@ export default function CDSSPage() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => fetchPatientContext(false)}
-              className="px-3.5 py-2 rounded-xl bg-medichain-bg-dark border border-medichain-border text-xs font-semibold text-white hover:bg-medichain-surface transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center"
+              className="px-3.5 py-2 rounded-xl bg-medichain-bg-ivory border border-medichain-border text-xs font-semibold text-hc-text hover:bg-medichain-surface transition-all flex items-center gap-1.5 w-full sm:w-auto justify-center"
             >
               <span>↻</span> {refreshStatus || 'Refresh Health Profile'}
             </button>
@@ -308,10 +308,10 @@ export default function CDSSPage() {
         </div>
 
         {/* ── SECTION: EDITABLE PATIENT CLINICAL CONTEXT ───────────────────────────── */}
-        <GlassCard className="border-accent-cyan/30 shadow-lg">
+        <GlassCard className="border-accent-emerald-dark/30 shadow-lg">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-5 pb-3 border-b border-medichain-border">
             <div>
-              <h3 className="text-sm font-bold uppercase tracking-widest text-accent-cyan flex items-center gap-2">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-accent-emerald-dark flex items-center gap-2">
                 👤 Patient Clinical Parameters (EHR Active)
               </h3>
               <p className="text-[11px] text-text-secondary mt-0.5">
@@ -328,7 +328,7 @@ export default function CDSSPage() {
               <button
                 onClick={handleSaveContext}
                 disabled={saveStatus === 'saving'}
-                className="px-4 py-1.5 rounded-xl bg-accent-cyan/20 border border-accent-cyan/50 text-accent-cyan hover:bg-accent-cyan hover:text-black transition-all text-xs font-bold flex items-center gap-1.5"
+                className="px-4 py-1.5 rounded-xl bg-accent-emerald-dark/20 border border-accent-emerald-dark/50 text-accent-emerald-dark hover:bg-accent-emerald-dark hover:text-black transition-all text-xs font-bold flex items-center gap-1.5"
               >
                 {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? '✓ Context Saved' : 'Save Patient Context'}
               </button>
@@ -357,7 +357,7 @@ export default function CDSSPage() {
                   const v = parseInt(e.target.value);
                   setPatientAge(isNaN(v) ? 0 : Math.min(120, Math.max(0, v)));
                 }}
-                className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
               />
               <span className="text-[9px] text-text-secondary">0–120 years</span>
             </div>
@@ -377,7 +377,7 @@ export default function CDSSPage() {
                   const v = parseFloat(e.target.value);
                   setPatientWeight(isNaN(v) ? 1 : Math.min(500, Math.max(1, v)));
                 }}
-                className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
               />
               <span className="text-[9px] text-text-secondary">1–500 kg (Dosage scaling)</span>
             </div>
@@ -397,7 +397,7 @@ export default function CDSSPage() {
                   const v = parseInt(e.target.value);
                   setPatientGfr(isNaN(v) ? 0 : Math.min(200, Math.max(0, v)));
                 }}
-                className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none font-mono"
+                className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none font-mono"
               />
               <span className={`text-[9px] font-bold ${patientGfr < 30 ? 'text-status-danger' : patientGfr < 60 ? 'text-status-warning' : 'text-status-success'}`}>
                 {patientGfr < 15 ? 'Stage 5 (Kidney Failure)' : patientGfr < 30 ? 'Stage 4 (Severe CKD)' : patientGfr < 60 ? 'Stage 3 (Moderate CKD)' : 'Normal Function (≥60)'}
@@ -412,7 +412,7 @@ export default function CDSSPage() {
               <select
                 value={patientLiverClass}
                 onChange={e => setPatientLiverClass(e.target.value)}
-                className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
               >
                 <option value="A">Class A (5–6: Normal/Mild)</option>
                 <option value="B">Class B (7–9: Moderate)</option>
@@ -429,7 +429,7 @@ export default function CDSSPage() {
               <select
                 value={patientPregnancy}
                 onChange={e => setPatientPregnancy(e.target.value)}
-                className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
               >
                 <option value="not_pregnant">Not Pregnant</option>
                 <option value="pregnant">Pregnant (Active)</option>
@@ -453,9 +453,9 @@ export default function CDSSPage() {
                   value={newAllergy}
                   onChange={e => setNewAllergy(e.target.value)}
                   placeholder="Type allergy and press Enter (e.g. Penicillin)"
-                  className="flex-grow bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-1.5 text-xs text-white focus:border-accent-cyan outline-none"
+                  className="flex-grow bg-medichain-bg-ivory border border-medichain-border rounded-xl px-3 py-1.5 text-xs text-hc-text focus:border-accent-emerald-dark outline-none"
                 />
-                <button type="submit" className="px-3.5 bg-accent-cyan/20 border border-accent-cyan/40 rounded-xl text-accent-cyan font-bold text-xs hover:bg-accent-cyan hover:text-black transition-all">
+                <button type="submit" className="px-3.5 bg-accent-emerald-dark/20 border border-accent-emerald-dark/40 rounded-xl text-accent-emerald-dark font-bold text-xs hover:bg-accent-emerald-dark hover:text-black transition-all">
                   + Add
                 </button>
               </form>
@@ -470,7 +470,7 @@ export default function CDSSPage() {
                     onClick={() => {
                       if (!patientAllergies.includes(p)) setPatientAllergies([...patientAllergies, p]);
                     }}
-                    className="px-2 py-0.5 rounded text-[10px] bg-medichain-bg-dark border border-medichain-border text-text-secondary hover:text-white"
+                    className="px-2 py-0.5 rounded text-[10px] bg-medichain-bg-ivory border border-medichain-border text-text-secondary hover:text-hc-text"
                   >
                     + {p}
                   </button>
@@ -485,7 +485,7 @@ export default function CDSSPage() {
                   patientAllergies.map((allergy, i) => (
                     <span key={i} className="flex items-center gap-1.5 px-2.5 py-1 bg-status-danger/15 border border-status-danger/40 rounded-lg text-xs text-status-danger font-bold uppercase">
                       {allergy}
-                      <button type="button" onClick={() => removeAllergy(allergy)} className="hover:text-white font-bold ml-1">×</button>
+                      <button type="button" onClick={() => removeAllergy(allergy)} className="hover:text-hc-text font-bold ml-1">×</button>
                     </span>
                   ))
                 )}
@@ -508,8 +508,8 @@ export default function CDSSPage() {
                       onClick={() => toggleChronicCondition(cond)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all border ${
                         active
-                          ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                          : 'bg-medichain-bg-dark border-medichain-border text-text-secondary hover:text-white'
+                          ? 'bg-accent-emerald-dark/20 border-accent-emerald-dark text-accent-emerald-dark shadow-[0_0_10px_rgba(22,134,106,0.2)]'
+                          : 'bg-medichain-bg-ivory border-medichain-border text-text-secondary hover:text-hc-text'
                       }`}
                     >
                       {active ? '✓ ' : '+ '}{cond}
@@ -525,9 +525,9 @@ export default function CDSSPage() {
                   value={newCondition}
                   onChange={e => setNewCondition(e.target.value)}
                   placeholder="Add other custom comorbidity..."
-                  className="flex-grow bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-1.5 text-xs text-white focus:border-accent-cyan outline-none"
+                  className="flex-grow bg-medichain-bg-ivory border border-medichain-border rounded-xl px-3 py-1.5 text-xs text-hc-text focus:border-accent-emerald-dark outline-none"
                 />
-                <button type="submit" className="px-3 bg-medichain-surface border border-medichain-border rounded-xl text-white text-xs font-bold hover:bg-medichain-border">
+                <button type="submit" className="px-3 bg-medichain-surface border border-medichain-border rounded-xl text-hc-text text-xs font-bold hover:bg-medichain-border">
                   Add
                 </button>
               </form>
@@ -549,8 +549,8 @@ export default function CDSSPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`pb-3 px-2 font-display text-xs sm:text-sm font-bold border-b-2 transition-all uppercase tracking-wide whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'border-accent-cyan text-accent-cyan font-extrabold shadow-[0_4px_12px_-4px_rgba(34,211,238,0.4)]'
-                  : 'border-transparent text-text-secondary hover:text-white'
+                  ? 'border-accent-emerald-dark text-accent-emerald-dark font-extrabold shadow-[0_4px_12px_-4px_rgba(22,134,106,0.4)]'
+                  : 'border-transparent text-text-secondary hover:text-hc-text'
               }`}
             >
               {tab.label}
@@ -566,8 +566,8 @@ export default function CDSSPage() {
               {/* Form panel */}
               <GlassCard>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-bold text-white">Medications Setup</h3>
-                  <span className="text-[10px] font-mono text-accent-cyan font-bold">RxNorm Concept Resolver</span>
+                  <h3 className="text-base font-bold text-hc-text">Medications Setup</h3>
+                  <span className="text-[10px] font-mono text-accent-emerald-dark font-bold">RxNorm Concept Resolver</span>
                 </div>
                 
                 {/* Quick Add Medication Chips */}
@@ -579,7 +579,7 @@ export default function CDSSPage() {
                         key={qm}
                         type="button"
                         onClick={() => handleAddMed(qm)}
-                        className="px-2 py-0.5 rounded text-[10px] bg-medichain-bg-dark border border-medichain-border text-text-secondary hover:border-accent-cyan hover:text-accent-cyan transition-colors"
+                        className="px-2 py-0.5 rounded text-[10px] bg-medichain-bg-ivory border border-medichain-border text-text-secondary hover:border-accent-emerald-dark hover:text-accent-emerald-dark transition-colors"
                       >
                         + {qm}
                       </button>
@@ -595,7 +595,7 @@ export default function CDSSPage() {
                       value={medInput}
                       onChange={e => setMedInput(e.target.value)}
                       placeholder="e.g. Warfarin, Metformin, Lisinopril..."
-                      className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                      className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                     />
                   </div>
 
@@ -609,7 +609,7 @@ export default function CDSSPage() {
                         value={doseInput}
                         onChange={e => setDoseInput(e.target.value)}
                         placeholder="e.g. 5"
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none font-mono"
+                        className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none font-mono"
                       />
                     </div>
                     <div>
@@ -617,7 +617,7 @@ export default function CDSSPage() {
                       <select
                         value={freqInput}
                         onChange={e => setFreqInput(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       >
                         <option value="once_daily">Once Daily (QD)</option>
                         <option value="twice_daily">Twice Daily (BID)</option>
@@ -634,7 +634,7 @@ export default function CDSSPage() {
                       <select
                         value={routeInput}
                         onChange={e => setRouteInput(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       >
                         <option value="oral">Oral (PO)</option>
                         <option value="sublingual">Sublingual (SL)</option>
@@ -650,7 +650,7 @@ export default function CDSSPage() {
                         value={durationInput}
                         onChange={e => setDurationInput(e.target.value)}
                         placeholder="e.g. 7 days, 30 days"
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                   </div>
@@ -675,21 +675,21 @@ export default function CDSSPage() {
 
                   <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                     {analyzerMeds.length === 0 ? (
-                      <div className="text-center py-6 text-xs text-text-secondary border border-dashed border-medichain-border rounded-xl bg-medichain-bg-dark/20">
+                      <div className="text-center py-6 text-xs text-text-secondary border border-dashed border-medichain-border rounded-xl bg-medichain-bg-ivory/20">
                         No medications added. Click quick tags above or enter names manually.
                       </div>
                     ) : (
                       analyzerDosages.map((med, i) => (
-                        <div key={i} className="flex justify-between items-center p-2.5 bg-medichain-bg-dark/60 border border-medichain-border rounded-xl">
+                        <div key={i} className="flex justify-between items-center p-2.5 bg-medichain-bg-ivory/60 border border-medichain-border rounded-xl">
                           <div>
-                            <span className="font-bold text-white text-xs sm:text-sm">{med.drug}</span>
+                            <span className="font-bold text-hc-text text-xs sm:text-sm">{med.drug}</span>
                             <span className="text-[10px] text-text-secondary ml-2 font-mono">
                               {med.dose_mg}mg &bull; {med.frequency?.replace('_', ' ')}
                             </span>
                           </div>
                           <button
                             onClick={() => handleRemoveMed(med.drug)}
-                            className="text-status-danger hover:text-white text-xs font-bold px-2 py-1 rounded"
+                            className="text-status-danger hover:text-hc-text text-xs font-bold px-2 py-1 rounded"
                           >
                             ✕
                           </button>
@@ -705,7 +705,7 @@ export default function CDSSPage() {
                     <button
                       onClick={runPrescriptionAnalysis}
                       disabled={loadingAnalyze}
-                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-accent-blue to-accent-cyan text-white text-xs sm:text-sm font-bold hover:opacity-90 transition-opacity shadow-lg shadow-accent-cyan/20 flex items-center justify-center gap-2"
+                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-accent-emerald to-accent-emerald-dark text-hc-text text-xs sm:text-sm font-bold hover:opacity-90 transition-opacity shadow-lg shadow-accent-emerald-dark/20 flex items-center justify-center gap-2"
                       id="analyze-clinical-context-btn"
                     >
                       {loadingAnalyze ? (
@@ -728,7 +728,7 @@ export default function CDSSPage() {
 
               {/* OCR panel */}
               <GlassCard glowBorder={true}>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-accent-cyan mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-accent-emerald-dark mb-3">
                   📄 OCR Prescription Importer
                 </h3>
                 <PrescriptionOCRPanel onMedicationsExtracted={handleOcrExtracted} />
@@ -742,17 +742,17 @@ export default function CDSSPage() {
                   <div className="w-16 h-16 bg-medichain-surface rounded-2xl flex items-center justify-center text-3xl mb-2">
                     💊
                   </div>
-                  <h3 className="text-lg font-bold text-white">Enter Patient Information to Begin Clinical Analysis</h3>
+                  <h3 className="text-lg font-bold text-hc-text">Enter Patient Information to Begin Clinical Analysis</h3>
                   <p className="text-xs text-text-secondary max-w-md leading-relaxed">
-                    Add medications in the left panel and verify patient parameters (Age, eGFR, Liver status, Allergies). Then click <strong className="text-accent-cyan">Analyze Clinical Context</strong> to execute deterministic drug interaction and organ threshold audits.
+                    Add medications in the left panel and verify patient parameters (Age, eGFR, Liver status, Allergies). Then click <strong className="text-accent-emerald-dark">Analyze Clinical Context</strong> to execute deterministic drug interaction and organ threshold audits.
                   </p>
                 </GlassCard>
               )}
 
               {loadingAnalyze && (
                 <GlassCard className="flex flex-col items-center justify-center py-20 text-center space-y-3">
-                  <div className="w-12 h-12 border-4 border-accent-cyan border-t-transparent rounded-full animate-spin" />
-                  <p className="text-xs text-accent-cyan font-mono tracking-widest font-bold animate-pulse">
+                  <div className="w-12 h-12 border-4 border-accent-emerald-dark border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs text-accent-emerald-dark font-mono tracking-widest font-bold animate-pulse">
                     EXECUTING DETERMINISTIC SAFETY AUDIT & RXNORM RESOLUTION...
                   </p>
                 </GlassCard>
@@ -791,7 +791,7 @@ export default function CDSSPage() {
                   {/* Clinical Summary & Key Findings Card */}
                   <GlassCard>
                     <div className="flex items-center justify-between mb-3 pb-2 border-b border-medichain-border">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-accent-cyan flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-accent-emerald-dark flex items-center gap-1.5">
                         <span>📋</span> Clinical Decision Summary
                       </h4>
                       <span className="text-[10px] font-mono text-text-secondary">
@@ -799,7 +799,7 @@ export default function CDSSPage() {
                       </span>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-text-secondary leading-relaxed p-3 bg-medichain-bg-dark/60 rounded-xl border border-medichain-border">
+                    <p className="text-xs sm:text-sm text-text-secondary leading-relaxed p-3 bg-medichain-bg-ivory/60 rounded-xl border border-medichain-border">
                       {analysisResult.clinical_summary || analysisResult.clinical_explanation}
                     </p>
 
@@ -827,7 +827,7 @@ export default function CDSSPage() {
                   {/* Evidence & Authoritative Source Citations Table */}
                   <GlassCard>
                     <div className="flex items-center justify-between mb-3 pb-2 border-b border-medichain-border">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-accent-indigo flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-accent-terracotta flex items-center gap-1.5">
                         <span>📚</span> Evidence & Authoritative Source Citations
                       </h4>
                       <span className="text-[10px] font-mono text-emerald-400 font-bold">Verified Sources</span>
@@ -846,11 +846,11 @@ export default function CDSSPage() {
                         <tbody className="divide-y divide-medichain-border/30">
                           {analysisResult.evidence?.map((ev, idx) => (
                             <tr key={idx} className="hover:bg-white/5 transition-colors">
-                              <td className="py-3 font-bold text-white capitalize">{ev.drug}</td>
-                              <td className="py-3 text-accent-cyan font-mono text-[11px]">{ev.patientFactor}</td>
+                              <td className="py-3 font-bold text-hc-text capitalize">{ev.drug}</td>
+                              <td className="py-3 text-accent-emerald-dark font-mono text-[11px]">{ev.patientFactor}</td>
                               <td className="py-3 text-text-secondary text-[11px] leading-relaxed max-w-xs">{ev.finding}</td>
                               <td className="py-3">
-                                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-accent-indigo/20 border border-accent-indigo/40 text-accent-indigo uppercase">
+                                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-accent-terracotta/20 border border-accent-terracotta/40 text-accent-terracotta uppercase">
                                   {ev.source}
                                 </span>
                               </td>
@@ -875,19 +875,19 @@ export default function CDSSPage() {
                     </h4>
                     <div className="space-y-2">
                       {(analysisResult.interaction_analysis?.conflicts || []).map((c, i) => (
-                        <div key={i} className="border border-medichain-border rounded-xl overflow-hidden bg-medichain-bg-dark/40">
+                        <div key={i} className="border border-medichain-border rounded-xl overflow-hidden bg-medichain-bg-ivory/40">
                           <button
                             onClick={() => setExpandedIndex(expandedReasonIndex === i ? null : i)}
-                            className="w-full p-3 text-left flex items-center justify-between text-xs font-bold text-white hover:bg-medichain-surface/50"
+                            className="w-full p-3 text-left flex items-center justify-between text-xs font-bold text-hc-text hover:bg-medichain-surface/50"
                           >
                             <span>Why alert for {c.drug || `${c.drug1} ↔ ${c.drug2}`}?</span>
                             <span className="text-text-secondary font-mono">{expandedReasonIndex === i ? '▲ Hide' : '▼ View Logic'}</span>
                           </button>
                           {expandedReasonIndex === i && (
                             <div className="p-3 pt-0 text-[11px] text-text-secondary space-y-1.5 border-t border-medichain-border/30 mt-1">
-                              <p><strong className="text-white">Mechanism:</strong> {c.mechanism || c.description}</p>
-                              <p><strong className="text-white">Recommendation:</strong> {c.recommendation}</p>
-                              <p><strong className="text-white">Data Used:</strong> Evaluated against {c.source}</p>
+                              <p><strong className="text-hc-text">Mechanism:</strong> {c.mechanism || c.description}</p>
+                              <p><strong className="text-hc-text">Recommendation:</strong> {c.recommendation}</p>
+                              <p><strong className="text-hc-text">Data Used:</strong> Evaluated against {c.source}</p>
                             </div>
                           )}
                         </div>
@@ -901,25 +901,25 @@ export default function CDSSPage() {
                   </GlassCard>
 
                   {/* Data Used For Analysis Transparency Panel */}
-                  <GlassCard className="border-accent-cyan/20 bg-accent-cyan/5">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-accent-cyan mb-2">
+                  <GlassCard className="border-accent-emerald-dark/20 bg-accent-emerald-dark/5">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-accent-emerald-dark mb-2">
                       🔍 Data Used For Analysis (Audit Trail)
                     </h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div><span className="text-text-secondary block text-[10px]">Age:</span><strong className="text-white">{patientAge} yrs</strong></div>
-                      <div><span className="text-text-secondary block text-[10px]">Weight:</span><strong className="text-white">{patientWeight} kg</strong></div>
-                      <div><span className="text-text-secondary block text-[10px]">Kidney eGFR:</span><strong className="text-white">{patientGfr} mL/min</strong></div>
-                      <div><span className="text-text-secondary block text-[10px]">Liver Status:</span><strong className="text-white">Class {patientLiverClass}</strong></div>
-                      <div><span className="text-text-secondary block text-[10px]">Pregnancy:</span><strong className="text-white">{patientPregnancy}</strong></div>
-                      <div><span className="text-text-secondary block text-[10px]">Allergies:</span><strong className="text-white">{patientAllergies.join(', ') || 'None'}</strong></div>
-                      <div><span className="text-text-secondary block text-[10px]">Conditions:</span><strong className="text-white">{patientChronicConditions.join(', ') || 'None'}</strong></div>
-                      <div><span className="text-text-secondary block text-[10px]">Medications:</span><strong className="text-white">{analyzerMeds.join(', ')}</strong></div>
+                      <div><span className="text-text-secondary block text-[10px]">Age:</span><strong className="text-hc-text">{patientAge} yrs</strong></div>
+                      <div><span className="text-text-secondary block text-[10px]">Weight:</span><strong className="text-hc-text">{patientWeight} kg</strong></div>
+                      <div><span className="text-text-secondary block text-[10px]">Kidney eGFR:</span><strong className="text-hc-text">{patientGfr} mL/min</strong></div>
+                      <div><span className="text-text-secondary block text-[10px]">Liver Status:</span><strong className="text-hc-text">Class {patientLiverClass}</strong></div>
+                      <div><span className="text-text-secondary block text-[10px]">Pregnancy:</span><strong className="text-hc-text">{patientPregnancy}</strong></div>
+                      <div><span className="text-text-secondary block text-[10px]">Allergies:</span><strong className="text-hc-text">{patientAllergies.join(', ') || 'None'}</strong></div>
+                      <div><span className="text-text-secondary block text-[10px]">Conditions:</span><strong className="text-hc-text">{patientChronicConditions.join(', ') || 'None'}</strong></div>
+                      <div><span className="text-text-secondary block text-[10px]">Medications:</span><strong className="text-hc-text">{analyzerMeds.join(', ')}</strong></div>
                     </div>
                   </GlassCard>
 
                   {/* Medical Decision Support Disclaimer */}
-                  <div className="p-4 rounded-xl bg-medichain-bg-dark border border-medichain-border text-[11px] text-text-secondary leading-relaxed">
-                    <strong className="text-white">Safety Disclaimer:</strong> Clinical decision support only. This system does not replace professional medical judgment, current prescribing information, or institutional protocols. Verify medication, dosing, contraindications, allergies, and patient-specific factors before clinical use.
+                  <div className="p-4 rounded-xl bg-medichain-bg-ivory border border-medichain-border text-[11px] text-text-secondary leading-relaxed">
+                    <strong className="text-hc-text">Safety Disclaimer:</strong> Clinical decision support only. This system does not replace professional medical judgment, current prescribing information, or institutional protocols. Verify medication, dosing, contraindications, allergies, and patient-specific factors before clinical use.
                   </div>
                 </div>
               )}
@@ -945,7 +945,7 @@ export default function CDSSPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 space-y-6">
               <GlassCard className="flex flex-col items-center">
-                <h3 className="text-base font-bold text-white mb-4 text-center w-full pb-2 border-b border-medichain-border">
+                <h3 className="text-base font-bold text-hc-text mb-4 text-center w-full pb-2 border-b border-medichain-border">
                   🫁 5-Organ Neural Risk Spectrum
                 </h3>
                 <RiskRadarChart organRisks={getMockOrganRisks(patientAge, patientChronicConditions, patientGfr)} />
@@ -959,15 +959,15 @@ export default function CDSSPage() {
                 </h3>
                 <div className="space-y-3">
                   {getMockDiseasePredictions(patientAge, patientChronicConditions, patientGfr).map((d, idx) => (
-                    <div key={idx} className="p-4 bg-medichain-bg-dark/50 border border-medichain-border rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div key={idx} className="p-4 bg-medichain-bg-ivory/50 border border-medichain-border rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex-grow">
                         <div className="flex justify-between items-center mb-1">
-                          <span className="font-bold text-white text-sm capitalize">{d.disease} Risk</span>
-                          <span className="text-xs font-mono font-bold text-white">{d.probability.toFixed(1)}%</span>
+                          <span className="font-bold text-hc-text text-sm capitalize">{d.disease} Risk</span>
+                          <span className="text-xs font-mono font-bold text-hc-text">{d.probability.toFixed(1)}%</span>
                         </div>
                         <div className="h-2 bg-medichain-surface rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all duration-700 ${d.probability >= 50 ? 'bg-status-danger' : d.probability >= 25 ? 'bg-status-warning' : 'bg-accent-blue'}`}
+                            className={`h-full rounded-full transition-all duration-700 ${d.probability >= 50 ? 'bg-status-danger' : d.probability >= 25 ? 'bg-status-warning' : 'bg-accent-emerald'}`}
                             style={{ width: `${d.probability}%` }}
                           />
                         </div>
@@ -1004,13 +1004,13 @@ export default function CDSSPage() {
 
             <div className="lg:col-span-1 space-y-6">
               <GlassCard>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-accent-indigo mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-accent-terracotta mb-4">
                   🤖 Refill Consistency Evaluation
                 </h3>
                 <div className="space-y-4 text-xs text-text-secondary">
                   <p>Refill adherence is calculated from verified prescription and refill timestamps.</p>
-                  <div className="p-3 bg-medichain-bg-dark rounded-xl border border-medichain-border space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-white">Status:</span>
+                  <div className="p-3 bg-medichain-bg-ivory rounded-xl border border-medichain-border space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-hc-text">Status:</span>
                     <p className="font-mono text-emerald-400 font-bold">Good Adherence (85% on-time refill rate)</p>
                   </div>
                 </div>
@@ -1030,7 +1030,7 @@ export default function CDSSPage() {
                 <select
                   value={selectedDisease}
                   onChange={e => setSelectedDisease(e.target.value)}
-                  className="w-full bg-medichain-bg-dark border border-medichain-border rounded-xl px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                  className="w-full bg-white border border-medichain-border rounded-xl px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                 >
                   <option value="heart">Cardiovascular Risk Vector</option>
                   <option value="kidney">Renal Impairment Vector</option>
@@ -1076,19 +1076,19 @@ function DosageSafetyTab({
 }) {
   return (
     <div className="space-y-6">
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-hc-terracotta-soft to-hc-emerald-soft border border-hc-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">⚗️ Dosage Threshold Safety Checker</h2>
+          <h2 className="text-lg font-bold text-hc-text flex items-center gap-2">⚗️ Dosage Threshold Safety Checker</h2>
           <p className="text-xs text-text-secondary mt-1">Evaluates maximum safe doses against renal clearance (eGFR {patientGfr}) and hepatic function (Class {patientLiverClass}).</p>
         </div>
       </div>
 
       {!analyzerDosages.length ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-medichain-border rounded-2xl bg-medichain-bg-dark/20">
+        <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-medichain-border rounded-2xl bg-medichain-bg-ivory/20">
           <div className="text-4xl mb-3">💊</div>
-          <h3 className="text-lg font-bold text-white mb-1">No Medications Loaded</h3>
+          <h3 className="text-lg font-bold text-hc-text mb-1">No Medications Loaded</h3>
           <p className="text-xs text-text-secondary max-w-sm">
-            Add medications in the <strong className="text-accent-cyan">Prescription Analyzer</strong> tab to review dosage safety thresholds.
+            Add medications in the <strong className="text-accent-emerald-dark">Prescription Analyzer</strong> tab to review dosage safety thresholds.
           </p>
         </div>
       ) : (
@@ -1110,7 +1110,7 @@ function DosageSafetyTab({
               <tbody className="divide-y divide-medichain-border/30">
                 {analyzerDosages.map((d, i) => (
                   <tr key={i} className="hover:bg-white/5">
-                    <td className="py-3 font-bold text-white">{d.drug}</td>
+                    <td className="py-3 font-bold text-hc-text">{d.drug}</td>
                     <td className="py-3 font-mono">{d.dose_mg} mg</td>
                     <td className="py-3 capitalize">{d.frequency?.replace('_', ' ')}</td>
                     <td className="py-3 uppercase text-[11px]">{d.route || 'Oral'}</td>
@@ -1141,11 +1141,11 @@ function getMockOrganRisks(age = 45, conditions = [], gfr = 90) {
   const strokeBase = conditions.includes('stroke') ? 85 : conditions.includes('hypertension') ? 40 : 5;
 
   return {
-    heart: { label: 'Cardiovascular', risk_score: heartBase, risk_level: heartBase > 60 ? 'HIGH' : 'LOW', color: heartBase > 60 ? '#ef4444' : '#10b981' },
-    kidney: { label: 'Renal', risk_score: kidneyBase, risk_level: kidneyBase > 60 ? 'HIGH' : 'LOW', color: kidneyBase > 60 ? '#ef4444' : '#10b981' },
-    liver: { label: 'Hepatic', risk_score: liverBase, risk_level: liverBase > 60 ? 'HIGH' : 'LOW', color: liverBase > 60 ? '#ef4444' : '#10b981' },
-    diabetes: { label: 'Metabolic', risk_score: diabetesBase, risk_level: diabetesBase > 60 ? 'HIGH' : 'LOW', color: diabetesBase > 60 ? '#ef4444' : '#10b981' },
-    stroke: { label: 'Neurological', risk_score: strokeBase, risk_level: strokeBase > 60 ? 'HIGH' : 'LOW', color: strokeBase > 60 ? '#ef4444' : '#10b981' }
+    heart: { label: 'Cardiovascular', risk_score: heartBase, risk_level: heartBase > 60 ? 'HIGH' : 'LOW', color: heartBase > 60 ? '#b44736' : '#16866a' },
+    kidney: { label: 'Renal', risk_score: kidneyBase, risk_level: kidneyBase > 60 ? 'HIGH' : 'LOW', color: kidneyBase > 60 ? '#b44736' : '#16866a' },
+    liver: { label: 'Hepatic', risk_score: liverBase, risk_level: liverBase > 60 ? 'HIGH' : 'LOW', color: liverBase > 60 ? '#b44736' : '#16866a' },
+    diabetes: { label: 'Metabolic', risk_score: diabetesBase, risk_level: diabetesBase > 60 ? 'HIGH' : 'LOW', color: diabetesBase > 60 ? '#b44736' : '#16866a' },
+    stroke: { label: 'Neurological', risk_score: strokeBase, risk_level: strokeBase > 60 ? 'HIGH' : 'LOW', color: strokeBase > 60 ? '#b44736' : '#16866a' }
   };
 }
 

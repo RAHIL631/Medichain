@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
-import mediChainLogo from '../medichain-logo.png';
+import mediChainLogo from '../medichain-logo-green.svg';
 
 const SIDE_IMG = 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80&auto=format&fit=crop';
 
@@ -56,16 +56,16 @@ export default function Login() {
           className="w-full h-full object-cover"
           loading="eager"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-hc-navy/80 via-hc-navy/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-hc-forest/80 via-hc-forest/20 to-transparent" />
         <div className="absolute bottom-12 left-10 right-10">
           <div className="flex items-center gap-2 mb-4">
             <img src={mediChainLogo} alt="MediChain" className="h-8 w-auto object-contain" />
           </div>
-          <h2 className="text-3xl font-bold text-white leading-snug mb-2">
+          <h2 className="text-3xl font-bold text-hc-text leading-snug mb-2">
             Secure, patient-controlled<br />healthcare records
           </h2>
-          <div className="flex items-center gap-2 text-sm text-white/70">
-            <Shield className="w-4 h-4 text-hc-teal flex-shrink-0" />
+          <div className="flex items-center gap-2 text-sm text-hc-text/70">
+            <Shield className="w-4 h-4 text-hc-emerald-dark flex-shrink-0" />
             <span>Blockchain-verified · Patient-owned · Private by design</span>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function Login() {
           {/* Register link */}
           <p className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-hc-text-muted">
             Don't have an account?{' '}
-            <Link to="/register" className="text-hc-blue hover:text-hc-blue-hover font-bold transition-colors">
+            <Link to="/register" className="text-hc-emerald hover:text-hc-emerald-hover font-bold transition-colors">
               Create account
             </Link>
           </p>

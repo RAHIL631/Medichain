@@ -12,15 +12,15 @@ const CustomTooltip = ({ active, payload, label }) => {
   const val = payload[0]?.value;
   return (
     <div style={{
-      background: '#0f172a',
-      border: '1px solid #334155',
+      background: '#faf8f1',
+      border: '1px solid #e9f4ec',
       borderRadius: '8px',
       padding: '10px 14px',
       fontFamily: "'Inter', sans-serif",
       fontSize: '12px',
     }}>
-      <div style={{ color: '#94a3b8', marginBottom: '4px' }}>{label}</div>
-      <div style={{ color: val >= 80 ? '#34d399' : val >= 60 ? '#fbbf24' : '#f87171', fontWeight: 700 }}>
+      <div style={{ color: '#68766e', marginBottom: '4px' }}>{label}</div>
+      <div style={{ color: val >= 80 ? '#0F6852' : val >= 60 ? '#805B12' : '#B44736', fontWeight: 700 }}>
         Adherence: {val?.toFixed(0)}%
       </div>
     </div>
@@ -46,15 +46,15 @@ export default function AdherenceTimeline({ adherenceData = null, predictedDate 
 
   const hasData = displayData.some(d => d.score !== null);
 
-  const riskColor = currentScore >= 80 ? '#10b981'
-    : currentScore >= 60 ? '#f59e0b'
-    : currentScore >= 40 ? '#f97316'
-    : '#ef4444';
+  const riskColor = currentScore >= 80 ? '#16866a'
+    : currentScore >= 60 ? '#805B12'
+    : currentScore >= 40 ? '#B44736'
+    : '#b44736';
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
       {!hasData ? (
-        <div style={{ color: '#64748b', textAlign: 'center', padding: '40px' }}>
+        <div style={{ color: '#68766e', textAlign: 'center', padding: '40px' }}>
           <div style={{ fontSize: '32px', marginBottom: '8px' }}>📅</div>
           No adherence history yet. Data builds over time from prescription refills.
         </div>
@@ -80,8 +80,8 @@ export default function AdherenceTimeline({ adherenceData = null, predictedDate 
                   {adherenceData?.category_label || 'Adherence Score'}
                 </div>
                 {predictedDate && (
-                  <div style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>
-                    🗓️ Predicted next refill: <strong style={{ color: '#7dd3fc' }}>{predictedDate}</strong>
+                  <div style={{ color: '#68766e', fontSize: '12px', marginTop: '4px' }}>
+                    🗓️ Predicted next refill: <strong style={{ color: '#b9d8c5' }}>{predictedDate}</strong>
                   </div>
                 )}
               </div>
@@ -97,23 +97,23 @@ export default function AdherenceTimeline({ adherenceData = null, predictedDate 
                   <stop offset="100%" stopColor={riskColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E4E9E2" />
               <XAxis
                 dataKey="month"
-                tick={{ fontSize: 10, fill: '#475569' }}
+                tick={{ fontSize: 10, fill: '#68766e' }}
                 tickLine={false}
-                axisLine={{ stroke: '#334155' }}
+                axisLine={{ stroke: '#e9f4ec' }}
               />
               <YAxis
                 domain={[0, 100]}
-                tick={{ fontSize: 10, fill: '#475569' }}
+                tick={{ fontSize: 10, fill: '#68766e' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => `${v}%`}
               />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={80} stroke="#10b98144" strokeDasharray="6 3" label={{ value: 'Good', fill: '#10b981', fontSize: 10 }} />
-              <ReferenceLine y={60} stroke="#f59e0b44" strokeDasharray="6 3" label={{ value: 'Fair', fill: '#f59e0b', fontSize: 10 }} />
+              <ReferenceLine y={80} stroke="#16866a44" strokeDasharray="6 3" label={{ value: 'Good', fill: '#16866a', fontSize: 10 }} />
+              <ReferenceLine y={60} stroke="#ebcb8244" strokeDasharray="6 3" label={{ value: 'Fair', fill: '#ebcb82', fontSize: 10 }} />
               <Area
                 type="monotone"
                 dataKey="score"
@@ -131,10 +131,10 @@ export default function AdherenceTimeline({ adherenceData = null, predictedDate 
       {/* Factors */}
       {adherenceData?.contributing_factors?.length > 0 && (
         <div style={{ marginTop: '16px' }}>
-          <div style={{ color: '#f59e0b', fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>
+          <div style={{ color: '#805B12', fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>
             ⚡ Adherence Risk Factors
           </div>
-          <ul style={{ margin: 0, paddingLeft: '16px', color: '#94a3b8', fontSize: '12px' }}>
+          <ul style={{ margin: 0, paddingLeft: '16px', color: '#68766e', fontSize: '12px' }}>
             {adherenceData.contributing_factors.map((f, i) => (
               <li key={i} style={{ marginBottom: '4px' }}>{f}</li>
             ))}
@@ -145,10 +145,10 @@ export default function AdherenceTimeline({ adherenceData = null, predictedDate 
       {/* Interventions */}
       {adherenceData?.recommended_interventions?.length > 0 && (
         <div style={{ marginTop: '12px' }}>
-          <div style={{ color: '#7dd3fc', fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>
+          <div style={{ color: '#b9d8c5', fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>
             💡 Recommended Interventions
           </div>
-          <ul style={{ margin: 0, paddingLeft: '16px', color: '#94a3b8', fontSize: '12px' }}>
+          <ul style={{ margin: 0, paddingLeft: '16px', color: '#68766e', fontSize: '12px' }}>
             {adherenceData.recommended_interventions.map((r, i) => (
               <li key={i} style={{ marginBottom: '4px' }}>{r}</li>
             ))}

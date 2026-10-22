@@ -92,8 +92,8 @@ export default function WalletConnectionModal({
 
         {/* Icon + header */}
         <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-5 pr-8">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-hc-blue-soft flex items-center justify-center flex-shrink-0">
-            <Wallet className="w-5 h-5 text-hc-blue" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-hc-emerald-soft flex items-center justify-center flex-shrink-0">
+            <Wallet className="w-5 h-5 text-hc-emerald" />
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-bold text-hc-text leading-tight">Wallet connection required</h2>
@@ -113,11 +113,11 @@ export default function WalletConnectionModal({
             <React.Fragment key={n}>
               <div className="flex items-center gap-1.5">
                 <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-colors ${
-                  done ? 'bg-hc-success text-white' : step === n ? 'bg-hc-blue text-white' : 'bg-hc-border text-hc-text-muted'
+                  done ? 'bg-hc-success text-white' : step === n ? 'bg-hc-emerald-dark text-white' : 'bg-hc-border text-hc-text-muted'
                 }`}>
                   {done ? '✓' : n}
                 </div>
-                <span className={`text-[11px] sm:text-xs font-medium ${done ? 'text-hc-success' : step === n ? 'text-hc-blue' : 'text-hc-text-muted'}`}>
+                <span className={`text-[11px] sm:text-xs font-medium ${done ? 'text-hc-success' : step === n ? 'text-hc-emerald' : 'text-hc-text-muted'}`}>
                   {label}
                 </span>
               </div>
@@ -142,7 +142,7 @@ export default function WalletConnectionModal({
               href="https://metamask.io/download/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-hc-blue hover:underline font-semibold"
+              className="text-hc-emerald hover:underline font-semibold"
             >
               Install MetaMask ↗
             </a>

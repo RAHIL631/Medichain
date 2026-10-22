@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
-import mediChainLogo from '../medichain-logo.png';
+import mediChainLogo from '../medichain-logo-green.svg';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar({ navItems = [] }) {
@@ -45,7 +45,7 @@ export default function Sidebar({ navItems = [] }) {
               title={collapsed ? label : undefined}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                 active
-                  ? 'bg-hc-blue-soft text-hc-blue font-semibold shadow-xs'
+                  ? 'bg-hc-emerald-soft text-hc-emerald font-semibold shadow-xs'
                   : 'text-hc-text-muted hover:bg-hc-bg-alt hover:text-hc-text'
               } ${collapsed ? 'justify-center px-2' : ''}`}
               aria-current={active ? 'page' : undefined}
@@ -83,4 +83,3 @@ export default function Sidebar({ navItems = [] }) {
     </aside>
   );
 }
-

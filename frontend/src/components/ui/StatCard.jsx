@@ -3,12 +3,12 @@ import React from "react";
 import { SkeletonStat } from "./Skeleton";
 
 const ICON_BG = {
-  default: "bg-hc-blue-soft    text-hc-blue",
+  default: "bg-hc-emerald-soft    text-hc-emerald",
   success: "bg-hc-success-soft text-hc-success",
   warning: "bg-hc-warning-soft text-hc-warning",
   danger:  "bg-hc-danger-soft  text-hc-danger",
-  teal:    "bg-hc-teal-soft    text-hc-teal",
-  violet:  "bg-hc-violet-soft  text-hc-violet",
+  teal:    "bg-hc-emerald-dark-soft    text-hc-emerald-dark",
+  violet:  "bg-hc-terracotta-soft  text-hc-terracotta",
 };
 
 export function StatCard({ icon, label, value, sub, loading = false, variant = "default", action, actionLabel }) {
@@ -30,7 +30,7 @@ export function StatCard({ icon, label, value, sub, loading = false, variant = "
         {sub && <p className="text-xs text-hc-text-muted mt-1">{sub}</p>}
       </div>
       {action && actionLabel && (
-        <button onClick={action} className="text-xs text-hc-blue hover:underline font-medium flex-shrink-0 mt-0.5">{actionLabel}</button>
+        <button onClick={action} className="text-xs text-hc-emerald hover:underline font-medium flex-shrink-0 mt-0.5">{actionLabel}</button>
       )}
     </div>
   );

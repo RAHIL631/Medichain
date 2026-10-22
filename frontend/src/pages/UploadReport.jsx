@@ -98,7 +98,7 @@ const UploadReport = () => {
             <div className="max-w-4xl mx-auto py-6 sm:py-10 space-y-6 sm:space-y-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
                    <div>
-                       <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">Diagnostic Disbursement</h2>
+                       <h2 className="text-2xl sm:text-3xl font-display font-bold text-hc-text">Diagnostic Disbursement</h2>
                        <p className="text-text-secondary text-xs sm:text-sm mt-1">Upload verified diagnostic and laboratory findings to decentralized storage.</p>
                    </div>
                    {!isConnected && (
@@ -125,7 +125,7 @@ const UploadReport = () => {
                                     value={patientAddress}
                                     onChange={e => setPatientAddress(e.target.value)}
                                     placeholder="0x..." 
-                                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-4 py-3 text-sm font-mono text-accent-cyan outline-none focus:border-accent-cyan min-h-[44px]" 
+                                    className="w-full bg-medichain-bg-ivory border border-medichain-border rounded-lg px-4 py-3 text-sm font-mono text-accent-emerald-dark outline-none focus:border-accent-emerald-dark min-h-[44px]"
                                     required={isDoctorOrHospital}
                                 />
                             </div>
@@ -135,7 +135,7 @@ const UploadReport = () => {
                             <select 
                                 value={recordType}
                                 onChange={e => setRecordType(e.target.value)}
-                                className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-cyan min-h-[44px]"
+                                className="w-full bg-medichain-bg-ivory border border-medichain-border rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-emerald-dark min-h-[44px]"
                             >
                                 <option value="lab_report">Lab Report</option>
                                 <option value="prescription">Prescription</option>
@@ -151,7 +151,7 @@ const UploadReport = () => {
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
                                 placeholder="Summary of results, lab tests, and doctor notes..." 
-                                className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-cyan"
+                                className="w-full bg-medichain-bg-ivory border border-medichain-border rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-emerald-dark"
                             />
                         </div>
                     </GlassCard>
@@ -163,7 +163,7 @@ const UploadReport = () => {
                                 type="file" 
                                 accept=".pdf,.jpg,.jpeg,.png"
                                 onChange={e => setFile(e.target.files[0])}
-                                className="w-full text-xs text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-accent-cyan/10 file:text-accent-cyan hover:file:bg-accent-cyan/20 cursor-pointer min-h-[44px]" 
+                                className="w-full text-xs text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-accent-emerald-dark/10 file:text-accent-emerald-dark hover:file:bg-accent-emerald-dark/20 cursor-pointer min-h-[44px]"
                             />
                             <p className="text-[10px] text-text-secondary mt-2">Accepted formats: PDF, JPG, PNG (Max 10MB)</p>
                         </GlassCard>

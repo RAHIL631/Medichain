@@ -10,7 +10,7 @@ import {
 const Section = ({ icon: Icon, title, children }) => (
   <section className="hc-card p-5 sm:p-6">
     <div className="flex items-center gap-2.5 mb-3">
-      <div className="w-9 h-9 rounded-xl bg-hc-blue-soft text-hc-blue flex items-center justify-center flex-shrink-0">
+      <div className="w-9 h-9 rounded-xl bg-hc-emerald-soft text-hc-emerald flex items-center justify-center flex-shrink-0">
         <Icon className="w-4 h-4" />
       </div>
       <h2 className="text-base sm:text-lg font-bold text-hc-text">{title}</h2>
@@ -27,7 +27,7 @@ export default function HelpPage() {
       <Navbar />
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-hc-blue-soft border border-hc-blue-mid text-hc-blue text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-hc-emerald-soft border border-hc-emerald-mid text-hc-emerald text-xs font-semibold mb-4">
             <HelpCircle className="w-3.5 h-3.5" />
             Product help
           </div>
@@ -43,9 +43,9 @@ export default function HelpPage() {
             <p>Create an account with email and password as a patient, doctor, hospital staff, or admin.</p>
             <p>If sign-in fails, check the email/password and that the backend is reachable. Cold-started demo servers may take up to a minute on first request.</p>
             <p>
-              <Link to="/login" className="text-hc-blue font-semibold hover:underline">Sign in</Link>
+              <Link to="/login" className="text-hc-emerald font-semibold hover:underline">Sign in</Link>
               {' · '}
-              <Link to="/register" className="text-hc-blue font-semibold hover:underline">Create account</Link>
+              <Link to="/register" className="text-hc-emerald font-semibold hover:underline">Create account</Link>
             </p>
           </Section>
 

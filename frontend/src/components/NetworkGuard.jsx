@@ -128,9 +128,9 @@ const HardhatGuide = () => {
   return (
     <div style={{
       borderRadius: 10,
-      border: '1px solid rgba(255,255,255,0.07)',
+      border: '1px solid #E4E9E2',
       overflow: 'hidden',
-      background: 'rgba(255,255,255,0.02)',
+      background: '#FFFFFF',
       marginTop: 8,
     }}>
       {/* Accordion header */}
@@ -140,7 +140,7 @@ const HardhatGuide = () => {
           width: '100%', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', padding: '10px 14px',
           background: 'none', border: 'none', cursor: 'pointer',
-          color: '#94a3b8', fontSize: 12, fontWeight: 600,
+          color: '#68766e', fontSize: 12, fontWeight: 600,
           letterSpacing: '0.04em', textAlign: 'left',
         }}
       >
@@ -156,7 +156,7 @@ const HardhatGuide = () => {
       {/* Accordion body */}
       {open && (
         <div style={{ padding: '0 14px 14px', animation: 'ng-slideUp 0.2s ease' }}>
-          <p style={{ fontSize: 11, color: '#64748b', marginBottom: 10, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 11, color: '#68766e', marginBottom: 10, lineHeight: 1.6 }}>
             Run these commands in your project root (requires Node.js + Hardhat installed):
           </p>
 
@@ -168,30 +168,30 @@ const HardhatGuide = () => {
               <span style={{
                 minWidth: 20, height: 20, borderRadius: '50%',
                 background: 'rgba(245,158,11,0.15)',
-                color: '#f59e0b', fontSize: 10, fontWeight: 800,
+                color: '#805B12', fontSize: 10, fontWeight: 800,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, marginTop: 2,
               }}>{i + 1}</span>
               <div>
                 <code style={{
                   display: 'block', fontFamily: 'monospace', fontSize: 11,
-                  background: 'rgba(0,0,0,0.3)', color: '#7dd3fc',
+                  background: '#FAF8F1', color: '#26352E',
                   padding: '3px 8px', borderRadius: 5, marginBottom: 2,
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  border: '1px solid #E4E9E2',
                 }}>
                   {step.cmd}
                 </code>
-                <span style={{ fontSize: 10, color: '#64748b' }}>{step.note}</span>
+                <span style={{ fontSize: 10, color: '#68766e' }}>{step.note}</span>
               </div>
             </div>
           ))}
 
           <div style={{
             marginTop: 10, padding: '8px 10px',
-            background: 'rgba(56,189,248,0.06)',
-            borderRadius: 6, border: '1px solid rgba(56,189,248,0.15)',
+            background: '#E9F4EC',
+            borderRadius: 6, border: '1px solid #B9D8C5',
           }}>
-            <p style={{ fontSize: 10, color: '#7dd3fc', margin: 0, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 10, color: '#26352E', margin: 0, lineHeight: 1.6 }}>
               💡 Then add <strong>Hardhat Local</strong> to MetaMask manually:<br />
               Network Name: <code>Hardhat Local</code> · RPC: <code>http://127.0.0.1:8545</code> ·
               Chain ID: <code>31337</code> · Currency: <code>ETH</code>
@@ -207,8 +207,8 @@ const HardhatGuide = () => {
 const WrongNetworkScreen = ({ currentChainId, onSwitch, switching, switchError }) => (
   <div style={{
     position: 'fixed', inset: 0, zIndex: 9999,
-    background: 'rgba(2, 6, 23, 0.97)',
-    backdropFilter: 'blur(20px)',
+    background: 'rgba(250,248,241,0.96)',
+    backdropFilter: 'blur(12px)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: 24,
     animation: 'ng-fadeIn 0.3s ease',
@@ -216,8 +216,8 @@ const WrongNetworkScreen = ({ currentChainId, onSwitch, switching, switchError }
   }}>
     <div style={{
       maxWidth: 480, width: '100%',
-      background: 'linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(2,6,23,0.9) 100%)',
-      border: '1px solid rgba(245,158,11,0.25)',
+      background: 'linear-gradient(135deg, #FFFFFF 0%, #FBF3DE 100%)',
+      border: '1px solid #EBCB82',
       borderRadius: 20,
       padding: 32,
       display: 'flex', flexDirection: 'column', gap: 20,
@@ -229,11 +229,11 @@ const WrongNetworkScreen = ({ currentChainId, onSwitch, switching, switchError }
         <div style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 72, height: 72, borderRadius: '50%',
-          background: 'rgba(245,158,11,0.12)',
-          border: '2px solid rgba(245,158,11,0.3)',
+          background: '#FBF3DE',
+          border: '2px solid #EBCB82',
           animation: 'ng-warningBob 2s ease-in-out infinite',
         }}>
-          <svg width="36" height="36" fill="none" stroke="#f59e0b"
+          <svg width="36" height="36" fill="none" stroke="#805B12"
             strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
             viewBox="0 0 24 24">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -247,14 +247,14 @@ const WrongNetworkScreen = ({ currentChainId, onSwitch, switching, switchError }
       <div style={{ textAlign: 'center' }}>
         <h1 style={{
           margin: '0 0 8px',
-          fontSize: 22, fontWeight: 800, color: '#f1f5f9',
+          fontSize: 22, fontWeight: 800, color: '#26352E',
           letterSpacing: '-0.02em',
         }}>
           Wrong Network Detected
         </h1>
-        <p style={{ margin: 0, fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 13, color: '#68766e', lineHeight: 1.6 }}>
           MediChain requires the{' '}
-          <strong style={{ color: '#fbbf24' }}>{TARGET_NETWORK?.name}</strong>{' '}
+          <strong style={{ color: '#805B12' }}>{TARGET_NETWORK?.name}</strong>{' '}
           network to interact with the smart contracts.
         </p>
       </div>
@@ -267,40 +267,40 @@ const WrongNetworkScreen = ({ currentChainId, onSwitch, switching, switchError }
         {/* Current (wrong) */}
         <div style={{
           padding: '10px 14px', borderRadius: 10,
-          background: 'rgba(239,68,68,0.08)',
-          border: '1px solid rgba(239,68,68,0.25)',
+          background: '#F8E5DD',
+          border: '1px solid #D97860',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4,
+          <div style={{ fontSize: 10, color: '#68766e', marginBottom: 4,
             textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Current
           </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#f87171' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#b44736' }}>
             {getNetworkName(currentChainId)}
           </div>
-          <div style={{ fontSize: 10, fontFamily: 'monospace', color: '#64748b', marginTop: 2 }}>
+          <div style={{ fontSize: 10, fontFamily: 'monospace', color: '#68766e', marginTop: 2 }}>
             chain {currentChainId}
           </div>
         </div>
 
         {/* Arrow */}
-        <div style={{ color: '#334155', fontSize: 18, textAlign: 'center' }}>→</div>
+        <div style={{ color: '#174A3A', fontSize: 18, textAlign: 'center' }}>→</div>
 
         {/* Target (required) */}
         <div style={{
           padding: '10px 14px', borderRadius: 10,
-          background: 'rgba(16,185,129,0.08)',
-          border: '1px solid rgba(16,185,129,0.25)',
+          background: '#E9F4EC',
+          border: '1px solid #B9D8C5',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4,
+          <div style={{ fontSize: 10, color: '#68766e', marginBottom: 4,
             textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Required
           </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#34d399' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#16866a' }}>
             {TARGET_NETWORK?.name}
           </div>
-          <div style={{ fontSize: 10, fontFamily: 'monospace', color: '#64748b', marginTop: 2 }}>
+          <div style={{ fontSize: 10, fontFamily: 'monospace', color: '#68766e', marginTop: 2 }}>
             chain {TARGET_CHAIN_ID}
           </div>
         </div>
@@ -314,14 +314,14 @@ const WrongNetworkScreen = ({ currentChainId, onSwitch, switching, switchError }
           width: '100%', padding: '13px 20px',
           borderRadius: 12, border: 'none', cursor: switching ? 'not-allowed' : 'pointer',
           background: switching
-            ? 'rgba(245,158,11,0.3)'
-            : 'linear-gradient(135deg, #d97706, #f59e0b)',
+            ? '#68766E'
+            : 'linear-gradient(135deg, #0F6852, #16866A)',
           color: '#fff', fontWeight: 800, fontSize: 14,
           letterSpacing: '0.04em', textTransform: 'uppercase',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           transition: 'all 0.2s',
-          animation: switching ? 'none' : 'ng-pulse 2s ease-in-out infinite',
-          boxShadow: switching ? 'none' : '0 0 24px rgba(245,158,11,0.3)',
+          animation: 'none',
+          boxShadow: switching ? 'none' : '0 4px 16px rgba(22,134,106,0.18)',
         }}
       >
         {switching ? (
@@ -353,9 +353,9 @@ const WrongNetworkScreen = ({ currentChainId, onSwitch, switching, switchError }
       {switchError && (
         <div style={{
           padding: '8px 12px', borderRadius: 8,
-          background: 'rgba(239,68,68,0.08)',
-          border: '1px solid rgba(239,68,68,0.2)',
-          fontSize: 11, color: '#f87171', lineHeight: 1.5,
+          background: '#F8E5DD',
+          border: '1px solid #D97860',
+          fontSize: 11, color: '#b44736', lineHeight: 1.5,
         }}>
           ⚠ {switchError}
         </div>
@@ -365,13 +365,13 @@ const WrongNetworkScreen = ({ currentChainId, onSwitch, switching, switchError }
       {TARGET_CHAIN_ID === 31337 && <HardhatGuide />}
 
       {/* ── Footer note ── */}
-      <p style={{ margin: 0, fontSize: 10, color: '#334155', textAlign: 'center', lineHeight: 1.6 }}>
+      <p style={{ margin: 0, fontSize: 10, color: '#e9f4ec', textAlign: 'center', lineHeight: 1.6 }}>
         After switching, this screen will automatically dismiss.
         {!window.ethereum && (
-          <span style={{ color: '#f87171' }}>
+          <span style={{ color: '#b44736' }}>
             {' '}MetaMask is not installed —{' '}
             <a href="https://metamask.io/download/" target="_blank"
-              rel="noopener noreferrer" style={{ color: '#38bdf8' }}>
+              rel="noopener noreferrer" style={{ color: '#16866a' }}>
               install it first ↗
             </a>
           </span>

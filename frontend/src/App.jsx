@@ -47,7 +47,7 @@ const PageLoader = () => (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
         <div className="w-12 h-12 border-4 border-hc-border-light rounded-full" />
-        <div className="absolute inset-0 w-12 h-12 border-4 border-t-hc-blue border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+        <div className="absolute inset-0 w-12 h-12 border-4 border-t-hc-emerald border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
       </div>
       <div className="flex flex-col items-center gap-1">
         <p className="text-sm font-bold text-hc-text">MediChain</p>

@@ -15,11 +15,11 @@ import GlassCard from '../components/GlassCard';
 import FuturisticButton from '../components/FuturisticButton';
 
 const ORGAN_NODES = {
-  brain:     { label: 'Neurological (Stroke)', cx: 100, cy: 30, color: '#eab308', key: 'Neurological' },
-  heart:     { label: 'Cardiovascular',        cx: 100, cy: 75, color: '#ef4444', key: 'Cardiovascular' },
-  endocrine: { label: 'Endocrine (Diabetes)',  cx: 100, cy: 110, color: '#f97316', key: 'Endocrine' },
-  liver:     { label: 'Hepatic (Liver)',       cx: 90,  cy: 125, color: '#10b981', key: 'Hepatic' },
-  kidney:    { label: 'Renal (Kidney)',        cx: 110, cy: 135, color: '#3b82f6', key: 'Renal' }
+  brain:     { label: 'Neurological (Stroke)', cx: 100, cy: 30, color: '#ebcb82', key: 'Neurological' },
+  heart:     { label: 'Cardiovascular',        cx: 100, cy: 75, color: '#b44736', key: 'Cardiovascular' },
+  endocrine: { label: 'Endocrine (Diabetes)',  cx: 100, cy: 110, color: '#d97860', key: 'Endocrine' },
+  liver:     { label: 'Hepatic (Liver)',       cx: 90,  cy: 125, color: '#16866a', key: 'Hepatic' },
+  kidney:    { label: 'Renal (Kidney)',        cx: 110, cy: 135, color: '#16866a', key: 'Renal' }
 };
 
 export default function DigitalTwinDashboard() {
@@ -203,7 +203,7 @@ export default function DigitalTwinDashboard() {
         {/* Top Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-white flex items-center gap-2">
+            <h1 className="text-3xl font-display font-bold text-hc-text flex items-center gap-2">
               👥 AI Patient Digital Twin Simulator
             </h1>
             <p className="text-text-secondary mt-1">
@@ -219,8 +219,8 @@ export default function DigitalTwinDashboard() {
                   padding: '8px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: activeSubTab === tab ? 'linear-gradient(135deg, #06b6d4, #3b82f6)' : 'rgba(255,255,255,0.05)',
-                  color: activeSubTab === tab ? 'white' : '#94a3b8',
+                  background: activeSubTab === tab ? 'linear-gradient(135deg, #16866a, #16866a)' : 'rgba(255,255,255,0.05)',
+                  color: activeSubTab === tab ? 'white' : '#68766e',
                   fontSize: '12px',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -257,8 +257,8 @@ export default function DigitalTwinDashboard() {
                   <path
                     d="M 100 10 C 90 10, 85 20, 85 30 C 85 40, 90 48, 100 48 C 110 48, 115 40, 115 30 C 115 20, 110 10, 100 10 Z 
                        M 90 52 C 70 55, 60 70, 50 110 C 45 130, 42 160, 42 180 C 42 195, 48 195, 48 180 C 50 150, 55 120, 70 95 C 70 120, 75 180, 70 240 C 68 260, 65 285, 65 295 C 65 298, 70 298, 72 295 C 80 270, 85 240, 92 205 C 95 190, 105 190, 108 205 C 115 240, 120 270, 128 295 C 130 298, 135 298, 135 295 C 135 285, 132 260, 130 240 C 125 180, 130 120, 130 95 C 145 120, 150 150, 152 180 C 152 195, 158 195, 158 180 C 158 160, 155 130, 150 110 C 140 70, 130 55, 110 52"
-                    fill="rgba(255,255,255,0.03)"
-                    stroke="rgba(255,255,255,0.08)"
+                    fill="#E9F4EC"
+                    stroke="#B9D8C5"
                     strokeWidth="1.5"
                   />
 
@@ -292,11 +292,11 @@ export default function DigitalTwinDashboard() {
                 {/* Node info selector brief */}
                 <div className="mt-4 text-center z-10">
                   <span className="text-[10px] text-text-secondary uppercase block mb-1">Target Organ Selected</span>
-                  <span className="text-sm font-bold text-white block">
+                  <span className="text-sm font-bold text-hc-text block">
                     {activeNodeInfo?.label}
                   </span>
                   <span className="text-xs text-text-secondary mt-1 block">
-                    Baseline: <strong className="text-white">{activeOrganRisks.baseline}%</strong> | Simulated: <strong style={{ color: activeNodeInfo?.color }}>{activeOrganRisks.simulated}%</strong>
+                    Baseline: <strong className="text-hc-text">{activeOrganRisks.baseline}%</strong> | Simulated: <strong style={{ color: activeNodeInfo?.color }}>{activeOrganRisks.simulated}%</strong>
                   </span>
                 </div>
               </GlassCard>
@@ -307,7 +307,7 @@ export default function DigitalTwinDashboard() {
               
               {/* Simulation Controller */}
               <GlassCard>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-accent-cyan mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-accent-emerald-dark mb-4">
                   💊 Medication Prototyping Panel
                 </h3>
                 
@@ -317,7 +317,7 @@ export default function DigitalTwinDashboard() {
                     <select
                       value={selectedDrug}
                       onChange={e => setSelectedDrug(e.target.value)}
-                      className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                      className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                     >
                       <option value="Lisinopril">Lisinopril (Blood Pressure)</option>
                       <option value="Metformin">Metformin (Glucose Control)</option>
@@ -332,7 +332,7 @@ export default function DigitalTwinDashboard() {
                       type="number"
                       value={selectedDosage}
                       onChange={e => setSelectedDosage(e.target.value)}
-                      className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                      className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                     />
                   </div>
 
@@ -351,18 +351,18 @@ export default function DigitalTwinDashboard() {
                   {/* Before vs After risks comparison */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <GlassCard className="md:col-span-2">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-4">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-hc-text mb-4">
                         📊 Baseline vs Simulated Risk Comparison (%)
                       </h4>
                       <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={simResults.organ_risk_comparison || []} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                          <XAxis dataKey="organ" stroke="#64748b" tick={{ fontSize: 9 }} />
-                          <YAxis stroke="#64748b" domain={[0, 100]} tick={{ fontSize: 9 }} />
-                          <ChartTooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155' }} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E4E9E2" />
+                          <XAxis dataKey="organ" stroke="#68766e" tick={{ fontSize: 9 }} />
+                          <YAxis stroke="#68766e" domain={[0, 100]} tick={{ fontSize: 9 }} />
+                          <ChartTooltip contentStyle={{ background: '#faf8f1', border: '1px solid #e9f4ec' }} />
                           <ChartLegend />
-                          <Bar dataKey="baseline" fill="#475569" name="Baseline Risk" radius={[3, 3, 0, 0]} />
-                          <Bar dataKey="simulated" fill="#06b6d4" name="Simulated Risk" radius={[3, 3, 0, 0]} />
+                          <Bar dataKey="baseline" fill="#68766e" name="Baseline Risk" radius={[3, 3, 0, 0]} />
+                          <Bar dataKey="simulated" fill="#16866a" name="Simulated Risk" radius={[3, 3, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </GlassCard>
@@ -388,7 +388,7 @@ export default function DigitalTwinDashboard() {
                         </div>
                         <div>
                           <span className="block text-[10px] text-text-secondary uppercase">Compliance Rating</span>
-                          <span className="text-2xl font-bold text-cyan-400 font-mono">
+                          <span className="text-2xl font-bold text-emerald-400 font-mono">
                             {simResults.treatment_outcomes?.predicted_adherence}%
                           </span>
                         </div>
@@ -398,18 +398,18 @@ export default function DigitalTwinDashboard() {
 
                   {/* Future risk progression timeline chart */}
                   <GlassCard>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-accent-indigo mb-4">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-accent-terracotta mb-4">
                       📈 {activeNodeInfo?.label} Progression Trajectory (1-5 Years)
                     </h4>
                     <ResponsiveContainer width="100%" height={260}>
                       <LineChart data={trajectoryData} margin={{ top: 10, right: 30, left: -10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                        <XAxis dataKey="year" stroke="#64748b" tick={{ fontSize: 10 }} />
-                        <YAxis stroke="#64748b" domain={[0, 100]} tick={{ fontSize: 10 }} />
-                        <ChartTooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155' }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E4E9E2" />
+                        <XAxis dataKey="year" stroke="#68766e" tick={{ fontSize: 10 }} />
+                        <YAxis stroke="#68766e" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                        <ChartTooltip contentStyle={{ background: '#faf8f1', border: '1px solid #e9f4ec' }} />
                         <ChartLegend />
-                        <Line type="monotone" dataKey="Baseline" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} name="Baseline Trajectory" />
-                        <Line type="monotone" dataKey="Simulated" stroke="#22c55e" strokeWidth={2.5} dot={{ r: 4 }} name="Post-Treatment Trajectory" />
+                        <Line type="monotone" dataKey="Baseline" stroke="#b44736" strokeWidth={2.5} dot={{ r: 4 }} name="Baseline Trajectory" />
+                        <Line type="monotone" dataKey="Simulated" stroke="#16866a" strokeWidth={2.5} dot={{ r: 4 }} name="Post-Treatment Trajectory" />
                       </LineChart>
                     </ResponsiveContainer>
                     <p className="text-[10px] text-text-secondary italic text-center mt-3 max-w-lg mx-auto">
@@ -426,7 +426,7 @@ export default function DigitalTwinDashboard() {
         {/* TAB 2: PROFILE FORM */}
         {activeSubTab === 'baseline' && (
           <GlassCard className="max-w-2xl mx-auto">
-            <h3 className="text-lg font-bold text-white mb-6">⚙️ Configure Digital Twin Baseline Profile</h3>
+            <h3 className="text-lg font-bold text-hc-text mb-6">⚙️ Configure Digital Twin Baseline Profile</h3>
             
             <form onSubmit={handleUpdateBaseline} className="space-y-6">
               {!isPatient && (
@@ -438,7 +438,7 @@ export default function DigitalTwinDashboard() {
                     value={patientId}
                     onChange={e => setPatientId(e.target.value)}
                     placeholder="e.g. 648fdf..."
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                     onBlur={() => patientId && fetchProfile()}
                   />
                 </div>
@@ -452,7 +452,7 @@ export default function DigitalTwinDashboard() {
                     required
                     value={age}
                     onChange={e => setAge(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   />
                 </div>
                 <div>
@@ -460,7 +460,7 @@ export default function DigitalTwinDashboard() {
                   <select
                     value={gender}
                     onChange={e => setGender(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   >
                     <option value="M">Male</option>
                     <option value="F">Female</option>
@@ -474,7 +474,7 @@ export default function DigitalTwinDashboard() {
                     required
                     value={bmi}
                     onChange={e => setBmi(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   />
                 </div>
               </div>
@@ -487,7 +487,7 @@ export default function DigitalTwinDashboard() {
                     required
                     value={bp}
                     onChange={e => setBp(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   />
                 </div>
                 <div>
@@ -497,7 +497,7 @@ export default function DigitalTwinDashboard() {
                     required
                     value={diastolicBp}
                     onChange={e => setDiastolicBp(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   />
                 </div>
                 <div>
@@ -507,7 +507,7 @@ export default function DigitalTwinDashboard() {
                     required
                     value={cholesterol}
                     onChange={e => setCholesterol(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   />
                 </div>
               </div>
@@ -520,7 +520,7 @@ export default function DigitalTwinDashboard() {
                     required
                     value={glucose}
                     onChange={e => setGlucose(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   />
                 </div>
                 <div>
@@ -530,7 +530,7 @@ export default function DigitalTwinDashboard() {
                     required
                     value={gfr}
                     onChange={e => setGfr(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   />
                 </div>
                 <div>
@@ -541,7 +541,7 @@ export default function DigitalTwinDashboard() {
                     required
                     value={creatinine}
                     onChange={e => setCreatinine(e.target.value)}
-                    className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                    className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                   />
                 </div>
               </div>
@@ -560,11 +560,11 @@ export default function DigitalTwinDashboard() {
                       style={{
                         width: '40px', height: '20px',
                         borderRadius: '10px',
-                        background: tog.state ? '#06b6d4' : 'rgba(255,255,255,0.1)',
+                        background: tog.state ? '#16866a' : 'rgba(255,255,255,0.1)',
                         cursor: 'pointer',
                         transition: 'all 0.25s',
                         position: 'relative',
-                        border: `1px solid ${tog.state ? 'rgba(6,182,212,0.5)' : 'rgba(255,255,255,0.1)'}`
+                        border: `1px solid ${tog.state ? 'rgba(22,134,106,0.5)' : 'rgba(255,255,255,0.1)'}`
                       }}
                     >
                       <div style={{

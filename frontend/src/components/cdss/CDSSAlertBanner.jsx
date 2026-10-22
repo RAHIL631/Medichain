@@ -6,46 +6,46 @@ import React, { useState } from 'react';
 
 const SEVERITY_CONFIG = {
   SAFE: {
-    bg: 'linear-gradient(135deg, #065f46, #047857)',
-    border: '#10b981',
+    bg: 'linear-gradient(135deg, #E9F4EC, #B9D8C5)',
+    border: '#16866a',
     icon: '✅',
     label: 'SAFE',
-    textColor: '#6ee7b7',
+    textColor: '#0F6852',
   },
   LOW: {
-    bg: 'linear-gradient(135deg, #713f12, #92400e)',
-    border: '#f59e0b',
+    bg: 'linear-gradient(135deg, #FBF3DE, #EBCB82)',
+    border: '#805B12',
     icon: '🟡',
     label: 'LOW RISK',
-    textColor: '#fcd34d',
+    textColor: '#805B12',
   },
   MODERATE: {
-    bg: 'linear-gradient(135deg, #7c2d12, #9a3412)',
-    border: '#f97316',
+    bg: 'linear-gradient(135deg, #F8E5DD, #F8E5DD)',
+    border: '#B44736',
     icon: '⚠️',
     label: 'MODERATE RISK',
-    textColor: '#fdba74',
+    textColor: '#8D3A2D',
   },
   HIGH: {
-    bg: 'linear-gradient(135deg, #7f1d1d, #991b1b)',
-    border: '#ef4444',
+    bg: 'linear-gradient(135deg, #F8E5DD, #F8E5DD)',
+    border: '#b44736',
     icon: '🔴',
     label: 'HIGH RISK',
-    textColor: '#fca5a5',
+    textColor: '#8D3A2D',
   },
   CRITICAL: {
-    bg: 'linear-gradient(135deg, #4a044e, #701a75)',
-    border: '#e879f9',
+    bg: 'linear-gradient(135deg, #F8E5DD, #F8E5DD)',
+    border: '#B44736',
     icon: '🚨',
     label: 'CRITICAL',
-    textColor: '#f0abfc',
+    textColor: '#8D3A2D',
   },
   UNKNOWN: {
-    bg: 'linear-gradient(135deg, #1e293b, #334155)',
-    border: '#64748b',
+    bg: 'linear-gradient(135deg, #ffffff, #e9f4ec)',
+    border: '#68766e',
     icon: 'ℹ️',
     label: 'ANALYSIS PENDING',
-    textColor: '#94a3b8',
+    textColor: '#68766e',
   },
 };
 
@@ -70,7 +70,7 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
       marginBottom: '16px',
       fontFamily: "'Inter', sans-serif",
       position: 'relative',
-      boxShadow: `0 4px 20px rgba(0,0,0,0.3)`,
+      boxShadow: '0 4px 16px rgba(38,53,46,0.08)',
     }}>
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -81,7 +81,7 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
               AI PRESCRIPTION ANALYSIS — {config.label}
             </div>
             {score !== undefined && (
-              <div style={{ color: '#e2e8f0', fontSize: '12px', marginTop: '2px' }}>
+              <div style={{ color: '#26352e', fontSize: '12px', marginTop: '2px' }}>
                 Safety Score: <strong style={{ color: config.textColor }}>{score}/100</strong>
               </div>
             )}
@@ -91,7 +91,7 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
           <button
             onClick={() => setExpanded(!expanded)}
             style={{
-              background: 'rgba(255,255,255,0.1)',
+              background: '#FFFFFF',
               border: `1px solid ${config.border}`,
               color: config.textColor,
               borderRadius: '6px',
@@ -108,7 +108,7 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#94a3b8',
+                color: '#68766e',
                 cursor: 'pointer',
                 fontSize: '16px',
                 padding: '0 4px',
@@ -123,7 +123,7 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
       {/* Clinical explanation */}
       {analysis.clinical_explanation && (
         <p style={{
-          color: '#cbd5e1',
+          color: '#68766e',
           fontSize: '13px',
           margin: '8px 0 0',
           lineHeight: '1.6',
@@ -136,7 +136,7 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
 
       {/* Expanded details */}
       {expanded && (
-        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px solid rgba(255,255,255,0.1)` }}>
+        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #E4E9E2' }}>
 
           {/* Drug conflicts */}
           {conflicts.length > 0 && (
@@ -146,12 +146,12 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
               </div>
               {conflicts.map((c, i) => (
                 <div key={i} style={{
-                  background: 'rgba(0,0,0,0.2)',
+                  background: '#FFFFFF',
                   borderRadius: '6px',
                   padding: '8px 12px',
                   marginBottom: '6px',
                   fontSize: '12px',
-                  color: '#e2e8f0',
+                  color: '#26352e',
                 }}>
                   <span style={{ color: config.textColor, fontWeight: 600 }}>
                     {c.drug1} ↔ {c.drug2}
@@ -167,7 +167,7 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
                   }}>
                     {c.severity}
                   </span>
-                  <div style={{ color: '#94a3b8', marginTop: '3px' }}>{c.description}</div>
+                  <div style={{ color: '#68766e', marginTop: '3px' }}>{c.description}</div>
                 </div>
               ))}
             </div>
@@ -176,10 +176,10 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
           {/* Recommendations */}
           {recs.length > 0 && (
             <div>
-              <div style={{ color: '#7dd3fc', fontWeight: 600, fontSize: '12px', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              <div style={{ color: '#0F6852', fontWeight: 600, fontSize: '12px', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 💡 CLINICAL RECOMMENDATIONS
               </div>
-              <ul style={{ margin: 0, paddingLeft: '16px', color: '#cbd5e1', fontSize: '12px' }}>
+              <ul style={{ margin: 0, paddingLeft: '16px', color: '#68766e', fontSize: '12px' }}>
                 {recs.map((r, i) => (
                   <li key={i} style={{ marginBottom: '4px', lineHeight: '1.5' }}>{r}</li>
                 ))}
@@ -193,7 +193,7 @@ export default function CDSSAlertBanner({ analysis, onDismiss }) {
             paddingTop: '8px',
             borderTop: '1px solid rgba(255,255,255,0.1)',
             fontSize: '11px',
-            color: '#94a3b8',
+            color: '#68766e',
             fontStyle: 'italic',
             display: 'flex',
             alignItems: 'center',

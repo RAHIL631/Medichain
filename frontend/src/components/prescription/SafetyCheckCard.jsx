@@ -4,21 +4,21 @@
 import React, { useState } from 'react';
 
 const STATUS_CONFIG = {
-  SAFE:              { color: '#22c55e', bg: 'rgba(34,197,94,0.08)',   icon: '✅', label: 'Safe' },
-  CLEAR:             { color: '#22c55e', bg: 'rgba(34,197,94,0.08)',   icon: '✅', label: 'Clear' },
-  NOT_APPLICABLE:    { color: '#64748b', bg: 'rgba(100,116,139,0.08)', icon: '—',  label: 'N/A' },
-  USE_WITH_CAUTION:  { color: '#f97316', bg: 'rgba(249,115,22,0.08)',  icon: '⚠️', label: 'Caution' },
-  HIGH_RISK:         { color: '#ef4444', bg: 'rgba(239,68,68,0.08)',   icon: '🔴', label: 'High Risk' },
-  CONTRAINDICATED:   { color: '#a855f7', bg: 'rgba(168,85,247,0.08)',  icon: '🚨', label: 'Contraindicated' },
-  EXCEEDS_MAX:       { color: '#ef4444', bg: 'rgba(239,68,68,0.08)',   icon: '🔴', label: 'Exceeds Max' },
-  OVERDOSE:          { color: '#a855f7', bg: 'rgba(168,85,247,0.08)',  icon: '🚨', label: 'Overdose' },
-  DAILY_LIMIT_EXCEEDED: { color: '#f97316', bg: 'rgba(249,115,22,0.08)', icon: '⚠️', label: 'Daily Limit' },
-  UNKNOWN:           { color: '#64748b', bg: 'rgba(100,116,139,0.08)', icon: '❓', label: 'Unknown' },
+  SAFE:              { color: '#16866a', bg: 'rgba(34,197,94,0.08)',   icon: '✅', label: 'Safe' },
+  CLEAR:             { color: '#16866a', bg: 'rgba(34,197,94,0.08)',   icon: '✅', label: 'Clear' },
+  NOT_APPLICABLE:    { color: '#68766e', bg: 'rgba(100,116,139,0.08)', icon: '—',  label: 'N/A' },
+  USE_WITH_CAUTION:  { color: '#805B12', bg: '#FBF3DE', icon: '⚠️', label: 'Caution' },
+  HIGH_RISK:         { color: '#b44736', bg: 'rgba(239,68,68,0.08)',   icon: '🔴', label: 'High Risk' },
+  CONTRAINDICATED:   { color: '#b44736', bg: '#f8e5dd',  icon: '🚨', label: 'Contraindicated' },
+  EXCEEDS_MAX:       { color: '#b44736', bg: 'rgba(239,68,68,0.08)',   icon: '🔴', label: 'Exceeds Max' },
+  OVERDOSE:          { color: '#b44736', bg: '#f8e5dd',  icon: '🚨', label: 'Overdose' },
+  DAILY_LIMIT_EXCEEDED: { color: '#805B12', bg: '#FBF3DE', icon: '⚠️', label: 'Daily Limit' },
+  UNKNOWN:           { color: '#68766e', bg: 'rgba(100,116,139,0.08)', icon: '❓', label: 'Unknown' },
 };
 
 const SEVERITY_COLOR = {
-  NONE: '#22c55e', LOW: '#eab308', MODERATE: '#f97316',
-  HIGH: '#ef4444', CRITICAL: '#a855f7', UNKNOWN: '#64748b',
+  NONE: '#16866a', LOW: '#ebcb82', MODERATE: '#d97860',
+  HIGH: '#b44736', CRITICAL: '#d97860', UNKNOWN: '#68766e',
 };
 
 function CheckRow({ result, showExtra }) {
@@ -31,8 +31,8 @@ function CheckRow({ result, showExtra }) {
 
   return (
     <div style={{
-      background: isAlert ? config.bg : 'rgba(255,255,255,0.02)',
-      border: `1px solid ${isAlert ? config.color + '33' : 'rgba(255,255,255,0.06)'}`,
+      background: isAlert ? config.bg : '#FFFFFF',
+      border: `1px solid ${isAlert ? config.color + '33' : '#E4E9E2'}`,
       borderRadius: '10px',
       padding: '12px 14px',
       transition: 'all 0.2s',
@@ -45,18 +45,18 @@ function CheckRow({ result, showExtra }) {
         <span style={{ fontSize: '16px', flexShrink: 0 }}>{config.icon}</span>
 
         {/* Drug name */}
-        <span style={{ flex: 1, color: '#f9fafb', fontSize: '13px', fontWeight: 600 }}>
+        <span style={{ flex: 1, color: '#26352E', fontSize: '13px', fontWeight: 600 }}>
           {result.drug}
         </span>
 
         {/* Extra info (GFR / liver score) */}
         {showExtra && result.patient_gfr !== undefined && (
-          <span style={{ color: '#6b7280', fontSize: '10px', flexShrink: 0 }}>
+          <span style={{ color: '#68766e', fontSize: '10px', flexShrink: 0 }}>
             GFR {result.patient_gfr} mL/min
           </span>
         )}
         {showExtra && result.liver_score !== undefined && (
-          <span style={{ color: '#6b7280', fontSize: '10px', flexShrink: 0 }}>
+          <span style={{ color: '#68766e', fontSize: '10px', flexShrink: 0 }}>
             Score {result.liver_score} ({result.liver_class || ''})
           </span>
         )}
@@ -87,7 +87,7 @@ function CheckRow({ result, showExtra }) {
 
         {/* Expand chevron */}
         {result.message && (
-          <span style={{ color: '#4b5563', fontSize: '11px', flexShrink: 0, transition: 'transform 0.2s',
+          <span style={{ color: '#68766e', fontSize: '11px', flexShrink: 0, transition: 'transform 0.2s',
             transform: expanded ? 'rotate(180deg)' : 'none' }}>▾</span>
         )}
       </div>
@@ -97,8 +97,8 @@ function CheckRow({ result, showExtra }) {
         <p style={{
           marginTop: '10px',
           paddingTop: '10px',
-          borderTop: '1px solid rgba(255,255,255,0.07)',
-          color: '#9ca3af',
+          borderTop: '1px solid #E4E9E2',
+          color: '#68766E',
           fontSize: '12px',
           lineHeight: 1.5,
           margin: '10px 0 0',
@@ -116,12 +116,12 @@ export default function SafetyCheckCard({ title, icon, results = [], showExtra =
   ).length;
   const warnCount = results.filter(r => r.status === 'USE_WITH_CAUTION').length;
 
-  const headerColor = flagCount > 0 ? '#a855f7' : warnCount > 0 ? '#f97316' : '#22c55e'; // eslint-disable-line no-unused-vars
+  const headerColor = flagCount > 0 ? '#d97860' : warnCount > 0 ? '#d97860' : '#16866a'; // eslint-disable-line no-unused-vars
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #0d1117 0%, #111827 100%)',
-      border: `1px solid ${flagCount > 0 ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.07)'}`,
+      background: 'linear-gradient(135deg, #FAF8F1 0%, #E9F4EC 100%)',
+      border: `1px solid ${flagCount > 0 ? '#D97860' : '#E4E9E2'}`,
       borderRadius: '14px',
       overflow: 'hidden',
       fontFamily: "'Inter', sans-serif",
@@ -129,22 +129,22 @@ export default function SafetyCheckCard({ title, icon, results = [], showExtra =
       {/* Header */}
       <div style={{
         padding: '14px 18px',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid #E4E9E2',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        background: 'rgba(255,255,255,0.02)',
+        background: '#FFFFFF',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '18px' }}>{icon}</span>
-          <span style={{ color: '#f9fafb', fontWeight: 700, fontSize: '14px' }}>{title}</span>
+          <span style={{ color: '#26352E', fontWeight: 700, fontSize: '14px' }}>{title}</span>
         </div>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           {flagCount > 0 && (
             <span style={{
               padding: '2px 10px', borderRadius: '20px',
-              background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)',
-              color: '#a855f7', fontSize: '11px', fontWeight: 700,
+              background: '#F8E5DD', border: '1px solid #D97860',
+              color: '#8D3A2D', fontSize: '11px', fontWeight: 700,
             }}>
               {flagCount} Flag{flagCount > 1 ? 's' : ''}
             </span>
@@ -153,7 +153,7 @@ export default function SafetyCheckCard({ title, icon, results = [], showExtra =
             <span style={{
               padding: '2px 10px', borderRadius: '20px',
               background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)',
-              color: '#f97316', fontSize: '11px', fontWeight: 700,
+              color: '#8D3A2D', fontSize: '11px', fontWeight: 700,
             }}>
               {warnCount} Warning{warnCount > 1 ? 's' : ''}
             </span>
@@ -162,7 +162,7 @@ export default function SafetyCheckCard({ title, icon, results = [], showExtra =
             <span style={{
               padding: '2px 10px', borderRadius: '20px',
               background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
-              color: '#22c55e', fontSize: '11px', fontWeight: 700,
+              color: '#16866a', fontSize: '11px', fontWeight: 700,
             }}>All Clear</span>
           )}
         </div>
@@ -171,7 +171,7 @@ export default function SafetyCheckCard({ title, icon, results = [], showExtra =
       {/* Results list */}
       <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {results.length === 0 ? (
-          <p style={{ color: '#4b5563', fontSize: '13px', textAlign: 'center', padding: '16px 0' }}>
+          <p style={{ color: '#68766e', fontSize: '13px', textAlign: 'center', padding: '16px 0' }}>
             No data available
           </p>
         ) : (

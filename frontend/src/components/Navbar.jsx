@@ -8,7 +8,7 @@ import {
   Shield, Bell, LogOut, User, Menu, X,
   FileText, Lock, Brain, Home, Stethoscope, Wallet, HelpCircle
 } from 'lucide-react';
-import mediChainLogo from '../medichain-logo.png';
+import mediChainLogo from '../medichain-logo-green.svg';
 
 const PATIENT_NAV = [
   { label: 'Dashboard',   path: '/patient-dashboard', Icon: Home        },
@@ -102,7 +102,7 @@ export default function Navbar() {
                 to={path}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
                   isActive(path)
-                    ? 'bg-hc-blue-soft text-hc-blue font-semibold'
+                    ? 'bg-hc-emerald-soft text-hc-emerald font-semibold'
                     : 'text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt'
                 }`}
                 aria-current={isActive(path) ? 'page' : undefined}
@@ -117,7 +117,7 @@ export default function Navbar() {
                   to={path}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
                     isActive(path)
-                      ? 'bg-hc-blue-soft text-hc-blue font-semibold'
+                      ? 'bg-hc-emerald-soft text-hc-emerald font-semibold'
                       : 'text-hc-text-muted hover:text-hc-text hover:bg-hc-bg-alt'
                   }`}
                 >
@@ -169,7 +169,7 @@ export default function Navbar() {
                 </button>
 
                 <Link to="/profile" className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-hc-bg-alt transition-colors group">
-                  <div className="w-8 h-8 rounded-full bg-hc-blue flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-hc-emerald-soft flex items-center justify-center text-hc-emerald-dark text-xs font-bold">
                     {initials}
                   </div>
                   <div className="text-left hidden lg:block">
@@ -210,7 +210,7 @@ export default function Navbar() {
       {/* Mobile Backdrop Overlay */}
       {menuOpen && (
         <div
-          className="md:hidden fixed inset-0 top-16 z-40 bg-hc-navy/40 backdrop-blur-xs animate-fade-in"
+          className="md:hidden fixed inset-0 top-16 z-40 bg-hc-forest/40 backdrop-blur-xs animate-fade-in"
           onClick={closeMenu}
           aria-hidden="true"
         />
@@ -226,7 +226,7 @@ export default function Navbar() {
             <>
               {/* User info */}
               <div className="flex items-center gap-3 px-3.5 py-3 mb-3 bg-hc-bg-alt rounded-xl border border-hc-border-light">
-                <div className="w-10 h-10 rounded-full bg-hc-blue flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-hc-emerald-soft flex items-center justify-center text-hc-emerald-dark text-sm font-bold flex-shrink-0">
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -243,7 +243,7 @@ export default function Navbar() {
                     to={path}
                     onClick={closeMenu}
                     className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-colors min-h-[44px] ${
-                      isActive(path) ? 'bg-hc-blue-soft text-hc-blue font-bold' : 'text-hc-text hover:bg-hc-bg-alt'
+                      isActive(path) ? 'bg-hc-emerald-soft text-hc-emerald font-bold' : 'text-hc-text hover:bg-hc-bg-alt'
                     }`}
                   >
                     {Icon && <Icon className="w-5 h-5 flex-shrink-0" />}

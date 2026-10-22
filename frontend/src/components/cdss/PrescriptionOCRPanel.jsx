@@ -103,24 +103,24 @@ export default function PrescriptionOCRPanel({ onMedicationsExtracted }) {
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         style={{
-          border: `2px dashed ${isDragging ? '#3b82f6' : '#334155'}`,
+          border: `2px dashed ${isDragging ? '#16866a' : '#e9f4ec'}`,
           borderRadius: '12px',
           padding: '32px 20px',
           textAlign: 'center',
           cursor: 'pointer',
-          background: isDragging ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.02)',
+          background: isDragging ? 'rgba(22,134,106,0.08)' : 'rgba(255,255,255,0.02)',
           transition: 'all 0.2s ease',
         }}
       >
         <div style={{ fontSize: '36px', marginBottom: '8px' }}>
           {loading ? '⚙️' : file ? '📄' : '📋'}
         </div>
-        <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '4px' }}>
+        <div style={{ color: '#68766e', fontSize: '14px', marginBottom: '4px' }}>
           {loading ? 'Analyzing prescription with OCR…' :
             file ? file.name :
               'Drop a prescription image or PDF here'}
         </div>
-        <div style={{ color: '#475569', fontSize: '12px' }}>
+        <div style={{ color: '#68766e', fontSize: '12px' }}>
           {!file && 'or click to select — JPEG, PNG, PDF (max 10MB)'}
         </div>
 
@@ -128,10 +128,10 @@ export default function PrescriptionOCRPanel({ onMedicationsExtracted }) {
           <div style={{
             display: 'inline-block', marginTop: '12px',
             padding: '6px 20px',
-            background: 'rgba(59,130,246,0.15)',
-            border: '1px solid #3b82f666',
+            background: 'rgba(22,134,106,0.15)',
+            border: '1px solid #16866a66',
             borderRadius: '20px',
-            color: '#60a5fa', fontSize: '12px',
+            color: '#16866a', fontSize: '12px',
           }}>
             🔍 Extracting medications…
           </div>
@@ -151,7 +151,7 @@ export default function PrescriptionOCRPanel({ onMedicationsExtracted }) {
         <div style={{ marginTop: '12px', textAlign: 'center' }}>
           <img src={preview} alt="Prescription preview" style={{
             maxWidth: '100%', maxHeight: '200px', borderRadius: '8px',
-            border: '1px solid #334155',
+            border: '1px solid #e9f4ec',
           }} />
         </div>
       )}
@@ -162,7 +162,7 @@ export default function PrescriptionOCRPanel({ onMedicationsExtracted }) {
           marginTop: '12px', padding: '10px 14px',
           background: 'rgba(239,68,68,0.1)',
           border: '1px solid rgba(239,68,68,0.3)',
-          borderRadius: '8px', color: '#f87171', fontSize: '13px',
+          borderRadius: '8px', color: '#b44736', fontSize: '13px',
         }}>
           ⚠️ {error}
         </div>
@@ -173,15 +173,15 @@ export default function PrescriptionOCRPanel({ onMedicationsExtracted }) {
         <div style={{
           marginTop: '16px',
           background: 'rgba(255,255,255,0.03)',
-          border: '1px solid #334155',
+          border: '1px solid #e9f4ec',
           borderRadius: '10px',
           padding: '16px',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '14px' }}>
+            <div style={{ color: '#e9f4ec', fontWeight: 700, fontSize: '14px' }}>
               📋 OCR Extraction Results
             </div>
-            <div style={{ color: '#64748b', fontSize: '12px' }}>
+            <div style={{ color: '#68766e', fontSize: '12px' }}>
               Confidence: {result.ocr_available
                 ? `${Math.round((result.confidence || 0) * 100)}%`
                 : 'N/A (OCR unavailable)'}
@@ -191,17 +191,17 @@ export default function PrescriptionOCRPanel({ onMedicationsExtracted }) {
           {/* Medications */}
           {result.medications?.length > 0 ? (
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ color: '#7dd3fc', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>
+              <div style={{ color: '#0F6852', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>
                 💊 Detected Medications ({result.medications.length})
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {result.medications.map((med, i) => (
                   <span key={i} style={{
                     padding: '4px 12px',
-                    background: 'rgba(59,130,246,0.15)',
-                    border: '1px solid rgba(59,130,246,0.3)',
+                    background: 'rgba(22,134,106,0.15)',
+                    border: '1px solid rgba(22,134,106,0.3)',
                     borderRadius: '20px',
-                    color: '#93c5fd',
+                    color: '#0F6852',
                     fontSize: '12px',
                     fontWeight: 500,
                   }}>
@@ -211,7 +211,7 @@ export default function PrescriptionOCRPanel({ onMedicationsExtracted }) {
               </div>
             </div>
           ) : (
-            <div style={{ color: '#64748b', fontSize: '13px', marginBottom: '12px' }}>
+            <div style={{ color: '#68766e', fontSize: '13px', marginBottom: '12px' }}>
               {result.ocr_available
                 ? '⚠️ No known medications detected. Try a clearer image.'
                 : '⚠️ ' + (result.error || 'OCR not available')}
@@ -220,29 +220,29 @@ export default function PrescriptionOCRPanel({ onMedicationsExtracted }) {
 
           {/* Structured data */}
           {result.doctor_name && (
-            <div style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '4px' }}>
-              👨‍⚕️ Prescriber: <strong style={{ color: '#e2e8f0' }}>{result.doctor_name}</strong>
+            <div style={{ color: '#68766e', fontSize: '12px', marginBottom: '4px' }}>
+              👨‍⚕️ Prescriber: <strong style={{ color: '#26352e' }}>{result.doctor_name}</strong>
             </div>
           )}
           {result.prescription_date && (
-            <div style={{ color: '#94a3b8', fontSize: '12px' }}>
-              📅 Date: <strong style={{ color: '#e2e8f0' }}>{result.prescription_date}</strong>
+            <div style={{ color: '#68766e', fontSize: '12px' }}>
+              📅 Date: <strong style={{ color: '#26352e' }}>{result.prescription_date}</strong>
             </div>
           )}
 
           {/* Raw text (collapsed) */}
           {result.raw_text && (
             <details style={{ marginTop: '12px' }}>
-              <summary style={{ color: '#475569', fontSize: '11px', cursor: 'pointer' }}>
+              <summary style={{ color: '#68766e', fontSize: '11px', cursor: 'pointer' }}>
                 View raw OCR text
               </summary>
               <pre style={{
                 marginTop: '8px',
-                background: 'rgba(0,0,0,0.3)',
+                background: '#FAF8F1',
                 borderRadius: '6px',
                 padding: '10px',
                 fontSize: '11px',
-                color: '#64748b',
+                color: '#26352e',
                 overflow: 'auto',
                 maxHeight: '200px',
                 whiteSpace: 'pre-wrap',

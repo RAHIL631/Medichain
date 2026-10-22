@@ -113,7 +113,7 @@ export default function AdherenceDashboard() {
         {/* Top Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-white flex items-center gap-2">
+            <h1 className="text-3xl font-display font-bold text-hc-text flex items-center gap-2">
               🗓️ AI Medication Adherence Predictor
             </h1>
             <p className="text-text-secondary mt-1">
@@ -129,8 +129,8 @@ export default function AdherenceDashboard() {
                   padding: '8px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: activeTab === tab ? 'linear-gradient(135deg, #06b6d4, #3b82f6)' : 'rgba(255,255,255,0.05)',
-                  color: activeTab === tab ? 'white' : '#94a3b8',
+                  background: activeTab === tab ? 'linear-gradient(135deg, #16866a, #16866a)' : 'rgba(255,255,255,0.05)',
+                  color: activeTab === tab ? 'white' : '#68766e',
                   fontSize: '12px',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -150,7 +150,7 @@ export default function AdherenceDashboard() {
             {/* Params Form */}
             <div className="lg:col-span-1">
               <GlassCard>
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-hc-text mb-4 flex items-center gap-2">
                   <span>👤</span> Patient Compliance Profile
                 </h3>
 
@@ -164,7 +164,7 @@ export default function AdherenceDashboard() {
                         value={patientId}
                         onChange={e => setPatientId(e.target.value)}
                         placeholder="e.g. 648fdf..."
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                         onBlur={() => patientId && fetchPatientLogs()}
                       />
                     </div>
@@ -178,7 +178,7 @@ export default function AdherenceDashboard() {
                         required
                         value={age}
                         onChange={e => setAge(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                     <div>
@@ -186,7 +186,7 @@ export default function AdherenceDashboard() {
                       <select
                         value={education}
                         onChange={e => setEducation(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       >
                         <option value="Primary">Primary</option>
                         <option value="Secondary">Secondary</option>
@@ -205,7 +205,7 @@ export default function AdherenceDashboard() {
                       value={historyScore}
                       onChange={e => setHistoryScore(e.target.value)}
                       placeholder="e.g. 85%"
-                      className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                      className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                     />
                   </div>
 
@@ -219,7 +219,7 @@ export default function AdherenceDashboard() {
                         max={30}
                         value={missedMedicines}
                         onChange={e => setMissedMedicines(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                     <div>
@@ -231,7 +231,7 @@ export default function AdherenceDashboard() {
                         max={10}
                         value={chronicDiseases}
                         onChange={e => setChronicDiseases(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export default function AdherenceDashboard() {
               {!currentReport && !loading && (
                 <GlassCard className="flex flex-col items-center justify-center py-28 text-center">
                   <div style={{ fontSize: '56px', marginBottom: '16px' }}>🗓️</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Medication Adherence Predictor</h3>
+                  <h3 className="text-xl font-bold text-hc-text mb-2">Medication Adherence Predictor</h3>
                   <p className="text-sm text-text-secondary max-w-sm">
                     Enter patient parameters to analyze compliance risks, calculate adherence scores, and configure custom SMS, WhatsApp, and family notification recommendations.
                   </p>
@@ -259,13 +259,13 @@ export default function AdherenceDashboard() {
                 <GlassCard className="flex flex-col items-center justify-center py-28 text-center">
                   <div style={{
                     width: '44px', height: '44px',
-                    border: '3px solid rgba(6,182,212,0.2)',
-                    borderTop: '3px solid #06b6d4',
+                    border: '3px solid rgba(22,134,106,0.2)',
+                    borderTop: '3px solid #16866a',
                     borderRadius: '50%',
                     animation: 'spin 1.2s linear infinite',
                     marginBottom: '16px'
                   }} />
-                  <p style={{ color: '#06b6d4', fontWeight: 800, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.8px', animation: 'pulse 1s infinite' }}>
+                  <p style={{ color: '#16866a', fontWeight: 800, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.8px', animation: 'pulse 1s infinite' }}>
                     RUNNING ADHERENCE PREDICTION ENGINE...
                   </p>
                 </GlassCard>
@@ -282,9 +282,9 @@ export default function AdherenceDashboard() {
                       </h4>
                       <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="110" height="110" viewBox="0 0 110 110" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="55" cy="55" r="45" fill="transparent" stroke="rgba(255,255,255,0.04)" strokeWidth="6" />
+                          <circle cx="55" cy="55" r="45" fill="transparent" stroke="#E4E9E2" strokeWidth="6" />
                           <circle cx="55" cy="55" r="45" fill="transparent"
-                            stroke={currentReport.risk === 'LOW' ? '#22c55e' : currentReport.risk === 'MEDIUM' ? '#eab308' : '#ef4444'}
+                            stroke={currentReport.risk === 'LOW' ? '#16866a' : currentReport.risk === 'MEDIUM' ? '#ebcb82' : '#b44736'}
                             strokeWidth="6"
                             strokeDasharray={2 * Math.PI * 45}
                             strokeDashoffset={2 * Math.PI * 45 * (1 - (currentReport.adherenceScore || 100) / 100)}
@@ -316,7 +316,7 @@ export default function AdherenceDashboard() {
                           marginBottom: '12px'
                         }}>
                           <span style={{
-                            color: currentReport.risk === 'LOW' ? '#22c55e' : currentReport.risk === 'MEDIUM' ? '#eab308' : '#ef4444',
+                            color: currentReport.risk === 'LOW' ? '#16866a' : currentReport.risk === 'MEDIUM' ? '#ebcb82' : '#b44736',
                             fontWeight: 800,
                             fontSize: '11px',
                             textTransform: 'uppercase'
@@ -324,20 +324,20 @@ export default function AdherenceDashboard() {
                             {currentReport.risk} Risk of Non-Adherence
                           </span>
                         </div>
-                        <p style={{ color: '#d1d5db', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
+                        <p style={{ color: '#68766e', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
                           The patient's compliance patterns indicate a <strong>{currentReport.adherenceScore}%</strong> overall medication adherence score. This score was evaluated by the custom trained RandomForest model.
                         </p>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-medichain-border/30 text-xs">
                         <div>
-                          <span style={{ display: 'block', fontSize: '10px', color: '#6b7280', textTransform: 'uppercase' }}>Missed Doses (30d)</span>
+                          <span style={{ display: 'block', fontSize: '10px', color: '#68766e', textTransform: 'uppercase' }}>Missed Doses (30d)</span>
                           <span style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'white' }}>
                             {currentReport.patientProfile?.missedMedicines30d} Missed Doses
                           </span>
                         </div>
                         <div>
-                          <span style={{ display: 'block', fontSize: '10px', color: '#6b7280', textTransform: 'uppercase' }}>Chronic Conditions</span>
+                          <span style={{ display: 'block', fontSize: '10px', color: '#68766e', textTransform: 'uppercase' }}>Chronic Conditions</span>
                           <span style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'white' }}>
                             {currentReport.patientProfile?.chronicDiseases} Conditions
                           </span>
@@ -348,7 +348,7 @@ export default function AdherenceDashboard() {
 
                   {/* Reminder Recommendation Channels */}
                   <GlassCard>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-4">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-hc-text mb-4">
                       🔔 Recommended Reminder Alert Channels
                     </h4>
                     
@@ -365,8 +365,8 @@ export default function AdherenceDashboard() {
                             style={{
                               padding: '16px',
                               borderRadius: '12px',
-                              border: active ? '1px solid rgba(6,182,212,0.4)' : '1px solid rgba(255,255,255,0.06)',
-                              background: active ? 'rgba(6,182,212,0.05)' : 'rgba(255,255,255,0.01)',
+                              border: active ? '1px solid rgba(22,134,106,0.4)' : '1px solid #E4E9E2',
+                              background: active ? 'rgba(22,134,106,0.05)' : '#FFFFFF',
                               display: 'flex',
                               flexDirection: 'column',
                               gap: '6px'
@@ -378,7 +378,7 @@ export default function AdherenceDashboard() {
                                 padding: '2px 8px',
                                 borderRadius: '4px',
                                 background: active ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                                color: active ? '#22c55e' : '#ef4444',
+                                color: active ? '#16866a' : '#b44736',
                                 fontSize: '9px',
                                 fontWeight: 700,
                                 textTransform: 'uppercase'
@@ -387,7 +387,7 @@ export default function AdherenceDashboard() {
                               </span>
                             </div>
                             <span style={{ color: 'white', fontWeight: 700, fontSize: '13px', marginTop: '6px' }}>{ch.label}</span>
-                            <span style={{ color: '#6b7280', fontSize: '10px', lineHeight: 1.4 }}>{ch.desc}</span>
+                            <span style={{ color: '#68766e', fontSize: '10px', lineHeight: 1.4 }}>{ch.desc}</span>
                           </div>
                         );
                       })}
@@ -396,7 +396,7 @@ export default function AdherenceDashboard() {
 
                   {/* Contributing Factors */}
                   <GlassCard>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-3">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-hc-text mb-3">
                       🔬 Compliance Factor Audits
                     </h4>
                     <ul className="space-y-2 m-0 p-0 pl-4 text-xs text-text-secondary list-disc">
@@ -423,7 +423,7 @@ export default function AdherenceDashboard() {
         {/* TAB 2: COMPLIANCE LOG */}
         {activeTab === 'history' && (
           <GlassCard>
-            <h3 className="text-lg font-bold text-white mb-6">📜 Historical Compliance Log</h3>
+            <h3 className="text-lg font-bold text-hc-text mb-6">📜 Historical Compliance Log</h3>
             
             {history.length === 0 ? (
               <div className="text-center py-20 text-text-secondary italic">
@@ -435,15 +435,15 @@ export default function AdherenceDashboard() {
                   const dateStr = new Date(rep.createdAt).toLocaleString();
                   return (
                     <div key={rep._id} className="relative group">
-                      <span className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-medichain-bg-dark flex items-center justify-center bg-accent-cyan" />
-                      <div className="p-4 bg-medichain-bg-dark/40 border border-medichain-border/30 rounded-xl hover:border-accent-cyan/30 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <span className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-medichain-bg-ivory flex items-center justify-center bg-accent-emerald-dark" />
+                      <div className="p-4 bg-medichain-bg-ivory/40 border border-medichain-border/30 rounded-xl hover:border-accent-emerald-dark/30 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                           <span className="text-[10px] text-text-secondary font-mono block mb-1">{dateStr}</span>
-                          <h4 className="text-sm font-bold text-white">Compliance Check #{history.length - idx}</h4>
+                          <h4 className="text-sm font-bold text-hc-text">Compliance Check #{history.length - idx}</h4>
                           <div className="flex gap-4 mt-2 flex-wrap text-xs text-text-secondary">
                             <span>Missed: <strong>{rep.patientProfile?.missedMedicines30d} doses</strong></span>
                             <span>Conditions: <strong>{rep.patientProfile?.chronicDiseases}</strong></span>
-                            <span>Risk: <strong style={{ color: rep.risk === 'LOW' ? '#22c55e' : rep.risk === 'MEDIUM' ? '#eab308' : '#ef4444' }}>{rep.risk}</strong></span>
+                            <span>Risk: <strong style={{ color: rep.risk === 'LOW' ? '#16866a' : rep.risk === 'MEDIUM' ? '#ebcb82' : '#b44736' }}>{rep.risk}</strong></span>
                           </div>
                         </div>
 
@@ -452,7 +452,7 @@ export default function AdherenceDashboard() {
                             <span style={{ fontSize: '18px', fontWeight: 800, color: 'white', block: 'block' }}>
                               {rep.adherenceScore}%
                             </span>
-                            <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', block: 'block' }}>
+                            <span style={{ fontSize: '9px', color: '#68766e', textTransform: 'uppercase', block: 'block' }}>
                               Adherence
                             </span>
                           </div>
@@ -462,9 +462,9 @@ export default function AdherenceDashboard() {
                             style={{
                               padding: '6px 12px',
                               borderRadius: '6px',
-                              border: '1px solid rgba(6,182,212,0.3)',
+                              border: '1px solid rgba(22,134,106,0.3)',
                               background: 'transparent',
-                              color: '#06b6d4',
+                              color: '#16866a',
                               fontSize: '11px',
                               fontWeight: 700,
                               cursor: 'pointer'

@@ -7,7 +7,7 @@ import {
   User, Stethoscope, Building2,
   ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff
 } from 'lucide-react';
-import mediChainLogo from '../medichain-logo.png';
+import mediChainLogo from '../medichain-logo-green.svg';
 
 // Password rules — must mirror backend/middleware/validate.js exactly
 const passwordRules = [
@@ -209,9 +209,9 @@ const Register = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 mt-2">
               <button 
                 onClick={() => handleRoleSelect('patient')} 
-                className="hc-card-hover p-5 sm:p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-blue"
+                className="hc-card-hover p-5 sm:p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-emerald"
               >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-hc-blue-soft text-hc-blue flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-hc-emerald-soft text-hc-emerald flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform">
                   <User className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
                 <span className="font-bold text-base text-hc-text">Patient</span>
@@ -220,9 +220,9 @@ const Register = () => {
               
               <button 
                 onClick={() => handleRoleSelect('doctor')} 
-                className="hc-card-hover p-5 sm:p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-teal"
+                className="hc-card-hover p-5 sm:p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-emerald-dark"
               >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-hc-teal-soft text-hc-teal flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-hc-emerald-dark-soft text-hc-emerald-dark flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform">
                   <Stethoscope className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
                 <span className="font-bold text-base text-hc-text">Doctor</span>
@@ -231,9 +231,9 @@ const Register = () => {
               
               <button 
                 onClick={() => handleRoleSelect('hospital')} 
-                className="hc-card-hover p-5 sm:p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-violet"
+                className="hc-card-hover p-5 sm:p-6 flex flex-col items-center text-center group border border-hc-border hover:border-hc-terracotta"
               >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-hc-violet-soft text-hc-violet flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-hc-terracotta-soft text-hc-terracotta flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform">
                   <Building2 className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
                 <span className="font-bold text-base text-hc-text">Hospital / Lab</span>
@@ -241,9 +241,9 @@ const Register = () => {
               </button>
             </div>
 
-            <div className="mt-6 p-3 sm:p-3.5 rounded-xl bg-hc-blue-soft/50 border border-hc-blue/20 text-center">
+            <div className="mt-6 p-3 sm:p-3.5 rounded-xl bg-hc-emerald-soft/50 border border-hc-emerald/20 text-center">
               <p className="text-xs text-hc-text-muted">
-                <span className="font-semibold text-hc-blue">Wallet-Optional Sign Up:</span> You do not need a cryptocurrency wallet to create an account. You can link MetaMask anytime from your dashboard for decentralized access control.
+                <span className="font-semibold text-hc-emerald">Wallet-Optional Sign Up:</span> You do not need a cryptocurrency wallet to create an account. You can link MetaMask anytime from your dashboard for decentralized access control.
               </p>
             </div>
           </div>
@@ -530,7 +530,7 @@ const Register = () => {
         <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-hc-border-light text-center">
           <p className="text-xs sm:text-sm text-hc-text-muted">
             Already have a MediChain account?{' '}
-            <Link to="/login" className="text-hc-blue hover:text-hc-blue-hover font-bold transition-colors">
+            <Link to="/login" className="text-hc-emerald hover:text-hc-emerald-hover font-bold transition-colors">
               Sign in here
             </Link>
           </p>

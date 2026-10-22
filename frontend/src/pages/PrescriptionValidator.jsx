@@ -36,12 +36,12 @@ const TABS = [
 ];
 
 const SEV_STYLE = {
-  SAFE:     { bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.25)',   color: '#22c55e',  label: '🟢 SAFE' },
-  LOW:      { bg: 'rgba(234,179,8,0.08)',   border: 'rgba(234,179,8,0.25)',   color: '#eab308',  label: '🟡 LOW RISK' },
-  MODERATE: { bg: 'rgba(249,115,22,0.08)',  border: 'rgba(249,115,22,0.25)',  color: '#f97316',  label: '🟠 MODERATE' },
-  HIGH:     { bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.25)',   color: '#ef4444',  label: '🔴 HIGH RISK' },
-  CRITICAL: { bg: 'rgba(168,85,247,0.08)',  border: 'rgba(168,85,247,0.25)',  color: '#a855f7',  label: '🚨 CRITICAL' },
-  UNKNOWN:  { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.2)',  color: '#64748b',  label: '⬜ UNKNOWN' },
+  SAFE:     { bg: 'rgba(34,197,94,0.08)',   border: 'rgba(34,197,94,0.25)',   color: '#16866a',  label: '🟢 SAFE' },
+  LOW:      { bg: '#FBF3DE', border: '#EBCB82', color: '#805B12', label: '🟡 LOW RISK' },
+  MODERATE: { bg: '#F8E5DD', border: '#D97860', color: '#8D3A2D', label: '🟠 MODERATE' },
+  HIGH:     { bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.25)',   color: '#b44736',  label: '🔴 HIGH RISK' },
+  CRITICAL: { bg: 'rgba(180,71,54,0.08)',  border: 'rgba(180,71,54,0.25)',  color: '#b44736',  label: '🚨 CRITICAL' },
+  UNKNOWN:  { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.2)',  color: '#68766e',  label: '⬜ UNKNOWN' },
 };
 
 function StatPill({ label, value, highlight = false }) {
@@ -49,19 +49,19 @@ function StatPill({ label, value, highlight = false }) {
     <div style={{
       padding: '12px 18px',
       borderRadius: '12px',
-      background: highlight ? 'rgba(168,85,247,0.08)' : 'rgba(255,255,255,0.03)',
-      border: highlight ? '1px solid rgba(168,85,247,0.25)' : '1px solid rgba(255,255,255,0.07)',
+      background: highlight ? '#F8E5DD' : '#FFFFFF',
+      border: highlight ? '1px solid #D97860' : '1px solid #E4E9E2',
       textAlign: 'center',
       minWidth: '90px',
     }}>
       <div style={{
         fontSize: '24px',
         fontWeight: 800,
-        color: highlight ? '#a855f7' : '#f9fafb',
+        color: highlight ? '#B44736' : '#26352E',
         fontFamily: "'Inter', sans-serif",
         lineHeight: 1,
       }}>{value}</div>
-      <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <div style={{ fontSize: '10px', color: '#68766e', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         {label}
       </div>
     </div>
@@ -228,41 +228,41 @@ const PrescriptionValidator = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #060b14 0%, #0a0f1e 50%, #0d1117 100%)',
+      background: '#FAF8F1',
       fontFamily: "'Inter', sans-serif",
     }}>
 
       {/* ── TOP BAR ──────────────────────────────────────────────────────── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 40,
-        background: 'rgba(6,11,20,0.85)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(255,255,255,0.96)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #E4E9E2',
         padding: '0 24px',
         height: '60px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link to="/doctor-dashboard" style={{
-            color: '#4b5563', fontSize: '12px', textDecoration: 'none',
+            color: '#68766e', fontSize: '12px', textDecoration: 'none',
             display: 'flex', alignItems: 'center', gap: '4px',
             transition: 'color 0.2s',
           }}
-            onMouseEnter={e => e.currentTarget.style.color = '#06b6d4'}
-            onMouseLeave={e => e.currentTarget.style.color = '#4b5563'}
+            onMouseEnter={e => e.currentTarget.style.color = '#16866a'}
+            onMouseLeave={e => e.currentTarget.style.color = '#68766e'}
           >
             ← Dashboard
           </Link>
-          <span style={{ color: '#374151' }}>|</span>
+          <span style={{ color: '#26352e' }}>|</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{
               width: '28px', height: '28px',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+              background: 'linear-gradient(135deg, #16866a 0%, #16866a 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '14px',
             }}>Rx</div>
-            <span style={{ color: '#f9fafb', fontWeight: 700, fontSize: '15px' }}>
+            <span style={{ color: '#26352E', fontWeight: 700, fontSize: '15px' }}>
               AI Prescription Validator
             </span>
           </div>
@@ -274,9 +274,9 @@ const PrescriptionValidator = () => {
               style={{
                 padding: '6px 14px',
                 borderRadius: '8px',
-                background: 'rgba(6,182,212,0.1)',
-                border: '1px solid rgba(6,182,212,0.25)',
-                color: '#06b6d4',
+                background: 'rgba(22,134,106,0.1)',
+                border: '1px solid rgba(22,134,106,0.25)',
+                color: '#16866a',
                 fontSize: '12px',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -289,7 +289,7 @@ const PrescriptionValidator = () => {
           <div style={{
             width: '32px', height: '32px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #06b6d4, #6366f1)',
+            background: 'linear-gradient(135deg, #16866a, #d97860)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'white', fontWeight: 700, fontSize: '12px',
           }}>
@@ -310,10 +310,10 @@ const PrescriptionValidator = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Page header */}
               <div>
-                <h1 style={{ color: '#f9fafb', fontSize: '26px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
+                <h1 style={{ color: '#26352E', fontSize: '26px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
                   AI Prescription Validation
                 </h1>
-                <p style={{ color: '#6b7280', fontSize: '14px', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ color: '#68766e', fontSize: '14px', margin: 0, lineHeight: 1.5 }}>
                   Upload a prescription image or PDF. Our AI will extract medicines, run 10 safety checks,
                   calculate a prescription safety score, and generate a PDF report — anchored on blockchain.
                 </p>
@@ -326,13 +326,13 @@ const PrescriptionValidator = () => {
                 onDrop={handleDrop}
                 onClick={() => fileRef.current?.click()}
                 style={{
-                  border: `2px dashed ${dragOver ? '#06b6d4' : file ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                  border: `2px dashed ${dragOver ? '#16866a' : file ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.12)'}`,
                   borderRadius: '16px',
                   padding: '48px 24px',
                   textAlign: 'center',
                   cursor: 'pointer',
                   background: dragOver
-                    ? 'rgba(6,182,212,0.04)'
+                    ? 'rgba(22,134,106,0.04)'
                     : file
                     ? 'rgba(34,197,94,0.04)'
                     : 'rgba(255,255,255,0.02)',
@@ -351,10 +351,10 @@ const PrescriptionValidator = () => {
                     <div style={{ fontSize: '36px', marginBottom: '10px' }}>
                       {file.type === 'application/pdf' ? '📄' : '🖼️'}
                     </div>
-                    <p style={{ color: '#22c55e', fontWeight: 700, fontSize: '15px', margin: '0 0 4px' }}>
+                    <p style={{ color: '#16866a', fontWeight: 700, fontSize: '15px', margin: '0 0 4px' }}>
                       {file.name}
                     </p>
-                    <p style={{ color: '#4b5563', fontSize: '12px', margin: '0 0 10px' }}>
+                    <p style={{ color: '#68766e', fontSize: '12px', margin: '0 0 10px' }}>
                       {(file.size / 1024).toFixed(1)} KB
                     </p>
                     <button
@@ -362,17 +362,17 @@ const PrescriptionValidator = () => {
                       style={{
                         padding: '4px 12px', borderRadius: '6px',
                         background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
-                        color: '#ef4444', fontSize: '11px', cursor: 'pointer',
+                        color: '#b44736', fontSize: '11px', cursor: 'pointer',
                       }}
                     >Remove</button>
                   </>
                 ) : (
                   <>
                     <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
-                    <p style={{ color: '#9ca3af', fontWeight: 600, fontSize: '15px', margin: '0 0 6px' }}>
+                    <p style={{ color: '#68766e', fontWeight: 600, fontSize: '15px', margin: '0 0 6px' }}>
                       Drop prescription here or click to upload
                     </p>
-                    <p style={{ color: '#4b5563', fontSize: '12px', margin: 0 }}>
+                    <p style={{ color: '#68766e', fontSize: '12px', margin: 0 }}>
                       PDF, JPG, PNG, WebP — up to 10MB
                     </p>
                   </>
@@ -386,7 +386,7 @@ const PrescriptionValidator = () => {
                 borderRadius: '14px',
                 padding: '14px 18px',
               }}>
-                <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 700, marginBottom: '10px' }}>
+                <div style={{ fontSize: '11px', color: '#68766e', textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 700, marginBottom: '10px' }}>
                   📸 Try Real Medicine Sample Images
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -399,14 +399,14 @@ const PrescriptionValidator = () => {
                     style={{
                       display: 'flex', alignItems: 'center', gap: '10px',
                       padding: '8px', borderRadius: '10px',
-                      background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)',
+                      background: 'rgba(22,134,106,0.06)', border: '1px solid rgba(22,134,106,0.2)',
                       cursor: 'pointer', textAlign: 'left',
                     }}
                   >
                     <img src="/images/medicine_pill_bottles.png" alt="Pill Bottles" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} />
                     <div>
-                      <div style={{ color: '#06b6d4', fontSize: '12px', fontWeight: 700 }}>Rx Pill Bottles</div>
-                      <div style={{ color: '#6b7280', fontSize: '10px' }}>Metformin, Atorvastatin, Lisinopril</div>
+                      <div style={{ color: '#16866a', fontSize: '12px', fontWeight: 700 }}>Rx Pill Bottles</div>
+                      <div style={{ color: '#68766e', fontSize: '10px' }}>Metformin, Atorvastatin, Lisinopril</div>
                     </div>
                   </button>
 
@@ -419,14 +419,14 @@ const PrescriptionValidator = () => {
                     style={{
                       display: 'flex', alignItems: 'center', gap: '10px',
                       padding: '8px', borderRadius: '10px',
-                      background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)',
+                      background: '#F8E5DD', border: '1px solid #D97860',
                       cursor: 'pointer', textAlign: 'left',
                     }}
                   >
                     <img src="/images/medicine_blister_packs.png" alt="Blister Packs" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} />
                     <div>
-                      <div style={{ color: '#a855f7', fontSize: '12px', fontWeight: 700 }}>Blister Pack Rx</div>
-                      <div style={{ color: '#6b7280', fontSize: '10px' }}>Amoxicillin, Ibuprofen, Omeprazole</div>
+                      <div style={{ color: '#B44736', fontSize: '12px', fontWeight: 700 }}>Blister Pack Rx</div>
+                      <div style={{ color: '#68766e', fontSize: '10px' }}>Amoxicillin, Ibuprofen, Omeprazole</div>
                     </div>
                   </button>
                 </div>
@@ -434,13 +434,13 @@ const PrescriptionValidator = () => {
 
               {/* Manual medication input */}
               <div style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: '#FFFFFF',
+                border: '1px solid #E4E9E2',
                 borderRadius: '14px',
                 padding: '18px 20px',
               }}>
                 <label style={{
-                  display: 'block', color: '#9ca3af', fontSize: '11px',
+                  display: 'block', color: '#68766e', fontSize: '11px',
                   textTransform: 'uppercase', letterSpacing: '0.7px', marginBottom: '10px', fontWeight: 700,
                 }}>
                   Or enter medications manually (comma-separated)
@@ -452,10 +452,10 @@ const PrescriptionValidator = () => {
                   rows={3}
                   style={{
                     width: '100%', boxSizing: 'border-box',
-                    background: 'rgba(0,0,0,0.3)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: '#FAF8F1',
+                    border: '1px solid #E4E9E2',
                     borderRadius: '8px',
-                    color: '#f9fafb',
+                    color: '#26352E',
                     fontSize: '13px',
                     padding: '10px 12px',
                     resize: 'vertical',
@@ -463,10 +463,10 @@ const PrescriptionValidator = () => {
                     fontFamily: "'Inter', sans-serif",
                     lineHeight: 1.5,
                   }}
-                  onFocus={e => e.target.style.borderColor = 'rgba(6,182,212,0.4)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  onFocus={e => e.target.style.borderColor = 'rgba(22,134,106,0.4)'}
+                  onBlur={e => e.target.style.borderColor = '#E4E9E2'}
                 />
-                <p style={{ color: '#374151', fontSize: '10px', margin: '6px 0 0' }}>
+                <p style={{ color: '#26352e', fontSize: '10px', margin: '6px 0 0' }}>
                   Include dose and frequency if known for overdose analysis.
                 </p>
               </div>
@@ -478,21 +478,21 @@ const PrescriptionValidator = () => {
                   padding: '14px 28px',
                   borderRadius: '12px',
                   border: 'none',
-                  background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #6366f1 100%)',
+                  background: 'linear-gradient(135deg, #16866a 0%, #16866a 50%, #d97860 100%)',
                   color: 'white',
                   fontSize: '15px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   letterSpacing: '0.3px',
-                  boxShadow: '0 4px 20px rgba(6,182,212,0.3)',
+                  boxShadow: '0 4px 20px rgba(22,134,106,0.3)',
                   transition: 'all 0.2s',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
                 }}
-                onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 28px rgba(6,182,212,0.5)'}
-                onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(6,182,212,0.3)'}
+                onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 28px rgba(22,134,106,0.5)'}
+                onMouseLeave={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(22,134,106,0.3)'}
               >
                 🚀 Run AI Prescription Validation
               </button>
@@ -500,17 +500,17 @@ const PrescriptionValidator = () => {
 
             {/* Right: Patient context form */}
             <div style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: '#FFFFFF',
+              border: '1px solid #E4E9E2',
               borderRadius: '16px',
               padding: '22px',
               position: 'sticky',
               top: '76px',
             }}>
-              <h3 style={{ color: '#f9fafb', fontSize: '14px', fontWeight: 700, margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ color: '#26352E', fontSize: '14px', fontWeight: 700, margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 👤 Patient Context
               </h3>
-              <p style={{ color: '#4b5563', fontSize: '11px', margin: '0 0 16px', lineHeight: 1.4 }}>
+              <p style={{ color: '#68766e', fontSize: '11px', margin: '0 0 16px', lineHeight: 1.4 }}>
                 Provide patient details for personalized safety checks. Required for kidney, liver, allergy, and pregnancy assessments.
               </p>
 
@@ -523,7 +523,7 @@ const PrescriptionValidator = () => {
               ].map(field => (
                 <div key={field.key} style={{ marginBottom: '14px' }}>
                   <label style={{
-                    display: 'block', color: '#6b7280', fontSize: '10px',
+                    display: 'block', color: '#68766e', fontSize: '10px',
                     textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '5px', fontWeight: 700,
                   }}>
                     {field.label}
@@ -536,37 +536,37 @@ const PrescriptionValidator = () => {
                     min={0}
                     style={{
                       width: '100%', boxSizing: 'border-box',
-                      background: 'rgba(0,0,0,0.3)',
-                      border: '1px solid rgba(255,255,255,0.08)',
+                      background: '#FAF8F1',
+                      border: '1px solid #E4E9E2',
                       borderRadius: '8px',
-                      color: '#f9fafb',
+                      color: '#26352E',
                       fontSize: '13px',
                       padding: '8px 10px',
                       outline: 'none',
                       fontFamily: "'Inter', sans-serif",
                     }}
-                    onFocus={e => e.target.style.borderColor = 'rgba(6,182,212,0.4)'}
-                    onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                    onFocus={e => e.target.style.borderColor = 'rgba(22,134,106,0.4)'}
+                    onBlur={e => e.target.style.borderColor = '#E4E9E2'}
                   />
                   {field.hint && (
-                    <p style={{ color: '#374151', fontSize: '10px', margin: '3px 0 0' }}>{field.hint}</p>
+                    <p style={{ color: '#26352e', fontSize: '10px', margin: '3px 0 0' }}>{field.hint}</p>
                   )}
                 </div>
               ))}
 
               {/* Pregnant toggle */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
-                <span style={{ color: '#6b7280', fontSize: '12px', fontWeight: 600 }}>Pregnant Patient</span>
+                <span style={{ color: '#68766e', fontSize: '12px', fontWeight: 600 }}>Pregnant Patient</span>
                 <div
                   onClick={() => setPatientCtx(p => ({ ...p, pregnant: !p.pregnant }))}
                   style={{
                     width: '44px', height: '24px',
                     borderRadius: '12px',
-                    background: patientCtx.pregnant ? '#06b6d4' : 'rgba(255,255,255,0.1)',
+                    background: patientCtx.pregnant ? '#16866a' : 'rgba(255,255,255,0.1)',
                     cursor: 'pointer',
                     transition: 'all 0.25s',
                     position: 'relative',
-                    border: `1px solid ${patientCtx.pregnant ? 'rgba(6,182,212,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                    border: `1px solid ${patientCtx.pregnant ? 'rgba(22,134,106,0.5)' : 'rgba(255,255,255,0.1)'}`,
                   }}
                 >
                   <div style={{
@@ -589,10 +589,10 @@ const PrescriptionValidator = () => {
         {phase === 'processing' && (
           <div style={{ maxWidth: '560px', margin: '0 auto', paddingTop: '24px' }}>
             <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-              <h2 style={{ color: '#f9fafb', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>
+              <h2 style={{ color: '#26352E', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>
                 Running AI Validation Pipeline
               </h2>
-              <p style={{ color: '#6b7280', fontSize: '13px', margin: 0 }}>
+              <p style={{ color: '#68766e', fontSize: '13px', margin: 0 }}>
                 {file ? `Analysing: ${file.name}` : 'Analysing entered medications…'}
               </p>
             </div>
@@ -611,7 +611,7 @@ const PrescriptionValidator = () => {
                   borderRadius: '10px',
                   background: 'rgba(239,68,68,0.1)',
                   border: '1px solid rgba(239,68,68,0.25)',
-                  color: '#ef4444',
+                  color: '#b44736',
                   fontSize: '13px',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -635,7 +635,7 @@ const PrescriptionValidator = () => {
               alignItems: 'center',
               padding: '24px 28px',
               borderRadius: '18px',
-              background: `linear-gradient(135deg, #0d1117 0%, #111827 100%)`,
+              background: 'linear-gradient(135deg, #FAF8F1 0%, #E9F4EC 100%)',
               border: `1px solid ${sevStyle.border}`,
               marginBottom: '24px',
               flexWrap: 'wrap',
@@ -655,7 +655,7 @@ const PrescriptionValidator = () => {
                     {sevStyle.label}
                   </span>
                 </div>
-                <p style={{ color: '#d1d5db', fontSize: '13px', lineHeight: 1.6, margin: '0 0 16px' }}>
+                <p style={{ color: '#68766E', fontSize: '13px', lineHeight: 1.6, margin: '0 0 16px' }}>
                   {result.clinical_explanation}
                 </p>
                 {/* Summary stats */}
@@ -681,13 +681,13 @@ const PrescriptionValidator = () => {
                   maxWidth: '280px',
                   minWidth: '220px',
                 }}>
-                  <p style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 8px', fontWeight: 700 }}>
+                  <p style={{ color: '#68766e', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 8px', fontWeight: 700 }}>
                     Top Recommendations
                   </p>
                   {result.recommendations.slice(0, 3).map((rec, i) => (
                     <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
-                      <span style={{ color: '#06b6d4', flexShrink: 0, marginTop: '1px' }}>›</span>
-                      <p style={{ color: '#9ca3af', fontSize: '11px', lineHeight: 1.4, margin: 0 }}>{rec}</p>
+                      <span style={{ color: '#16866a', flexShrink: 0, marginTop: '1px' }}>›</span>
+                      <p style={{ color: '#68766e', fontSize: '11px', lineHeight: 1.4, margin: 0 }}>{rec}</p>
                     </div>
                   ))}
                 </div>
@@ -712,17 +712,17 @@ const PrescriptionValidator = () => {
                     borderRadius: '8px',
                     border: 'none',
                     background: activeTab === tab.id
-                      ? 'linear-gradient(135deg, #06b6d4, #3b82f6)'
+                      ? 'linear-gradient(135deg, #16866a, #16866a)'
                       : 'transparent',
-                    color: activeTab === tab.id ? 'white' : '#6b7280',
+                    color: activeTab === tab.id ? 'white' : '#68766e',
                     fontSize: '12px',
                     fontWeight: activeTab === tab.id ? 700 : 500,
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                     whiteSpace: 'nowrap',
                   }}
-                  onMouseEnter={e => { if (activeTab !== tab.id) e.currentTarget.style.color = '#d1d5db'; }}
-                  onMouseLeave={e => { if (activeTab !== tab.id) e.currentTarget.style.color = '#6b7280'; }}
+                  onMouseEnter={e => { if (activeTab !== tab.id) e.currentTarget.style.color = '#26352E'; }}
+                  onMouseLeave={e => { if (activeTab !== tab.id) e.currentTarget.style.color = '#68766e'; }}
                 >
                   {tab.label}
                 </button>
@@ -742,7 +742,7 @@ const PrescriptionValidator = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {/* OCR info */}
                   <div>
-                    <h3 style={{ color: '#9ca3af', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
+                    <h3 style={{ color: '#68766e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
                       OCR Extraction
                     </h3>
                     <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -750,7 +750,7 @@ const PrescriptionValidator = () => {
                         padding: '8px 14px', borderRadius: '8px',
                         background: result.ocr?.available ? 'rgba(34,197,94,0.08)' : 'rgba(100,116,139,0.08)',
                         border: `1px solid ${result.ocr?.available ? 'rgba(34,197,94,0.2)' : 'rgba(100,116,139,0.2)'}`,
-                        color: result.ocr?.available ? '#22c55e' : '#64748b',
+                        color: result.ocr?.available ? '#16866a' : '#68766e',
                         fontSize: '12px', fontWeight: 600,
                       }}>
                         {result.ocr?.available ? '✅ OCR Active' : '⬜ OCR Unavailable / Overridden'}
@@ -758,8 +758,8 @@ const PrescriptionValidator = () => {
                       {result.ocr?.confidence > 0 && (
                         <div style={{
                           padding: '8px 14px', borderRadius: '8px',
-                          background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)',
-                          color: '#06b6d4', fontSize: '12px', fontWeight: 600,
+                          background: 'rgba(22,134,106,0.08)', border: '1px solid rgba(22,134,106,0.2)',
+                          color: '#16866a', fontSize: '12px', fontWeight: 600,
                         }}>
                           Confidence: {(result.ocr.confidence * 100).toFixed(0)}%
                         </div>
@@ -768,7 +768,7 @@ const PrescriptionValidator = () => {
                         <div style={{
                           padding: '8px 14px', borderRadius: '8px',
                           background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-                          color: '#9ca3af', fontSize: '12px',
+                          color: '#68766e', fontSize: '12px',
                         }}>
                           Dr: {result.ocr.doctor_name}
                         </div>
@@ -779,18 +779,18 @@ const PrescriptionValidator = () => {
                   {/* Detected diseases */}
                   {result.detected_diseases?.length > 0 && (
                     <div>
-                      <h3 style={{ color: '#9ca3af', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
+                      <h3 style={{ color: '#68766e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
                         Likely Clinical Indications
                       </h3>
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {result.detected_diseases.map((dd, i) => (
                           <div key={i} style={{
                             padding: '5px 12px', borderRadius: '20px',
-                            background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)',
-                            color: '#818cf8', fontSize: '12px', fontWeight: 600,
+                            background: '#E9F4EC', border: '1px solid #B9D8C5',
+                            color: '#0F6852', fontSize: '12px', fontWeight: 600,
                           }}>
                             {dd.indication}
-                            <span style={{ color: '#4b5563', fontSize: '10px', marginLeft: '6px' }}>
+                            <span style={{ color: '#68766e', fontSize: '10px', marginLeft: '6px' }}>
                               ({dd.suggested_by})
                             </span>
                           </div>
@@ -802,18 +802,18 @@ const PrescriptionValidator = () => {
                   {/* Score breakdown */}
                   {result.score_breakdown?.deductions?.length > 0 && (
                     <div>
-                      <h3 style={{ color: '#9ca3af', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
+                      <h3 style={{ color: '#68766e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
                         Score Breakdown
                       </h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', borderRadius: '6px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)' }}>
-                          <span style={{ color: '#9ca3af', fontSize: '12px' }}>Starting score</span>
-                          <span style={{ color: '#22c55e', fontWeight: 700, fontSize: '12px' }}>100</span>
+                          <span style={{ color: '#68766e', fontSize: '12px' }}>Starting score</span>
+                          <span style={{ color: '#16866a', fontWeight: 700, fontSize: '12px' }}>100</span>
                         </div>
                         {result.score_breakdown.deductions.map((d, i) => (
                           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', borderRadius: '6px', background: 'rgba(255,255,255,0.02)' }}>
-                            <span style={{ color: '#6b7280', fontSize: '12px' }}>{d.reason}</span>
-                            <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '12px' }}>−{d.deduction}</span>
+                            <span style={{ color: '#68766e', fontSize: '12px' }}>{d.reason}</span>
+                            <span style={{ color: '#b44736', fontWeight: 700, fontSize: '12px' }}>−{d.deduction}</span>
                           </div>
                         ))}
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', borderRadius: '6px', background: sevStyle.bg, border: `1px solid ${sevStyle.border}`, marginTop: '4px' }}>
@@ -827,7 +827,7 @@ const PrescriptionValidator = () => {
                   {/* Recommendations */}
                   {result.recommendations?.length > 0 && (
                     <div>
-                      <h3 style={{ color: '#9ca3af', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
+                      <h3 style={{ color: '#68766e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
                         Clinical Recommendations
                       </h3>
                       {result.recommendations.map((rec, i) => (
@@ -836,12 +836,12 @@ const PrescriptionValidator = () => {
                           padding: '10px 12px', marginBottom: '6px',
                           borderRadius: '8px',
                           background: i === 0 && rec.includes('CRITICAL')
-                            ? 'rgba(168,85,247,0.06)' : 'rgba(255,255,255,0.02)',
+                            ? '#F8E5DD' : '#FFFFFF',
                           border: `1px solid ${i === 0 && rec.includes('CRITICAL')
-                            ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                            ? '#D97860' : '#E4E9E2'}`,
                         }}>
-                          <span style={{ color: '#06b6d4', flexShrink: 0 }}>{i + 1}.</span>
-                          <span style={{ color: '#d1d5db', fontSize: '13px', lineHeight: 1.5 }}>{rec}</span>
+                          <span style={{ color: '#16866a', flexShrink: 0 }}>{i + 1}.</span>
+                          <span style={{ color: '#26352E', fontSize: '13px', lineHeight: 1.5 }}>{rec}</span>
                         </div>
                       ))}
                     </div>
@@ -886,7 +886,7 @@ const PrescriptionValidator = () => {
                   />
                   {result.duplicate_medicines?.length > 0 && (
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <h3 style={{ color: '#9ca3af', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
+                      <h3 style={{ color: '#68766e', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.7px', margin: '0 0 12px' }}>
                         Therapeutic Duplications
                       </h3>
                       {result.duplicate_medicines.map((dup, i) => (
@@ -894,16 +894,16 @@ const PrescriptionValidator = () => {
                           padding: '12px 16px', marginBottom: '8px', borderRadius: '10px',
                           background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)',
                         }}>
-                          <div style={{ color: '#f97316', fontWeight: 700, fontSize: '13px', marginBottom: '4px' }}>
+                          <div style={{ color: '#B44736', fontWeight: 700, fontSize: '13px', marginBottom: '4px' }}>
                             🔁 {dup.class}
                           </div>
-                          <p style={{ color: '#9ca3af', fontSize: '12px', margin: 0 }}>{dup.message}</p>
+                          <p style={{ color: '#68766e', fontSize: '12px', margin: 0 }}>{dup.message}</p>
                           <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
                             {dup.drugs?.map((d, j) => (
                               <span key={j} style={{
                                 padding: '2px 10px', borderRadius: '20px',
                                 background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)',
-                                color: '#f97316', fontSize: '11px', fontWeight: 600,
+                                color: '#B44736', fontSize: '11px', fontWeight: 600,
                               }}>{d}</span>
                             ))}
                           </div>
@@ -931,7 +931,7 @@ const PrescriptionValidator = () => {
               {activeTab === 'overdose' && (
                 <div>
                   {(result.overdose_alerts || []).length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '40px', color: '#4b5563' }}>
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#68766e' }}>
                       <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
                       <p style={{ fontSize: '14px' }}>No overdose concerns detected.</p>
                     </div>
@@ -940,10 +940,10 @@ const PrescriptionValidator = () => {
                       {result.overdose_alerts.map((od, i) => {
                         const isAlert = od.severity && od.severity !== 'NONE';
                         const sevColors = {
-                          CRITICAL: '#a855f7', HIGH: '#ef4444', MODERATE: '#f97316',
-                          SAFE: '#22c55e', NONE: '#22c55e', UNKNOWN: '#64748b',
+                          CRITICAL: '#d97860', HIGH: '#b44736', MODERATE: '#d97860',
+                          SAFE: '#16866a', NONE: '#16866a', UNKNOWN: '#68766e',
                         };
-                        const c = sevColors[od.severity] || '#64748b';
+                        const c = sevColors[od.severity] || '#68766e';
                         return (
                           <div key={i} style={{
                             padding: '14px 18px',
@@ -952,7 +952,7 @@ const PrescriptionValidator = () => {
                             border: `1px solid ${c}33`,
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                              <span style={{ color: '#f9fafb', fontWeight: 700, fontSize: '14px' }}>{od.drug}</span>
+                              <span style={{ color: '#26352E', fontWeight: 700, fontSize: '14px' }}>{od.drug}</span>
                               <span style={{
                                 padding: '3px 12px', borderRadius: '20px',
                                 background: `${c}22`, border: `1px solid ${c}44`,
@@ -962,25 +962,25 @@ const PrescriptionValidator = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: '8px', marginBottom: '8px' }}>
                               {od.prescribed_dose_mg != null && (
                                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '8px' }}>
-                                  <div style={{ color: '#4b5563', fontSize: '10px' }}>Prescribed</div>
+                                  <div style={{ color: '#68766e', fontSize: '10px' }}>Prescribed</div>
                                   <div style={{ color: c, fontWeight: 700, fontFamily: 'monospace' }}>{od.prescribed_dose_mg} mg</div>
                                 </div>
                               )}
                               {od.max_safe_dose_mg != null && (
                                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '8px' }}>
-                                  <div style={{ color: '#4b5563', fontSize: '10px' }}>Max Safe</div>
-                                  <div style={{ color: '#22c55e', fontWeight: 700, fontFamily: 'monospace' }}>{od.max_safe_dose_mg} mg</div>
+                                  <div style={{ color: '#68766e', fontSize: '10px' }}>Max Safe</div>
+                                  <div style={{ color: '#16866a', fontWeight: 700, fontFamily: 'monospace' }}>{od.max_safe_dose_mg} mg</div>
                                 </div>
                               )}
                               {od.frequency && (
                                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '8px' }}>
-                                  <div style={{ color: '#4b5563', fontSize: '10px' }}>Frequency</div>
-                                  <div style={{ color: '#9ca3af', fontSize: '12px' }}>{od.frequency}</div>
+                                  <div style={{ color: '#68766e', fontSize: '10px' }}>Frequency</div>
+                                  <div style={{ color: '#68766e', fontSize: '12px' }}>{od.frequency}</div>
                                 </div>
                               )}
                             </div>
                             {od.message && (
-                              <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.4, margin: 0 }}>{od.message}</p>
+                              <p style={{ color: '#68766e', fontSize: '12px', lineHeight: 1.4, margin: 0 }}>{od.message}</p>
                             )}
                           </div>
                         );
@@ -1009,10 +1009,10 @@ const PrescriptionValidator = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '280px', gap: '20px' }}>
                   <div style={{ fontSize: '56px' }}>📄</div>
                   <div style={{ textAlign: 'center' }}>
-                    <h3 style={{ color: '#f9fafb', fontSize: '18px', fontWeight: 700, margin: '0 0 8px' }}>
+                    <h3 style={{ color: '#26352E', fontSize: '18px', fontWeight: 700, margin: '0 0 8px' }}>
                       Download PDF Report
                     </h3>
-                    <p style={{ color: '#6b7280', fontSize: '13px', maxWidth: '400px', lineHeight: 1.5 }}>
+                    <p style={{ color: '#68766e', fontSize: '13px', maxWidth: '400px', lineHeight: 1.5 }}>
                       Generate a professional clinical PDF with all validation results, safety checks,
                       drug interaction analysis, recommendations, and blockchain proof.
                     </p>
@@ -1031,8 +1031,8 @@ const PrescriptionValidator = () => {
                       { label: 'Signed', value: 'AI Hash' },
                     ].map((item, i) => (
                       <div key={i} style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#06b6d4', fontWeight: 700, fontSize: '15px' }}>{item.value}</div>
-                        <div style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
+                        <div style={{ color: '#16866a', fontWeight: 700, fontSize: '15px' }}>{item.value}</div>
+                        <div style={{ color: '#68766e', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
                       </div>
                     ))}
                   </div>
@@ -1044,12 +1044,12 @@ const PrescriptionValidator = () => {
                       padding: '14px 32px',
                       borderRadius: '12px',
                       border: 'none',
-                      background: pdfLoading ? 'rgba(6,182,212,0.3)' : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                      background: pdfLoading ? 'rgba(22,134,106,0.3)' : 'linear-gradient(135deg, #16866a 0%, #16866a 100%)',
                       color: 'white',
                       fontSize: '15px',
                       fontWeight: 700,
                       cursor: pdfLoading ? 'not-allowed' : 'pointer',
-                      boxShadow: '0 4px 20px rgba(6,182,212,0.3)',
+                      boxShadow: '0 4px 20px rgba(22,134,106,0.3)',
                       display: 'flex', alignItems: 'center', gap: '8px',
                       transition: 'all 0.2s',
                     }}
@@ -1070,9 +1070,9 @@ const PrescriptionValidator = () => {
                     )}
                   </button>
 
-                  <p style={{ color: '#374151', fontSize: '11px' }}>
+                  <p style={{ color: '#26352e', fontSize: '11px' }}>
                     Requires reportlab installed in the AI service. See{' '}
-                    <code style={{ color: '#4b5563' }}>pip install reportlab</code>
+                    <code style={{ color: '#68766e' }}>pip install reportlab</code>
                   </p>
                 </div>
               )}

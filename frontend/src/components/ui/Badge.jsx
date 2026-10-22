@@ -3,8 +3,8 @@ import React from "react";
 
 const VARIANTS = {
   success: "hc-badge-success", warning: "hc-badge-warning", danger: "hc-badge-danger",
-  info: "hc-badge-info", neutral: "hc-badge-neutral", violet: "hc-badge-violet",
-  primary: "hc-badge-primary", teal: "hc-badge-teal",
+  info: "hc-badge-info", neutral: "hc-badge-neutral", violet: "hc-badge-warm",
+  primary: "hc-badge-primary", teal: "hc-badge-emerald-dark",
 };
 const STATUS_MAP = {
   verified: "success", active: "success", safe: "success", healthy: "success",

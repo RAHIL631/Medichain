@@ -17,11 +17,11 @@ const EDIT_IMG1  = 'https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=
 const EDIT_IMG2  = 'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?w=700&q=80&auto=format&fit=crop';
 
 // ── Feature card ─────────────────────────────────────────────────────────────
-const FeatureCard = ({ icon: Icon, title, desc, accent = 'blue', num, image }) => {
+const FeatureCard = ({ icon: Icon, title, desc, accent = 'emerald', num, image }) => {
   const accents = {
-    blue:   'bg-hc-blue-soft    text-hc-blue',
-    teal:   'bg-hc-teal-soft    text-hc-teal',
-    violet: 'bg-hc-violet-soft  text-hc-violet',
+    emerald: 'bg-hc-emerald-soft text-hc-emerald-dark',
+    forest:  'bg-hc-emerald-dark-soft text-hc-emerald-dark',
+    warm:    'bg-hc-terracotta-soft text-hc-terracotta',
     success:'bg-hc-success-soft text-hc-success',
   };
   return (
@@ -33,9 +33,10 @@ const FeatureCard = ({ icon: Icon, title, desc, accent = 'blue', num, image }) =
             alt={title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            onError={event => { event.currentTarget.style.display = 'none'; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <span className="absolute bottom-2.5 right-3 text-xs font-bold text-white/90 font-mono">
+          <span className="absolute bottom-2.5 right-3 text-xs font-bold text-hc-text/90 font-mono">
             {String(num).padStart(2,'0')}
           </span>
         </div>
@@ -43,7 +44,7 @@ const FeatureCard = ({ icon: Icon, title, desc, accent = 'blue', num, image }) =
       <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center gap-2.5 mb-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${accents[accent] || accents.blue}`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${accents[accent] || accents.emerald}`}>
               <Icon className="w-4 h-4" />
             </div>
             <h3 className="text-base sm:text-lg font-bold text-hc-text leading-snug">{title}</h3>
@@ -58,8 +59,8 @@ const FeatureCard = ({ icon: Icon, title, desc, accent = 'blue', num, image }) =
 // ── Trust chip ───────────────────────────────────────────────────────────────
 const TrustChip = ({ icon: Icon, label, sub }) => (
   <div className="flex items-center gap-3 p-3.5 sm:p-4 hc-card">
-    <div className="w-10 h-10 rounded-xl bg-hc-blue-soft flex items-center justify-center flex-shrink-0">
-      <Icon className="w-5 h-5 text-hc-blue" />
+    <div className="w-10 h-10 rounded-xl bg-hc-emerald-soft flex items-center justify-center flex-shrink-0">
+      <Icon className="w-5 h-5 text-hc-emerald" />
     </div>
     <div className="min-w-0">
       <p className="text-xs sm:text-sm font-bold text-hc-text leading-tight truncate">{label}</p>
@@ -71,7 +72,7 @@ const TrustChip = ({ icon: Icon, label, sub }) => (
 // ── Step ─────────────────────────────────────────────────────────────────────
 const Step = ({ num, title, desc, last }) => (
   <div className="flex flex-col items-center text-center flex-1 min-w-0 relative">
-    <div className="w-12 h-12 rounded-full bg-hc-blue text-white flex items-center justify-center text-lg font-bold mb-3 sm:mb-4 shadow-hc-card flex-shrink-0 z-10">
+    <div className="w-12 h-12 rounded-full bg-hc-emerald-soft text-hc-emerald-dark flex items-center justify-center text-lg font-bold mb-3 sm:mb-4 shadow-hc-card flex-shrink-0 z-10">
       {num}
     </div>
     {!last && (
@@ -85,14 +86,15 @@ const Step = ({ num, title, desc, last }) => (
 // ── Main component ────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const features = [
-    { Icon: FileText,    title: 'Secure Health Records',        desc: 'All medical records stored on decentralized IPFS with end-to-end cryptographic verification.', accent: 'blue',    num: 1, image: MEDICAL_IMAGES.lab },
-    { Icon: Lock,        title: 'Patient-Controlled Access',    desc: 'You decide who sees your health data. Grant or revoke access instantly via smart contracts.',   accent: 'teal',    num: 2, image: EDIT_IMG1 },
-    { Icon: Brain,       title: 'AI Health Insights',           desc: 'Advisory clinical AI screens health patterns and prescription risks to support clinician judgment — not a diagnosis.', accent: 'violet',  num: 3, image: MEDICAL_IMAGES.mri },
+    { Icon: FileText,    title: 'Secure Health Records',        desc: 'Medical documents are encrypted before storage, with their integrity verifiable independently.', accent: 'emerald', num: 1, image: MEDICAL_IMAGES.lab },
+    { Icon: Lock,        title: 'Patient-Controlled Access',    desc: 'You decide who sees your health data. Grant or revoke access through the consent workflow.',   accent: 'forest',  num: 2, image: EDIT_IMG1 },
+    { Icon: Brain,       title: 'AI Health Insights',           desc: 'Advisory clinical AI screens health patterns and prescription risks to support clinician judgment — not a diagnosis.', accent: 'warm', num: 3, image: MEDICAL_IMAGES.mri },
     { Icon: Pill,        title: 'Drug & Dosage Safety',         desc: 'Real-time multi-drug interaction checking to catch conflicting prescriptions instantly.',        accent: 'success', num: 4, image: MEDICINE_IMAGES.pills },
-    { Icon: Activity,    title: 'Blockchain Integrity',         desc: 'Every diagnostic record anchored on Ethereum Sepolia with tamper-proof cryptographic proofs.',   accent: 'blue',    num: 5, image: MEDICAL_IMAGES.blood_test },
-    { Icon: Database,    title: 'Decentralized Storage',        desc: 'Immutable distributed storage on IPFS — zero single point of failure and true patient ownership.', accent: 'teal',    num: 6, image: MEDICAL_IMAGES.xray },
+    { Icon: Activity,    title: 'Blockchain Integrity',         desc: 'Record integrity can be checked against its cryptographic proof anchored on Ethereum Sepolia.',   accent: 'emerald', num: 5, image: MEDICAL_IMAGES.blood_test },
+    { Icon: Database,    title: 'Decentralized Storage',        desc: 'Encrypted record content is stored off-chain on IPFS, separate from the integrity proof.', accent: 'forest', num: 6, image: MEDICAL_IMAGES.xray },
   ];
 
   const trust = [
@@ -128,14 +130,14 @@ export default function LandingPage() {
 
             {/* Left — copy */}
             <div className="max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-hc-blue-soft border border-hc-blue-mid text-hc-blue text-xs font-semibold mb-4 sm:mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-hc-emerald-soft border border-hc-emerald-mid text-hc-emerald-dark text-xs font-semibold mb-4 sm:mb-6">
                 <Activity className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Blockchain-secured healthcare platform</span>
               </div>
 
               <h1 className="hc-hero-title mb-4 sm:mb-6">
-                Your Health Records.<br />
-                <span className="text-hc-blue">Under Your Control.</span>
+                Your Health.<br />
+                <span className="text-hc-emerald-dark">Your Records. Your Control.</span>
               </h1>
 
               <p className="text-sm sm:text-base text-hc-text-muted leading-relaxed mb-6 sm:mb-8 max-w-lg mx-auto lg:mx-0">
@@ -149,12 +151,9 @@ export default function LandingPage() {
                   Get Started
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <a href="#features" className="hc-btn hc-btn-ghost hc-btn-lg justify-center w-full sm:w-auto">
+                <a href="#features" className="hc-btn hc-btn-secondary hc-btn-lg justify-center w-full sm:w-auto">
                   Explore MediChain
                 </a>
-                <Link to="/login" className="hc-btn hc-btn-ghost hc-btn-lg justify-center w-full sm:w-auto">
-                  Sign In
-                </Link>
               </div>
 
               {/* Trust pills */}
@@ -171,18 +170,43 @@ export default function LandingPage() {
             {/* Right — hero image */}
             <div className="relative max-w-lg mx-auto lg:max-w-none w-full">
               <div className="relative rounded-2xl overflow-hidden shadow-hc-card-lg aspect-[4/3] sm:aspect-[16/10] bg-hc-bg-alt border border-hc-border-light">
-                {!imgLoaded && <div className="absolute inset-0 hc-skeleton" />}
-                <img
-                  src={HERO_IMG}
-                  alt="Doctor consulting with patient using digital healthcare platform"
-                  className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-                  onLoad={() => setImgLoaded(true)}
-                  loading="eager"
-                />
+                {!imgLoaded && !imgFailed && <div className="absolute inset-0 hc-skeleton" />}
+                {imgFailed ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-hc-emerald-soft p-8 text-center">
+                    <Shield className="h-12 w-12 text-hc-emerald-dark" aria-hidden="true" />
+                    <p className="max-w-xs text-sm font-semibold text-hc-text">Healthcare that keeps people at the centre.</p>
+                  </div>
+                ) : (
+                  <img
+                    src={HERO_IMG}
+                    alt="Doctor consulting with a patient in a bright clinical setting"
+                    className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    onLoad={() => setImgLoaded(true)}
+                    onError={() => { setImgFailed(true); setImgLoaded(true); }}
+                    loading="eager"
+                  />
+                )}
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 w-[min(15rem,65%)] rounded-xl border border-hc-border bg-white/95 p-3 shadow-hc-card-md sm:p-4">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-hc-emerald-dark">MediChain workspace</p>
+                  <p className="mt-1 text-xs font-bold text-hc-text">Your health, thoughtfully organized</p>
+                  <div className="mt-3 space-y-2 border-t border-hc-border-light pt-2.5">
+                    <div className="flex items-center gap-2 text-[10px] text-hc-text-muted">
+                      <FileText className="h-3.5 w-3.5 text-hc-emerald-dark" />
+                      Encrypted health records
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-hc-text-muted">
+                      <Lock className="h-3.5 w-3.5 text-hc-emerald-dark" />
+                      Access by your permission
+                    </div>
+                  </div>
+                  <Link to="/register" className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold text-hc-emerald-dark hover:underline">
+                    Explore your workspace <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
                 {/* Blockchain identity badge overlay */}
                 <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-hc-surface/95 backdrop-blur-sm rounded-xl p-2.5 sm:p-3 flex items-center gap-2.5 shadow-hc-card max-w-[calc(100%-1.5rem)] border border-hc-border-light">
-                  <div className="w-8 h-8 rounded-lg bg-hc-violet-soft flex items-center justify-center flex-shrink-0">
-                    <Activity className="w-4 h-4 text-hc-violet" />
+                  <div className="w-8 h-8 rounded-lg bg-hc-emerald-soft flex items-center justify-center flex-shrink-0">
+                  <Activity className="w-4 h-4 text-hc-emerald-dark" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] sm:text-xs font-bold text-hc-text leading-none truncate">Blockchain Verified</p>
@@ -192,8 +216,8 @@ export default function LandingPage() {
                 </div>
               </div>
               {/* Decorative blob */}
-              <div className="hidden sm:block absolute -top-6 -right-6 w-40 h-40 bg-hc-blue-soft rounded-full -z-10" aria-hidden="true" />
-              <div className="hidden sm:block absolute -bottom-6 -left-6 w-28 h-28 bg-hc-teal-soft rounded-full -z-10" aria-hidden="true" />
+              <div className="hidden sm:block absolute -top-6 -right-6 w-40 h-40 bg-hc-emerald-soft rounded-full -z-10" aria-hidden="true" />
+              <div className="hidden sm:block absolute -bottom-6 -left-6 w-28 h-28 bg-hc-terracotta-soft rounded-full -z-10" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -235,7 +259,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
             <div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-hc-blue uppercase tracking-wider mb-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-hc-emerald uppercase tracking-wider mb-1">
                 <Building2 className="w-4 h-4" /> Built for real care roles
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-hc-text">Who MediChain is designed for</h2>
@@ -266,12 +290,13 @@ export default function LandingPage() {
                 <div className="h-32 sm:h-36 overflow-hidden relative bg-hc-bg-alt">
                   <img
                     src={card.image}
-                    alt=""
+                    alt={`${card.title} care setting`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    onError={event => { event.currentTarget.style.display = 'none'; }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <span className="absolute bottom-2.5 left-3 text-sm font-bold text-white drop-shadow-sm">
+                  <span className="absolute bottom-2.5 left-3 text-sm font-bold text-hc-text drop-shadow-sm">
                     {card.title}
                   </span>
                 </div>
@@ -340,6 +365,7 @@ export default function LandingPage() {
                   alt="Healthcare professional reviewing patient data"
                   className="w-full h-full object-cover"
                   loading="lazy"
+                  onError={event => { event.currentTarget.style.display = 'none'; }}
                 />
               </div>
               <div className="rounded-2xl overflow-hidden shadow-hc-card aspect-square bg-hc-bg-alt mt-4 sm:mt-8 border border-hc-border-light">
@@ -348,6 +374,7 @@ export default function LandingPage() {
                   alt="Doctor using digital health technology"
                   className="w-full h-full object-cover"
                   loading="lazy"
+                  onError={event => { event.currentTarget.style.display = 'none'; }}
                 />
               </div>
             </div>
@@ -356,32 +383,32 @@ export default function LandingPage() {
       </section>
 
       {/* ── Security ─────────────────────────────────────────────────────── */}
-      <section id="security" className="py-12 sm:py-20 bg-hc-navy text-white">
+      <section id="security" className="py-12 sm:py-20 bg-hc-bg-alt border-y border-hc-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             <div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 leading-snug">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-hc-text mb-4 leading-snug">
                 Healthcare data deserves<br />more than a password.
               </h2>
-              <p className="text-sm sm:text-base text-hc-text-light leading-relaxed mb-6 sm:mb-8">
+              <p className="text-sm sm:text-base text-hc-text-muted leading-relaxed mb-6 sm:mb-8">
                 MediChain layers encryption, blockchain integrity, patient authorization, and 
                 decentralized storage to provide a level of data security appropriate for your health records.
               </p>
               <div className="space-y-3">
                 {security.map(({ Icon, label }) => (
                   <div key={label} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-hc-blue/20 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-hc-blue-mid" />
+                    <div className="w-8 h-8 rounded-lg bg-white border border-hc-border flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-hc-emerald-dark" />
                     </div>
-                    <span className="text-sm font-medium text-white">{label}</span>
+                    <span className="text-sm font-medium text-hc-text">{label}</span>
                   </div>
                 ))}
               </div>
             </div>
             <div className="hc-card p-5 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-hc-violet-soft flex items-center justify-center flex-shrink-0">
-                  <Activity className="w-5 h-5 text-hc-violet" />
+                <div className="w-10 h-10 rounded-xl bg-hc-terracotta-soft flex items-center justify-center flex-shrink-0">
+                  <Activity className="w-5 h-5 text-hc-terracotta" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-hc-text truncate">Integrity & access model</p>
@@ -432,8 +459,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-hc-blue rounded-lg flex items-center justify-center">
-                <Activity className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-hc-emerald rounded-lg flex items-center justify-center">
+                <Activity className="w-4 h-4 text-hc-text" />
               </div>
               <span className="text-sm font-bold text-hc-text">MediChain</span>
             </div>

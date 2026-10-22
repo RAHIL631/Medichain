@@ -132,7 +132,7 @@ const UploadPrescription = () => {
             <div className="max-w-5xl mx-auto space-y-6 py-4 sm:py-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
                     <div>
-                        <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">Upload Medical Record & Prescription</h2>
+                        <h2 className="text-2xl sm:text-3xl font-display font-bold text-hc-text">Upload Medical Record & Prescription</h2>
                         <p className="text-text-secondary text-xs sm:text-sm mt-1">
                             {isDoctorOrHospital 
                                 ? 'Issue AI-validated, IPFS-backed diagnostic prescriptions for patients.'
@@ -162,7 +162,7 @@ const UploadPrescription = () => {
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
                         <GlassCard>
-                            <h3 className="text-base sm:text-lg font-bold mb-4 sm:mb-6 text-white">Record Metadata</h3>
+                            <h3 className="text-base sm:text-lg font-bold mb-4 sm:mb-6 text-hc-text">Record Metadata</h3>
                             <div className="space-y-4 sm:space-y-6">
                                 {isDoctorOrHospital && (
                                     <div>
@@ -172,7 +172,7 @@ const UploadPrescription = () => {
                                             value={patientAddress}
                                             onChange={e => setPatientAddress(e.target.value)}
                                             placeholder="0x..." 
-                                            className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-4 py-3 text-sm font-mono text-accent-cyan outline-none focus:border-accent-cyan min-h-[44px]" 
+                                            className="w-full bg-medichain-bg-ivory border border-medichain-border rounded-lg px-4 py-3 text-sm font-mono text-accent-emerald-dark outline-none focus:border-accent-emerald-dark min-h-[44px]"
                                             required={isDoctorOrHospital}
                                         />
                                     </div>
@@ -182,7 +182,7 @@ const UploadPrescription = () => {
                                     <select 
                                         value={recordType}
                                         onChange={e => setRecordType(e.target.value)}
-                                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-cyan min-h-[44px]"
+                                        className="w-full bg-medichain-bg-ivory border border-medichain-border rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-emerald-dark min-h-[44px]"
                                     >
                                         <option value="prescription">Prescription</option>
                                         <option value="lab_report">Lab Report</option>
@@ -199,13 +199,13 @@ const UploadPrescription = () => {
                                         value={description}
                                         onChange={e => setDescription(e.target.value)}
                                         placeholder="Enter medical notes, diagnosis summary, or dosage instructions..." 
-                                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-cyan"
+                                        className="w-full bg-medichain-bg-ivory border border-medichain-border rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-emerald-dark"
                                     ></textarea>
                                 </div>
 
                                 {recordType === 'prescription' && (
                                     <div>
-                                        <label className="block text-[10px] uppercase text-accent-indigo tracking-widest mb-2 font-bold">
+                                        <label className="block text-[10px] uppercase text-accent-terracotta tracking-widest mb-2 font-bold">
                                             💊 Drug Names (For AI Safety Check)
                                         </label>
                                         <input 
@@ -213,7 +213,7 @@ const UploadPrescription = () => {
                                             value={drugs}
                                             onChange={e => setDrugs(e.target.value)}
                                             placeholder="e.g. Metformin, Aspirin, Lisinopril" 
-                                            className="w-full bg-accent-indigo/5 border border-accent-indigo/30 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-indigo min-h-[44px]" 
+                                            className="w-full bg-accent-terracotta/5 border border-accent-terracotta/30 rounded-lg px-4 py-3 text-sm outline-none focus:border-accent-terracotta min-h-[44px]"
                                         />
                                         <p className="text-[10px] text-text-secondary mt-1.5">Enter active ingredients separated by commas for automated CDSS interaction auditing.</p>
                                     </div>
@@ -238,16 +238,16 @@ const UploadPrescription = () => {
                               className="w-full h-full object-cover"
                               onError={(e) => { e.target.src = MEDICINE_IMAGES.pills; }}
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/30 to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-hc-surface/95 via-hc-surface/30 to-transparent" />
                             <div className="absolute bottom-3 left-4">
-                              <p className="text-xs font-bold text-white capitalize">{recordType.replace(/_/g, ' ')}</p>
-                              <p className="text-[10px] text-cyan-300">AI-validated · IPFS-stored · Encrypted</p>
+                              <p className="text-xs font-bold text-hc-text capitalize">{recordType.replace(/_/g, ' ')}</p>
+                              <p className="text-[10px] text-emerald-300">AI-validated · IPFS-stored · Encrypted</p>
                             </div>
                           </div>
                         </GlassCard>
 
-                        <GlassCard glowBorder={true} className="border-accent-blue/30">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-accent-blue mb-4">File Attachment</h3>
+                        <GlassCard glowBorder={true} className="border-accent-emerald/30">
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-accent-emerald mb-4">File Attachment</h3>
                             <div className="relative group">
                                 <input 
                                     type="file" 
@@ -256,9 +256,9 @@ const UploadPrescription = () => {
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                                 />
                                 <div className={`p-6 sm:p-8 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center text-center ${
-                                    file ? 'bg-accent-blue/10 border-accent-blue/50' : 'bg-medichain-bg-dark/50 border-medichain-border group-hover:border-accent-blue/40'
+                                    file ? 'bg-accent-emerald/10 border-accent-emerald/50' : 'bg-medichain-bg-ivory/50 border-medichain-border group-hover:border-accent-emerald/40'
                                 }`}>
-                                    <svg className={`w-8 h-8 sm:w-10 sm:h-10 mb-2 ${file ? 'text-accent-blue' : 'text-text-secondary'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className={`w-8 h-8 sm:w-10 sm:h-10 mb-2 ${file ? 'text-accent-emerald' : 'text-text-secondary'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                     </svg>
                                     <p className="text-xs font-bold truncate max-w-[200px]">{file ? file.name : 'Choose File'}</p>
@@ -282,7 +282,7 @@ const UploadPrescription = () => {
                             <div className="p-3 rounded-lg bg-medichain-surface border border-medichain-border text-xs">
                                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-text-secondary">
                                     <span>Target Network</span>
-                                    <span className="text-hc-blue font-bold">Ethereum Sepolia (11155111)</span>
+                                    <span className="text-hc-emerald font-bold">Ethereum Sepolia (11155111)</span>
                                 </div>
                             </div>
                         </div>

@@ -176,8 +176,8 @@ const AccessManager = () => {
       <div className="space-y-5 sm:space-y-6">
         {/* Wallet status banner */}
         {!isConnected && (
-          <div className="p-3.5 sm:p-4 rounded-xl bg-hc-blue-soft border border-hc-blue/20 flex items-start gap-3">
-            <Wallet className="w-5 h-5 text-hc-blue flex-shrink-0 mt-0.5" />
+          <div className="p-3.5 sm:p-4 rounded-xl bg-hc-emerald-soft border border-hc-emerald/20 flex items-start gap-3">
+            <Wallet className="w-5 h-5 text-hc-emerald flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-xs sm:text-sm font-bold text-hc-text">Blockchain access control</p>
               <p className="text-[11px] sm:text-xs text-hc-text-muted mt-0.5 leading-relaxed">
@@ -209,8 +209,8 @@ const AccessManager = () => {
         {/* ── Grant Access Form ──────────────────────────────────────── */}
         <div className="hc-card p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
-            <div className="w-8 h-8 rounded-lg bg-hc-teal-soft flex items-center justify-center flex-shrink-0">
-              <Lock className="w-4 h-4 text-hc-teal" />
+            <div className="w-8 h-8 rounded-lg bg-hc-emerald-dark-soft flex items-center justify-center flex-shrink-0">
+              <Lock className="w-4 h-4 text-hc-emerald-dark" />
             </div>
             <h3 className="text-xs sm:text-sm font-bold text-hc-text">Grant Doctor Access</h3>
           </div>
@@ -274,7 +274,7 @@ const AccessManager = () => {
         )}
 
         {loading && !txHash && (
-          <p className="text-center text-xs sm:text-sm text-hc-blue animate-pulse font-medium">
+          <p className="text-center text-xs sm:text-sm text-hc-emerald animate-pulse font-medium">
             Waiting for MetaMask confirmation…
           </p>
         )}
@@ -316,10 +316,10 @@ const AccessManager = () => {
               {authorizedDoctors.map((doc) => (
                 <li
                   key={doc}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 bg-hc-bg-alt border border-hc-border-light rounded-xl hover:border-hc-blue/30 transition-colors gap-3"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 bg-hc-bg-alt border border-hc-border-light rounded-xl hover:border-hc-emerald/30 transition-colors gap-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 bg-hc-blue-soft rounded-full flex items-center justify-center text-hc-blue font-bold text-xs flex-shrink-0">
+                    <div className="w-9 h-9 bg-hc-emerald-soft rounded-full flex items-center justify-center text-hc-emerald font-bold text-xs flex-shrink-0">
                       {doc.slice(2, 4).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">

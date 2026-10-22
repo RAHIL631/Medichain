@@ -25,7 +25,7 @@ function HashDisplay({ label, value, link }) {
       padding: '12px 14px',
     }}>
       <div style={{
-        color: '#06b6d4',
+        color: '#16866a',
         fontSize: '10px',
         textTransform: 'uppercase',
         letterSpacing: '0.8px',
@@ -38,12 +38,12 @@ function HashDisplay({ label, value, link }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <code style={{
           flex: 1,
-          color: '#e5e7eb',
+          color: '#26352e',
           fontSize: '11px',
           fontFamily: 'Courier New, monospace',
           overflowX: 'auto',
           whiteSpace: 'nowrap',
-          background: 'rgba(0,0,0,0.3)',
+          background: '#FAF8F1',
           padding: '6px 10px',
           borderRadius: '6px',
           display: 'block',
@@ -58,7 +58,7 @@ function HashDisplay({ label, value, link }) {
               style={{
                 background: copied ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.05)',
                 border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`,
-                color: copied ? '#22c55e' : '#9ca3af',
+                color: copied ? '#16866a' : '#68766e',
                 borderRadius: '6px',
                 padding: '6px 10px',
                 cursor: 'pointer',
@@ -75,9 +75,9 @@ function HashDisplay({ label, value, link }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  background: 'rgba(6,182,212,0.08)',
-                  border: '1px solid rgba(6,182,212,0.2)',
-                  color: '#06b6d4',
+                  background: 'rgba(22,134,106,0.08)',
+                  border: '1px solid rgba(22,134,106,0.2)',
+                  color: '#16866a',
                   borderRadius: '6px',
                   padding: '6px 10px',
                   cursor: 'pointer',
@@ -170,8 +170,8 @@ export default function BlockchainProof({
         borderRadius: '12px',
         background: isAnchored || anchorDone
           ? 'rgba(34,197,94,0.06)'
-          : 'rgba(6,182,212,0.06)',
-        border: `1px solid ${isAnchored || anchorDone ? 'rgba(34,197,94,0.2)' : 'rgba(6,182,212,0.2)'}`,
+          : 'rgba(22,134,106,0.06)',
+        border: `1px solid ${isAnchored || anchorDone ? 'rgba(34,197,94,0.2)' : 'rgba(22,134,106,0.2)'}`,
         display: 'flex',
         alignItems: 'center',
         gap: '14px',
@@ -181,7 +181,7 @@ export default function BlockchainProof({
           borderRadius: '12px',
           background: isAnchored || anchorDone
             ? 'rgba(34,197,94,0.1)'
-            : 'rgba(6,182,212,0.1)',
+            : 'rgba(22,134,106,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '20px', flexShrink: 0,
         }}>
@@ -192,11 +192,11 @@ export default function BlockchainProof({
             margin: 0,
             fontWeight: 700,
             fontSize: '14px',
-            color: isAnchored || anchorDone ? '#22c55e' : '#06b6d4',
+            color: isAnchored || anchorDone ? '#16866a' : '#16866a',
           }}>
             {isAnchored || anchorDone ? 'Report Anchored On-Chain ✓' : 'Awaiting Blockchain Anchoring'}
           </p>
-          <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '12px' }}>
+          <p style={{ margin: '4px 0 0', color: '#68766e', fontSize: '12px' }}>
             {isAnchored || anchorDone
               ? `This report's SHA-256 hash is permanently stored on the Ethereum blockchain.`
               : 'Anchor this report hash on-chain for tamper-proof verification.'}
@@ -222,7 +222,7 @@ export default function BlockchainProof({
         <div style={{
           display: 'flex',
           gap: '8px',
-          color: '#6b7280',
+          color: '#68766e',
           fontSize: '12px',
           alignItems: 'center',
           padding: '8px 12px',
@@ -230,8 +230,8 @@ export default function BlockchainProof({
           borderRadius: '8px',
           border: '1px solid rgba(255,255,255,0.05)',
         }}>
-          <span style={{ color: '#4b5563' }}>Block:</span>
-          <span style={{ color: '#9ca3af', fontFamily: 'monospace' }}>#{blockNumber}</span>
+          <span style={{ color: '#68766e' }}>Block:</span>
+          <span style={{ color: '#68766e', fontFamily: 'monospace' }}>#{blockNumber}</span>
         </div>
       )}
 
@@ -251,10 +251,10 @@ export default function BlockchainProof({
             border: '1px solid rgba(255,255,255,0.05)',
             borderRadius: '8px',
           }}>
-            <div style={{ color: '#4b5563', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+            <div style={{ color: '#68766e', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
               {item.label}
             </div>
-            <div style={{ color: '#f9fafb', fontSize: '15px', fontWeight: 700 }}>
+            <div style={{ color: '#26352e', fontSize: '15px', fontWeight: 700 }}>
               {item.value}
             </div>
           </div>
@@ -265,10 +265,10 @@ export default function BlockchainProof({
       {!isAnchored && !anchorDone && (
         <div>
           {anchorError && (
-            <p style={{ color: '#ef4444', fontSize: '12px', marginBottom: '8px' }}>{anchorError}</p>
+            <p style={{ color: '#b44736', fontSize: '12px', marginBottom: '8px' }}>{anchorError}</p>
           )}
           {!connected && (
-            <p style={{ color: '#f97316', fontSize: '12px', marginBottom: '8px' }}>
+            <p style={{ color: '#B44736', fontSize: '12px', marginBottom: '8px' }}>
               ⚠️ Connect your MetaMask wallet to anchor this report on-chain.
             </p>
           )}
@@ -281,8 +281,8 @@ export default function BlockchainProof({
               borderRadius: '10px',
               border: 'none',
               background: anchoring
-                ? 'rgba(6,182,212,0.3)'
-                : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                ? 'rgba(22,134,106,0.3)'
+                : 'linear-gradient(135deg, #16866a 0%, #16866a 100%)',
               color: 'white',
               fontSize: '14px',
               fontWeight: 700,
@@ -319,7 +319,7 @@ export default function BlockchainProof({
           borderRadius: '10px',
           background: 'rgba(34,197,94,0.08)',
           border: '1px solid rgba(34,197,94,0.2)',
-          color: '#22c55e',
+          color: '#16866a',
           fontSize: '13px',
           fontWeight: 600,
           textAlign: 'center',

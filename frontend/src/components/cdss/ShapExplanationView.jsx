@@ -29,7 +29,7 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
         {/* Baseline indicator */}
         <div className="flex justify-between text-xs text-text-secondary border-b border-medichain-border/30 pb-2">
           <span>Expected Base Output: <strong>{roundPct(base_value)}%</strong></span>
-          <span>Final Predicted Risk: <strong className="text-white">{roundPct(prediction_value)}%</strong></span>
+          <span>Final Predicted Risk: <strong className="text-hc-text">{roundPct(prediction_value)}%</strong></span>
         </div>
 
         {/* Horizontal bars */}
@@ -47,14 +47,14 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
               <div key={idx} className="relative space-y-1">
                 <div className="flex justify-between text-[11px]">
                   <span className="text-text-secondary">
-                    <strong className="text-white">{item.feature}</strong> ({item.feature_value})
+                    <strong className="text-hc-text">{item.feature}</strong> ({item.feature_value})
                   </span>
-                  <span style={{ color: isPositive ? '#ef4444' : '#22c55e', fontWeight: 'bold' }}>
+                  <span style={{ color: isPositive ? '#b44736' : '#16866a', fontWeight: 'bold' }}>
                     {isPositive ? '+' : ''}{roundPct(item.shap_value)}%
                   </span>
                 </div>
 
-                <div className="h-5 bg-black/30 rounded relative overflow-hidden flex items-center">
+                <div className="h-5 bg-hc-bg-alt border border-hc-border rounded relative overflow-hidden flex items-center">
                   {/* Accumulator Track */}
                   <div
                     style={{
@@ -65,12 +65,12 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
                       background: isPositive 
                         ? 'linear-gradient(to right, rgba(239,68,68,0.3), rgba(239,68,68,0.7))'
                         : 'linear-gradient(to right, rgba(34,197,94,0.3), rgba(34,197,94,0.7))',
-                      borderLeft: isPositive ? '2px solid #ef4444' : 'none',
-                      borderRight: !isPositive ? '2px solid #22c55e' : 'none',
+                      borderLeft: isPositive ? '2px solid #b44736' : 'none',
+                      borderRight: !isPositive ? '2px solid #16866a' : 'none',
                     }}
                   />
                   {/* Current flow marker */}
-                  <span className="z-10 pl-2 text-[9px] font-mono text-white/50">
+                  <span className="z-10 pl-2 text-[9px] font-mono text-hc-text-muted">
                     Flow: {roundPct(start)}% → {roundPct(end)}%
                   </span>
                 </div>
@@ -125,7 +125,7 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
           <span>Final: {roundPct(prediction_value)}%</span>
         </div>
 
-        <div className="bg-black/20 p-2 rounded-xl flex justify-center">
+        <div className="bg-hc-bg-alt border border-hc-border p-2 rounded-xl flex justify-center">
           <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} className="max-w-[450px]">
             {/* Grid Lines */}
             {[0, 0.25, 0.5, 0.75, 1].map((val, idx) => {
@@ -134,7 +134,7 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
                 <g key={idx}>
                   <line
                     x1={xCoord} y1={10} x2={xCoord} y2={height - 20}
-                    stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3"
+                    stroke="#E4E9E2" strokeDasharray="3,3"
                   />
                   <text
                     x={xCoord} y={height - 5}
@@ -150,11 +150,11 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
             <line
               x1={getX(base_value)} y1={10}
               x2={getX(base_value)} y2={height - 20}
-              stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,4"
+              stroke="#16866a" strokeWidth="1" strokeDasharray="4,4"
             />
             <text
               x={getX(base_value) + 5} y={15}
-              fill="#3b82f6" fontSize="7" fontWeight="bold"
+              fill="#16866a" fontSize="7" fontWeight="bold"
             >
               Base ({roundPct(base_value)}%)
             </text>
@@ -195,7 +195,7 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
               <circle
                 key={idx}
                 cx={p.x} cy={p.y} r="4"
-                fill={idx === points.length - 1 ? '#06b6d4' : 'white'}
+                fill={idx === points.length - 1 ? '#16866a' : 'white'}
                 stroke={idx === points.length - 1 ? 'white' : 'rgba(0,0,0,0.5)'}
                 strokeWidth="1"
               />
@@ -204,9 +204,9 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
             {/* Definitions */}
             <defs>
               <linearGradient id="pathGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-                <stop offset="0%" stopColor="#3b82f6" />
-                <stop offset="50%" stopColor="#8b5cf6" />
-                <stop offset="100%" stopColor="#06b6d4" />
+                <stop offset="0%" stopColor="#16866a" />
+                <stop offset="50%" stopColor="#d97860" />
+                <stop offset="100%" stopColor="#16866a" />
               </linearGradient>
             </defs>
           </svg>
@@ -220,10 +220,10 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
   return (
     <GlassCard>
       <div className="flex justify-between items-center mb-6 border-b border-medichain-border/30 pb-3 flex-wrap gap-2">
-        <h4 className="text-sm font-bold text-white flex items-center gap-2">
+        <h4 className="text-sm font-bold text-hc-text flex items-center gap-2">
           <span>🧠</span> {title}
         </h4>
-        <div className="flex bg-black/40 rounded-lg p-0.5 border border-medichain-border/30">
+        <div className="flex bg-hc-bg-alt rounded-lg p-0.5 border border-medichain-border">
           {[
             { key: 'waterfall', label: 'Waterfall' },
             { key: 'decision', label: 'Decision Plot' }
@@ -235,8 +235,8 @@ export default function ShapExplanationView({ shapData, title = "Model Predictio
                 padding: '4px 10px',
                 borderRadius: '6px',
                 border: 'none',
-                background: plotType === opt.key ? 'rgba(6,182,212,0.15)' : 'transparent',
-                color: plotType === opt.key ? '#06b6d4' : '#6b7280',
+                background: plotType === opt.key ? 'rgba(22,134,106,0.15)' : 'transparent',
+                color: plotType === opt.key ? '#16866a' : '#68766e',
                 fontSize: '10px',
                 fontWeight: 700,
                 cursor: 'pointer'

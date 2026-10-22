@@ -17,20 +17,20 @@ import RiskRadarChart from '../components/cdss/RiskRadarChart';
 import ShapExplanationView from '../components/cdss/ShapExplanationView';
 
 const ORGAN_DETAILS = {
-  heart:    { label: 'Cardiovascular', icon: '❤️', color: '#ef4444' },
-  diabetes: { label: 'Endocrine (Diabetes)', icon: '🩸', color: '#f97316' },
-  stroke:   { label: 'Neurological (Stroke)', icon: '🧠', color: '#eab308' },
-  kidney:   { label: 'Renal (Kidney)', icon: '🫘', color: '#3b82f6' },
-  liver:    { label: 'Hepatic (Liver)', icon: '🟤', color: '#10b981' },
-  cancer:   { label: 'Oncology (Cancer)', icon: '🎗️', color: '#a855f7' }
+  heart:    { label: 'Cardiovascular', icon: '❤️', color: '#b44736' },
+  diabetes: { label: 'Endocrine (Diabetes)', icon: '🩸', color: '#d97860' },
+  stroke:   { label: 'Neurological (Stroke)', icon: '🧠', color: '#ebcb82' },
+  kidney:   { label: 'Renal (Kidney)', icon: '🫘', color: '#16866a' },
+  liver:    { label: 'Hepatic (Liver)', icon: '🟤', color: '#16866a' },
+  cancer:   { label: 'Oncology (Cancer)', icon: '🎗️', color: '#d97860' }
 };
 
 const RISK_LABELS = {
-  'VERY HIGH': { color: '#ef4444', label: 'Very High Risk' },
-  'HIGH':      { color: '#f97316', label: 'High Risk' },
-  'MODERATE':  { color: '#eab308', label: 'Moderate Risk' },
-  'LOW':       { color: '#22c55e', label: 'Low Risk' },
-  'MINIMAL':   { color: '#10b981', label: 'Minimal Risk' }
+  'VERY HIGH': { color: '#b44736', label: 'Very High Risk' },
+  'HIGH':      { color: '#B44736', label: 'High Risk' },
+  'MODERATE':  { color: '#805B12', label: 'Moderate Risk' },
+  'LOW':       { color: '#16866a', label: 'Low Risk' },
+  'MINIMAL':   { color: '#16866a', label: 'Minimal Risk' }
 };
 
 export default function HealthRiskDashboard() {
@@ -189,7 +189,7 @@ export default function HealthRiskDashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-white flex items-center gap-2">
+            <h1 className="text-3xl font-display font-bold text-hc-text flex items-center gap-2">
               🩺 AI Health Risk Scorer & SHAP Explainer
             </h1>
             <p className="text-text-secondary mt-1">
@@ -205,8 +205,8 @@ export default function HealthRiskDashboard() {
                   padding: '8px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: activeSubTab === tab ? 'linear-gradient(135deg, #06b6d4, #3b82f6)' : 'rgba(255,255,255,0.05)',
-                  color: activeSubTab === tab ? 'white' : '#94a3b8',
+                  background: activeSubTab === tab ? 'linear-gradient(135deg, #16866a, #16866a)' : 'rgba(255,255,255,0.05)',
+                  color: activeSubTab === tab ? 'white' : '#68766e',
                   fontSize: '12px',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -227,7 +227,7 @@ export default function HealthRiskDashboard() {
             border: '1px solid rgba(239,68,68,0.25)',
             borderRadius: '10px',
             padding: '14px 18px',
-            color: '#ef4444',
+            color: '#b44736',
             fontSize: '13px',
             fontWeight: 600
           }}>
@@ -242,7 +242,7 @@ export default function HealthRiskDashboard() {
             {/* Form Column */}
             <div className="lg:col-span-1 space-y-6">
               <GlassCard>
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-hc-text mb-4 flex items-center gap-2">
                   <span>📝</span> Patient Health Context
                 </h3>
                 
@@ -256,7 +256,7 @@ export default function HealthRiskDashboard() {
                         value={patientId}
                         onChange={e => setPatientId(e.target.value)}
                         placeholder="e.g. 648fdf..."
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                         onBlur={() => patientId && loadPatientFromHistory(patientId)}
                       />
                     </div>
@@ -270,7 +270,7 @@ export default function HealthRiskDashboard() {
                         required
                         value={age}
                         onChange={e => setAge(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                     <div>
@@ -278,7 +278,7 @@ export default function HealthRiskDashboard() {
                       <select
                         value={gender}
                         onChange={e => setGender(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       >
                         <option value="M">Male</option>
                         <option value="F">Female</option>
@@ -295,7 +295,7 @@ export default function HealthRiskDashboard() {
                         required
                         value={bmi}
                         onChange={e => setBmi(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                     <div>
@@ -305,7 +305,7 @@ export default function HealthRiskDashboard() {
                         required
                         value={kidneyGfr}
                         onChange={e => setKidneyGfr(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                   </div>
@@ -315,7 +315,7 @@ export default function HealthRiskDashboard() {
                     <select
                       value={liverScore}
                       onChange={e => setLiverScore(e.target.value)}
-                      className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                      className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                     >
                       <option value={0}>Class A (Normal)</option>
                       <option value={7}>Class B (Moderate)</option>
@@ -339,11 +339,11 @@ export default function HealthRiskDashboard() {
                           style={{
                             width: '40px', height: '20px',
                             borderRadius: '10px',
-                            background: tog.state ? '#06b6d4' : 'rgba(255,255,255,0.1)',
+                            background: tog.state ? '#16866a' : 'rgba(255,255,255,0.1)',
                             cursor: 'pointer',
                             transition: 'all 0.25s',
                             position: 'relative',
-                            border: `1px solid ${tog.state ? 'rgba(6,182,212,0.5)' : 'rgba(255,255,255,0.1)'}`
+                            border: `1px solid ${tog.state ? 'rgba(22,134,106,0.5)' : 'rgba(255,255,255,0.1)'}`
                           }}
                         >
                           <div style={{
@@ -373,9 +373,9 @@ export default function HealthRiskDashboard() {
                             style={{
                               padding: '4px 10px',
                               borderRadius: '6px',
-                              border: active ? '1px solid rgba(6,182,212,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                              background: active ? 'rgba(6,182,212,0.1)' : 'transparent',
-                              color: active ? '#06b6d4' : '#6b7280',
+                              border: active ? '1px solid rgba(22,134,106,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                              background: active ? 'rgba(22,134,106,0.1)' : 'transparent',
+                              color: active ? '#16866a' : '#68766e',
                               fontSize: '11px',
                               fontWeight: 600,
                               cursor: 'pointer',
@@ -401,7 +401,7 @@ export default function HealthRiskDashboard() {
               {!currentReport && !loading && (
                 <GlassCard className="flex flex-col items-center justify-center py-24 text-center">
                   <div style={{ fontSize: '48px', marginBottom: '16px' }}>🩺</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Predictive Health Assessment</h3>
+                  <h3 className="text-xl font-bold text-hc-text mb-2">Predictive Health Assessment</h3>
                   <p className="text-sm text-text-secondary max-w-sm">
                     Enter patient parameters on the left and trigger calculation to view the diagnostic dashboard, SHAP feature waterfall mapping, and clinical schedules.
                   </p>
@@ -412,13 +412,13 @@ export default function HealthRiskDashboard() {
                 <GlassCard className="flex flex-col items-center justify-center py-24 text-center">
                   <div style={{
                     width: '40px', height: '40px',
-                    border: '3px solid rgba(6,182,212,0.3)',
-                    borderTop: '3px solid #06b6d4',
+                    border: '3px solid rgba(22,134,106,0.3)',
+                    borderTop: '3px solid #16866a',
                     borderRadius: '50%',
                     animation: 'spin 1.2s linear infinite',
                     marginBottom: '16px'
                   }} />
-                  <p style={{ color: '#06b6d4', fontWeight: 700, fontSize: '14px', letterSpacing: '1px', textTransform: 'uppercase', animation: 'pulse 1s infinite' }}>
+                  <p style={{ color: '#16866a', fontWeight: 700, fontSize: '14px', letterSpacing: '1px', textTransform: 'uppercase', animation: 'pulse 1s infinite' }}>
                     RUNNING MULTI-ORGAN PREDICTORS & SHAP KERNELS...
                   </p>
                 </GlassCard>
@@ -437,7 +437,7 @@ export default function HealthRiskDashboard() {
                       {/* Custom CSS Gauge */}
                       <div style={{ position: 'relative', width: '130px', height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="60" cy="60" r="50" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+                          <circle cx="60" cy="60" r="50" fill="transparent" stroke="#E4E9E2" strokeWidth="8" />
                           <circle cx="60" cy="60" r="50" fill="transparent"
                             stroke="url(#healthScoreGrad)"
                             strokeWidth="8"
@@ -448,8 +448,8 @@ export default function HealthRiskDashboard() {
                           />
                           <defs>
                             <linearGradient id="healthScoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor="#06b6d4" />
-                              <stop offset="100%" stopColor="#3b82f6" />
+                              <stop offset="0%" stopColor="#16866a" />
+                              <stop offset="100%" stopColor="#16866a" />
                             </linearGradient>
                           </defs>
                         </svg>
@@ -457,12 +457,12 @@ export default function HealthRiskDashboard() {
                           <span style={{ fontSize: '28px', fontWeight: 800, color: 'white', fontFamily: 'monospace' }}>
                             {currentReport.overallHealthScore}%
                           </span>
-                          <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700, marginTop: '2px' }}>
+                          <span style={{ fontSize: '9px', color: '#68766e', textTransform: 'uppercase', fontWeight: 700, marginTop: '2px' }}>
                             Optimal
                           </span>
                         </div>
                       </div>
-                      <div style={{ marginTop: '14px', fontSize: '11px', color: '#94a3b8' }}>
+                      <div style={{ marginTop: '14px', fontSize: '11px', color: '#68766e' }}>
                         Risk index: <strong>{currentReport.overallRiskScore}%</strong>
                       </div>
                     </GlassCard>
@@ -479,7 +479,7 @@ export default function HealthRiskDashboard() {
                             {RISK_LABELS[currentReport.overallRisk]?.label || currentReport.overallRisk}
                           </span>
                         </div>
-                        <p style={{ color: '#d1d5db', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+                        <p style={{ color: '#68766e', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
                           The patient's overall health score is calculated at <strong>{currentReport.overallHealthScore}/100</strong>, reflecting a highest single-organ risk model probability of <strong>{currentReport.overallRiskScore}%</strong>. Feature-attribution explanations below map key clinical drivers.
                         </p>
                       </div>
@@ -487,19 +487,19 @@ export default function HealthRiskDashboard() {
                       <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-medichain-border/30">
                         <div style={{ textAlign: 'center' }}>
                           <span style={{ display: 'block', fontSize: '16px', fontWeight: 800, color: 'white' }}>6</span>
-                          <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase' }}>Organs Checked</span>
+                          <span style={{ fontSize: '9px', color: '#68766e', textTransform: 'uppercase' }}>Organs Checked</span>
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                          <span style={{ display: 'block', fontSize: '16px', fontWeight: 800, color: currentReport.urgentFlags?.length > 0 ? '#ef4444' : 'white' }}>
+                          <span style={{ display: 'block', fontSize: '16px', fontWeight: 800, color: currentReport.urgentFlags?.length > 0 ? '#b44736' : 'white' }}>
                             {currentReport.urgentFlags?.length || 0}
                           </span>
-                          <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase' }}>Clinical Flags</span>
+                          <span style={{ fontSize: '9px', color: '#68766e', textTransform: 'uppercase' }}>Clinical Flags</span>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <span style={{ display: 'block', fontSize: '16px', fontWeight: 800, color: 'white' }}>
                             {Object.values(currentReport.organRisks || {}).filter(o => o.risk_score > 50).length}
                           </span>
-                          <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase' }}>High Risk Organs</span>
+                          <span style={{ fontSize: '9px', color: '#68766e', textTransform: 'uppercase' }}>High Risk Organs</span>
                         </div>
                       </div>
                     </GlassCard>
@@ -529,14 +529,14 @@ export default function HealthRiskDashboard() {
                             <div key={idx} style={{
                               padding: '10px 12px',
                               borderRadius: '8px',
-                              background: `${flag.color || '#ef4444'}10`,
-                              border: `1px solid ${flag.color || '#ef4444'}30`,
-                              borderLeft: `3px solid ${flag.color || '#ef4444'}`
+                              background: `${flag.color || '#b44736'}10`,
+                              border: `1px solid ${flag.color || '#b44736'}30`,
+                              borderLeft: `3px solid ${flag.color || '#b44736'}`
                             }}>
                               <span style={{ display: 'block', color: 'white', fontWeight: 700, fontSize: '12px' }}>
                                 {flag.flag}
                               </span>
-                              <span style={{ display: 'block', color: '#94a3b8', fontSize: '10px', marginTop: '3px', lineHeight: 1.3 }}>
+                              <span style={{ display: 'block', color: '#68766e', fontSize: '10px', marginTop: '3px', lineHeight: 1.3 }}>
                                 {flag.action}
                               </span>
                             </div>
@@ -550,7 +550,7 @@ export default function HealthRiskDashboard() {
                   <div className="space-y-4">
                     <GlassCard>
                       <div className="flex justify-between items-center flex-wrap gap-2">
-                        <h4 className="text-xs font-bold uppercase tracking-widest text-accent-cyan">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-accent-emerald-dark">
                           🧠 Select Disease Explainer
                         </h4>
                         <div className="flex gap-1 flex-wrap">
@@ -561,9 +561,9 @@ export default function HealthRiskDashboard() {
                               style={{
                                 padding: '4px 10px',
                                 borderRadius: '6px',
-                                border: selectedExplainerDisease === disease ? '1px solid rgba(6,182,212,0.4)' : '1px solid rgba(255,255,255,0.06)',
-                                background: selectedExplainerDisease === disease ? 'rgba(6,182,212,0.1)' : 'transparent',
-                                color: selectedExplainerDisease === disease ? '#06b6d4' : '#6b7280',
+                                border: selectedExplainerDisease === disease ? '1px solid rgba(22,134,106,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                                background: selectedExplainerDisease === disease ? 'rgba(22,134,106,0.1)' : 'transparent',
+                                color: selectedExplainerDisease === disease ? '#16866a' : '#68766e',
                                 fontSize: '10px',
                                 fontWeight: 700,
                                 cursor: 'pointer',
@@ -595,14 +595,14 @@ export default function HealthRiskDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Monitoring */}
                     <GlassCard>
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-accent-indigo mb-4">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-accent-terracotta mb-4">
                         📅 Clinical Monitoring Schedule
                       </h4>
                       <div className="divide-y divide-medichain-border/30">
                         {Object.entries(currentReport.monitoringSchedule || {}).map(([key, val]) => (
                           <div key={key} className="flex justify-between py-2 text-xs">
                             <span className="text-text-secondary capitalize">{key.replace('_', ' ')}</span>
-                            <span className="font-bold text-accent-cyan">{val}</span>
+                            <span className="font-bold text-accent-emerald-dark">{val}</span>
                           </div>
                         ))}
                       </div>
@@ -630,7 +630,7 @@ export default function HealthRiskDashboard() {
         {/* ── SUBTAB 2: TRENDS ── */}
         {activeSubTab === 'trends' && (
           <GlassCard>
-            <h3 className="text-lg font-bold text-white mb-6">📉 Historical Health Score Trends</h3>
+            <h3 className="text-lg font-bold text-hc-text mb-6">📉 Historical Health Score Trends</h3>
             {trends.length === 0 ? (
               <div className="text-center py-20 text-text-secondary italic">
                 No trend logs available yet. Run health risk assessments to track changes over time.
@@ -643,18 +643,18 @@ export default function HealthRiskDashboard() {
                     HealthScore: t.healthScore,
                     RiskScore: t.riskScore
                   }))} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 10 }} />
-                    <YAxis stroke="#64748b" domain={[0, 100]} tick={{ fontSize: 10 }} />
-                    <ChartTooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E4E9E2" />
+                    <XAxis dataKey="date" stroke="#68766e" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#68766e" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    <ChartTooltip contentStyle={{ background: '#faf8f1', border: '1px solid #e9f4ec' }} />
                     <ChartLegend />
-                    <Line type="monotone" dataKey="HealthScore" stroke="#06b6d4" strokeWidth={3} dot={{ r: 4, fill: '#06b6d4' }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="RiskScore" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 4" dot={{ r: 3, fill: '#ef4444' }} />
+                    <Line type="monotone" dataKey="HealthScore" stroke="#16866a" strokeWidth={3} dot={{ r: 4, fill: '#16866a' }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="RiskScore" stroke="#b44736" strokeWidth={2} strokeDasharray="3 4" dot={{ r: 3, fill: '#b44736' }} />
                   </LineChart>
                 </ResponsiveContainer>
                 
                 <p className="text-xs text-text-secondary leading-relaxed max-w-xl mx-auto text-center italic">
-                  This chart shows the patient's calculated overall Health Score (solid blue line) and overall Risk Score (dashed red line) compiled across all evaluations.
+                  This chart shows the patient's calculated overall Health Score (solid emerald line) and overall Risk Score (dashed red line) compiled across all evaluations.
                 </p>
               </div>
             )}
@@ -664,7 +664,7 @@ export default function HealthRiskDashboard() {
         {/* ── SUBTAB 3: HISTORY LOG (TIMELINE) ── */}
         {activeSubTab === 'history' && (
           <GlassCard>
-            <h3 className="text-lg font-bold text-white mb-6">📜 Diagnostic Assessment Logs</h3>
+            <h3 className="text-lg font-bold text-hc-text mb-6">📜 Diagnostic Assessment Logs</h3>
             
             {history.length === 0 ? (
               <div className="text-center py-20 text-text-secondary italic">
@@ -679,14 +679,14 @@ export default function HealthRiskDashboard() {
                   return (
                     <div key={rep._id} className="relative group">
                       {/* Icon connector */}
-                      <span className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-medichain-bg-dark flex items-center justify-center"
+                      <span className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-medichain-bg-ivory flex items-center justify-center"
                         style={{ background: badge.color }}
                       />
                       
-                      <div className="p-4 bg-medichain-bg-dark/40 border border-medichain-border/30 rounded-xl hover:border-accent-cyan/30 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div className="p-4 bg-medichain-bg-ivory/40 border border-medichain-border/30 rounded-xl hover:border-accent-emerald-dark/30 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                           <span className="text-[10px] text-text-secondary font-mono block mb-1">{dateStr}</span>
-                          <h4 className="text-sm font-bold text-white">Assessment #{history.length - idx}</h4>
+                          <h4 className="text-sm font-bold text-hc-text">Assessment #{history.length - idx}</h4>
                           <div className="flex gap-4 mt-2 flex-wrap text-xs text-text-secondary">
                             <span>Age: <strong>{rep.patientProfile?.age}</strong></span>
                             <span>BMI: <strong>{rep.patientProfile?.bmi}</strong></span>
@@ -699,7 +699,7 @@ export default function HealthRiskDashboard() {
                             <span style={{ fontSize: '18px', fontWeight: 800, color: 'white', block: 'block' }}>
                               {rep.overallHealthScore}%
                             </span>
-                            <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', block: 'block' }}>
+                            <span style={{ fontSize: '9px', color: '#68766e', textTransform: 'uppercase', block: 'block' }}>
                               Health Score
                             </span>
                           </div>
@@ -712,9 +712,9 @@ export default function HealthRiskDashboard() {
                             style={{
                               padding: '6px 12px',
                               borderRadius: '6px',
-                              border: '1px solid rgba(6,182,212,0.3)',
+                              border: '1px solid rgba(22,134,106,0.3)',
                               background: 'transparent',
-                              color: '#06b6d4',
+                              color: '#16866a',
                               fontSize: '11px',
                               fontWeight: 700,
                               cursor: 'pointer'

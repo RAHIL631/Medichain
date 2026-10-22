@@ -8,14 +8,14 @@ const ICONS = {
   success: <CheckCircle className="w-5 h-5 text-hc-success flex-shrink-0" />,
   error:   <XCircle     className="w-5 h-5 text-hc-danger  flex-shrink-0" />,
   warning: <AlertTriangle className="w-5 h-5 text-hc-warning flex-shrink-0" />,
-  info:    <Info        className="w-5 h-5 text-hc-blue   flex-shrink-0" />,
+  info:    <Info        className="w-5 h-5 text-hc-emerald   flex-shrink-0" />,
 };
 
 const STRIP = {
   success: "border-l-4 border-hc-success bg-hc-success-soft",
   error:   "border-l-4 border-hc-danger  bg-hc-danger-soft",
   warning: "border-l-4 border-hc-warning bg-hc-warning-soft",
-  info:    "border-l-4 border-hc-blue    bg-hc-blue-soft",
+  info:    "border-l-4 border-hc-emerald    bg-hc-emerald-soft",
 };
 
 export function ToastProvider({ children }) {

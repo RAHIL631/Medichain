@@ -59,20 +59,20 @@ export default function BottomNav() {
               {/* Active indicator bar */}
               {isActive && (
                 <div
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-hc-blue"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-hc-emerald"
                   aria-hidden="true"
                 />
               )}
               <div
                 className={`w-6 h-6 flex items-center justify-center transition-colors duration-150 ${
-                  isActive ? 'text-hc-blue' : 'text-hc-text-light'
+                  isActive ? 'text-hc-emerald' : 'text-hc-text-light'
                 }`}
               >
                 <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 1.75} />
               </div>
               <span
                 className={`text-[10px] font-semibold leading-none transition-colors duration-150 truncate ${
-                  isActive ? 'text-hc-blue' : 'text-hc-text-light'
+                  isActive ? 'text-hc-emerald' : 'text-hc-text-light'
                 }`}
               >
                 {label}

@@ -15,16 +15,16 @@ import FuturisticButton from '../components/FuturisticButton';
 import ShapExplanationView from '../components/cdss/ShapExplanationView';
 
 const PRIORITY_BADGES = {
-  'CRITICAL': { bg: 'rgba(168,85,247,0.1)',  border: 'rgba(168,85,247,0.3)',  color: '#a855f7', label: '🚨 Critical Priority' },
-  'HIGH':     { bg: 'rgba(239,68,68,0.1)',   border: 'rgba(239,68,68,0.3)',   color: '#ef4444', label: '🔴 High Priority' },
-  'MEDIUM':   { bg: 'rgba(249,115,22,0.1)',  border: 'rgba(249,115,22,0.3)',  color: '#f97316', label: '🟠 Medium' },
-  'LOW':      { bg: 'rgba(34,197,94,0.1)',   border: 'rgba(34,197,94,0.3)',   color: '#22c55e', label: '🟢 Low' }
+  'CRITICAL': { bg: '#F8E5DD', border: '#B44736', color: '#8D3A2D', label: '🚨 Critical Priority' },
+  'HIGH':     { bg: 'rgba(239,68,68,0.1)',   border: 'rgba(239,68,68,0.3)',   color: '#b44736', label: '🔴 High Priority' },
+  'MEDIUM':   { bg: '#FBF3DE', border: '#EBCB82', color: '#805B12', label: '🟠 Medium' },
+  'LOW':      { bg: 'rgba(34,197,94,0.1)',   border: 'rgba(34,197,94,0.3)',   color: '#16866a', label: '🟢 Low' }
 };
 
 const EMERGENCY_BADGES = {
-  'CRITICAL': { bg: 'rgba(168,85,247,0.15)', border: '#a855f7', color: '#a855f7', label: 'EMERGENCY: IMMEDIATE ACTION' },
-  'URGENT':   { bg: 'rgba(239,68,68,0.15)',   border: '#ef4444', color: '#ef4444', label: 'URGENT OUTPATIENT REVIEW' },
-  'ROUTINE':  { bg: 'rgba(255,255,255,0.03)', border: '#4b5563', color: '#9ca3af', label: 'ROUTINE CLINICAL CARE' }
+  'CRITICAL': { bg: '#F8E5DD', border: '#B44736', color: '#8D3A2D', label: 'EMERGENCY: IMMEDIATE ACTION' },
+  'URGENT':   { bg: 'rgba(239,68,68,0.15)',   border: '#b44736', color: '#b44736', label: 'URGENT OUTPATIENT REVIEW' },
+  'ROUTINE':  { bg: 'rgba(255,255,255,0.03)', border: '#68766e', color: '#68766e', label: 'ROUTINE CLINICAL CARE' }
 };
 
 export default function EnsemblePredictorDashboard() {
@@ -165,7 +165,7 @@ export default function EnsemblePredictorDashboard() {
         {/* Top Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-white flex items-center gap-2">
+            <h1 className="text-3xl font-display font-bold text-hc-text flex items-center gap-2">
               🧬 Upgraded AI Ensemble Predictor (XGBoost + LightGBM + CatBoost)
             </h1>
             <p className="text-text-secondary mt-1">
@@ -181,8 +181,8 @@ export default function EnsemblePredictorDashboard() {
                   padding: '8px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: activeTab === tab ? 'linear-gradient(135deg, #06b6d4, #3b82f6)' : 'rgba(255,255,255,0.05)',
-                  color: activeTab === tab ? 'white' : '#94a3b8',
+                  background: activeTab === tab ? 'linear-gradient(135deg, #16866a, #16866a)' : 'rgba(255,255,255,0.05)',
+                  color: activeTab === tab ? 'white' : '#68766e',
                   fontSize: '12px',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -202,7 +202,7 @@ export default function EnsemblePredictorDashboard() {
             {/* Inputs Card */}
             <div className="lg:col-span-1 space-y-6">
               <GlassCard>
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-hc-text mb-4 flex items-center gap-2">
                   <span>👤</span> Clinical Parameters
                 </h3>
 
@@ -216,7 +216,7 @@ export default function EnsemblePredictorDashboard() {
                         value={patientId}
                         onChange={e => setPatientId(e.target.value)}
                         placeholder="e.g. 648fdf..."
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                         onBlur={() => patientId && fetchPatientLogs()}
                       />
                     </div>
@@ -230,7 +230,7 @@ export default function EnsemblePredictorDashboard() {
                         required
                         value={age}
                         onChange={e => setAge(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                     <div>
@@ -238,7 +238,7 @@ export default function EnsemblePredictorDashboard() {
                       <select
                         value={gender}
                         onChange={e => setGender(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       >
                         <option value="M">Male</option>
                         <option value="F">Female</option>
@@ -255,7 +255,7 @@ export default function EnsemblePredictorDashboard() {
                         required
                         value={bmi}
                         onChange={e => setBmi(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                     <div>
@@ -265,7 +265,7 @@ export default function EnsemblePredictorDashboard() {
                         required
                         value={kidneyGfr}
                         onChange={e => setKidneyGfr(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export default function EnsemblePredictorDashboard() {
                         required
                         value={tsh}
                         onChange={e => setTsh(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                     <div>
@@ -290,7 +290,7 @@ export default function EnsemblePredictorDashboard() {
                         required
                         value={freeT4}
                         onChange={e => setFreeT4(e.target.value)}
-                        className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                        className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                       />
                     </div>
                   </div>
@@ -300,7 +300,7 @@ export default function EnsemblePredictorDashboard() {
                     <select
                       value={liverScore}
                       onChange={e => setLiverScore(e.target.value)}
-                      className="w-full bg-medichain-bg-dark border border-medichain-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-cyan outline-none"
+                      className="w-full bg-white border border-medichain-border rounded-lg px-3 py-2 text-sm text-hc-text focus:border-accent-emerald-dark outline-none"
                     >
                       <option value={0}>Class A (Normal)</option>
                       <option value={7}>Class B (Moderate)</option>
@@ -324,11 +324,11 @@ export default function EnsemblePredictorDashboard() {
                           style={{
                             width: '40px', height: '20px',
                             borderRadius: '10px',
-                            background: tog.state ? '#06b6d4' : 'rgba(255,255,255,0.1)',
+                            background: tog.state ? '#16866a' : 'rgba(255,255,255,0.1)',
                             cursor: 'pointer',
                             transition: 'all 0.25s',
                             position: 'relative',
-                            border: `1px solid ${tog.state ? 'rgba(6,182,212,0.5)' : 'rgba(255,255,255,0.1)'}`
+                            border: `1px solid ${tog.state ? 'rgba(22,134,106,0.5)' : 'rgba(255,255,255,0.1)'}`
                           }}
                         >
                           <div style={{
@@ -358,9 +358,9 @@ export default function EnsemblePredictorDashboard() {
                             style={{
                               padding: '4px 10px',
                               borderRadius: '6px',
-                              border: active ? '1px solid rgba(6,182,212,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                              background: active ? 'rgba(6,182,212,0.1)' : 'transparent',
-                              color: active ? '#06b6d4' : '#6b7280',
+                              border: active ? '1px solid rgba(22,134,106,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                              background: active ? 'rgba(22,134,106,0.1)' : 'transparent',
+                              color: active ? '#16866a' : '#68766e',
                               fontSize: '11px',
                               fontWeight: 600,
                               cursor: 'pointer',
@@ -386,7 +386,7 @@ export default function EnsemblePredictorDashboard() {
               {!currentReport && !loading && (
                 <GlassCard className="flex flex-col items-center justify-center py-28 text-center">
                   <div style={{ fontSize: '56px', marginBottom: '16px' }}>🧬</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Ensemble Predictive Engine</h3>
+                  <h3 className="text-xl font-bold text-hc-text mb-2">Ensemble Predictive Engine</h3>
                   <p className="text-sm text-text-secondary max-w-sm">
                     Assess patient profiles using a parallel model ensemble (XGBoost, LightGBM, CatBoost) to map and rank the top five disease risks.
                   </p>
@@ -397,13 +397,13 @@ export default function EnsemblePredictorDashboard() {
                 <GlassCard className="flex flex-col items-center justify-center py-28 text-center">
                   <div style={{
                     width: '44px', height: '44px',
-                    border: '3px solid rgba(6,182,212,0.2)',
-                    borderTop: '3px solid #06b6d4',
+                    border: '3px solid rgba(22,134,106,0.2)',
+                    borderTop: '3px solid #16866a',
                     borderRadius: '50%',
                     animation: 'spin 1.2s linear infinite',
                     marginBottom: '16px'
                   }} />
-                  <p style={{ color: '#06b6d4', fontWeight: 800, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.8px', animation: 'pulse 1s infinite' }}>
+                  <p style={{ color: '#16866a', fontWeight: 800, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.8px', animation: 'pulse 1s infinite' }}>
                     AGGREGATING ENSEMBLE KERNEL PREDICTIONS...
                   </p>
                 </GlassCard>
@@ -420,9 +420,9 @@ export default function EnsemblePredictorDashboard() {
                       </h4>
                       <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="110" height="110" viewBox="0 0 110 110" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="55" cy="55" r="45" fill="transparent" stroke="rgba(255,255,255,0.04)" strokeWidth="6" />
+                          <circle cx="55" cy="55" r="45" fill="transparent" stroke="#E4E9E2" strokeWidth="6" />
                           <circle cx="55" cy="55" r="45" fill="transparent"
-                            stroke="#06b6d4"
+                            stroke="#16866a"
                             strokeWidth="6"
                             strokeDasharray={2 * Math.PI * 45}
                             strokeDashoffset={2 * Math.PI * 45 * (1 - (currentReport.healthScore || 100) / 100)}
@@ -444,24 +444,24 @@ export default function EnsemblePredictorDashboard() {
                         <h4 className="text-xs font-bold uppercase tracking-widest text-text-secondary mb-3">
                           Diagnostic Assessment Briefing
                         </h4>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.3)', marginBottom: '12px' }}>
-                          <span style={{ color: '#06b6d4', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(22,134,106,0.1)', border: '1px solid rgba(22,134,106,0.3)', marginBottom: '12px' }}>
+                          <span style={{ color: '#16866a', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase' }}>
                             Ensemble Evaluated Successfully
                           </span>
                         </div>
-                        <p style={{ color: '#d1d5db', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
+                        <p style={{ color: '#68766e', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
                           Below are the ranked top 5 diseases evaluated by the XGBoost, LightGBM, and CatBoost ensemble classifiers. Check individual model probabilities and follow-up clinical tests.
                         </p>
                       </div>
                       <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-medichain-border/30">
                         <div>
-                          <span style={{ display: 'block', fontSize: '11px', color: '#6b7280', textTransform: 'uppercase' }}>Highest Risk Model</span>
-                          <span style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#ef4444' }}>
+                          <span style={{ display: 'block', fontSize: '11px', color: '#68766e', textTransform: 'uppercase' }}>Highest Risk Model</span>
+                          <span style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: '#b44736' }}>
                             {currentReport.topFive?.[0]?.disease || 'None'} ({currentReport.topFive?.[0]?.probability}%)
                           </span>
                         </div>
                         <div>
-                          <span style={{ display: 'block', fontSize: '11px', color: '#6b7280', textTransform: 'uppercase' }}>Urgent Actions Required</span>
+                          <span style={{ display: 'block', fontSize: '11px', color: '#68766e', textTransform: 'uppercase' }}>Urgent Actions Required</span>
                           <span style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'white' }}>
                             {currentReport.topFive?.filter(t => t.emergency_level === 'CRITICAL' || t.emergency_level === 'URGENT').length || 0} Recommended
                           </span>
@@ -479,7 +479,7 @@ export default function EnsemblePredictorDashboard() {
                       {currentReport.topFive?.map((disease, idx) => {
                         const pb = PRIORITY_BADGES[disease.treatment_priority] || PRIORITY_BADGES.LOW;
                         return (
-                          <div key={idx} style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                          <div key={idx} style={{ padding: '12px 14px', borderRadius: '10px', background: '#FFFFFF', border: '1px solid #E4E9E2' }}>
                             <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
                               <span style={{ color: 'white', fontWeight: 700, fontSize: '13px' }}>
                                 {disease.icon} {disease.disease}
@@ -488,7 +488,7 @@ export default function EnsemblePredictorDashboard() {
                                 <span style={{ padding: '2px 8px', borderRadius: '20px', background: pb.bg, border: `1px solid ${pb.border}`, color: pb.color, fontSize: '10px', fontWeight: 700 }}>
                                   {pb.label}
                                 </span>
-                                <span style={{ color: '#9ca3af', fontSize: '10px' }}>
+                                <span style={{ color: '#68766e', fontSize: '10px' }}>
                                   CI: {disease.confidence_interval?.[0]}% - {disease.confidence_interval?.[1]}% (95%)
                                 </span>
                               </div>
@@ -497,14 +497,14 @@ export default function EnsemblePredictorDashboard() {
                             {/* Bar */}
                             <div>
                               <div className="flex justify-between text-xs mb-1">
-                                <span style={{ color: '#6b7280' }}>Probability: <strong>{disease.probability}%</strong></span>
-                                <span style={{ color: '#06b6d4', fontWeight: 700 }}>{disease.confidence} CONFIDENCE</span>
+                                <span style={{ color: '#68766e' }}>Probability: <strong>{disease.probability}%</strong></span>
+                                <span style={{ color: '#16866a', fontWeight: 700 }}>{disease.confidence} CONFIDENCE</span>
                               </div>
-                              <div style={{ height: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ height: '8px', background: '#E9F4EC', borderRadius: '4px', overflow: 'hidden' }}>
                                 <div style={{
                                   width: `${disease.probability}%`,
                                   height: '100%',
-                                  background: `linear-gradient(to right, ${pb.color}, #3b82f6)`,
+                                  background: `linear-gradient(to right, ${pb.color}, #16866a)`,
                                   borderRadius: '4px',
                                   transition: 'width 1s ease-out'
                                 }} />
@@ -518,20 +518,20 @@ export default function EnsemblePredictorDashboard() {
 
                   {/* Model comparison bar chart */}
                   <GlassCard>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-accent-cyan mb-6">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-accent-emerald-dark mb-6">
                       📊 XGBoost vs LightGBM vs CatBoost Probability Comparison
                     </h4>
                     <ResponsiveContainer width="100%" height={320}>
                       <BarChart data={modelComparisonData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                        <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 9 }} />
-                        <YAxis stroke="#64748b" domain={[0, 100]} tick={{ fontSize: 10 }} />
-                        <ChartTooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155' }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E4E9E2" />
+                        <XAxis dataKey="name" stroke="#68766e" tick={{ fontSize: 9 }} />
+                        <YAxis stroke="#68766e" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                        <ChartTooltip contentStyle={{ background: '#faf8f1', border: '1px solid #e9f4ec' }} />
                         <ChartLegend />
-                        <Bar dataKey="XGBoost" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="LightGBM" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="CatBoost" fill="#a855f7" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Ensemble" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="XGBoost" fill="#16866a" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="LightGBM" fill="#16866a" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="CatBoost" fill="#d97860" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Ensemble" fill="#16866a" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </GlassCard>
@@ -540,7 +540,7 @@ export default function EnsemblePredictorDashboard() {
                   <div className="space-y-4">
                     <GlassCard>
                       <div className="flex justify-between items-center flex-wrap gap-2">
-                        <h4 className="text-xs font-bold uppercase tracking-widest text-accent-cyan">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-accent-emerald-dark">
                           🧠 Select Disease Explainer
                         </h4>
                         <div className="flex gap-1 flex-wrap">
@@ -552,9 +552,9 @@ export default function EnsemblePredictorDashboard() {
                               style={{
                                 padding: '4px 10px',
                                 borderRadius: '6px',
-                                border: selectedEnsembleShapDisease === disease.disease_key ? '1px solid rgba(6,182,212,0.4)' : '1px solid rgba(255,255,255,0.06)',
-                                background: selectedEnsembleShapDisease === disease.disease_key ? 'rgba(6,182,212,0.1)' : 'transparent',
-                                color: selectedEnsembleShapDisease === disease.disease_key ? '#06b6d4' : '#6b7280',
+                                border: selectedEnsembleShapDisease === disease.disease_key ? '1px solid rgba(22,134,106,0.4)' : '1px solid #E4E9E2',
+                                background: selectedEnsembleShapDisease === disease.disease_key ? 'rgba(22,134,106,0.1)' : 'transparent',
+                                color: selectedEnsembleShapDisease === disease.disease_key ? '#16866a' : '#68766e',
                                 fontSize: '10px',
                                 fontWeight: 700,
                                 cursor: 'pointer',
@@ -590,7 +590,7 @@ export default function EnsemblePredictorDashboard() {
                         <GlassCard key={idx}>
                           <div className="flex justify-between items-start border-b border-medichain-border/30 pb-3 mb-4 flex-wrap gap-2">
                             <div>
-                              <span style={{ fontSize: '9px', textTransform: 'uppercase', color: '#6b7280', display: 'block' }}>Disease Risk</span>
+                              <span style={{ fontSize: '9px', textTransform: 'uppercase', color: '#68766e', display: 'block' }}>Disease Risk</span>
                               <h4 style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>
                                 {disease.icon} {disease.disease}
                               </h4>
@@ -602,15 +602,15 @@ export default function EnsemblePredictorDashboard() {
 
                           <div className="space-y-3">
                             <div>
-                              <span style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#6b7280', marginBottom: '2px' }}>Suggested Specialist</span>
+                              <span style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#68766e', marginBottom: '2px' }}>Suggested Specialist</span>
                               <span style={{ fontSize: '12px', fontWeight: 700, color: 'white' }}>👨‍⚕️ {disease.suggested_specialist}</span>
                             </div>
                             
                             <div>
-                              <span style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#6b7280', marginBottom: '4px' }}>Recommended Tests Screen</span>
+                              <span style={{ display: 'block', fontSize: '9px', textTransform: 'uppercase', color: '#68766e', marginBottom: '4px' }}>Recommended Tests Screen</span>
                               <div className="flex flex-wrap gap-1.5">
                                 {disease.recommended_tests?.map((test, ti) => (
-                                  <span key={ti} className="px-2 py-0.5 bg-accent-cyan/10 border border-accent-cyan/20 rounded text-[10px] text-accent-cyan font-bold uppercase">
+                                  <span key={ti} className="px-2 py-0.5 bg-accent-emerald-dark/10 border border-accent-emerald-dark/20 rounded text-[10px] text-accent-emerald-dark font-bold uppercase">
                                     {test}
                                   </span>
                                 ))}
@@ -631,7 +631,7 @@ export default function EnsemblePredictorDashboard() {
         {/* ── TAB 2: HISTORICAL LOGS ── */}
         {activeTab === 'history' && (
           <GlassCard>
-            <h3 className="text-lg font-bold text-white mb-6">📜 Historical Ensemble Assessments</h3>
+            <h3 className="text-lg font-bold text-hc-text mb-6">📜 Historical Ensemble Assessments</h3>
             
             {history.length === 0 ? (
               <div className="text-center py-20 text-text-secondary italic">
@@ -643,11 +643,11 @@ export default function EnsemblePredictorDashboard() {
                   const dateStr = new Date(rep.createdAt).toLocaleString();
                   return (
                     <div key={rep._id} className="relative group">
-                      <span className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-medichain-bg-dark flex items-center justify-center bg-accent-cyan" />
-                      <div className="p-4 bg-medichain-bg-dark/40 border border-medichain-border/30 rounded-xl hover:border-accent-cyan/30 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <span className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-medichain-bg-ivory flex items-center justify-center bg-accent-emerald-dark" />
+                      <div className="p-4 bg-medichain-bg-ivory/40 border border-medichain-border/30 rounded-xl hover:border-accent-emerald-dark/30 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                           <span className="text-[10px] text-text-secondary font-mono block mb-1">{dateStr}</span>
-                          <h4 className="text-sm font-bold text-white">Ensemble Run #{history.length - idx}</h4>
+                          <h4 className="text-sm font-bold text-hc-text">Ensemble Run #{history.length - idx}</h4>
                           <div className="flex gap-3 mt-2 flex-wrap text-xs text-text-secondary">
                             {rep.topFive?.slice(0, 3).map((t, ti) => (
                               <span key={ti}>{t.icon} {t.disease}: <strong>{t.probability}%</strong></span>
@@ -660,7 +660,7 @@ export default function EnsemblePredictorDashboard() {
                             <span style={{ fontSize: '18px', fontWeight: 800, color: 'white', block: 'block' }}>
                               {rep.healthScore}%
                             </span>
-                            <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', block: 'block' }}>
+                            <span style={{ fontSize: '9px', color: '#68766e', textTransform: 'uppercase', block: 'block' }}>
                               Health Index
                             </span>
                           </div>
@@ -670,9 +670,9 @@ export default function EnsemblePredictorDashboard() {
                             style={{
                               padding: '6px 12px',
                               borderRadius: '6px',
-                              border: '1px solid rgba(6,182,212,0.3)',
+                              border: '1px solid rgba(22,134,106,0.3)',
                               background: 'transparent',
-                              color: '#06b6d4',
+                              color: '#16866a',
                               fontSize: '11px',
                               fontWeight: 700,
                               cursor: 'pointer'

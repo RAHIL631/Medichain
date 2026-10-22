@@ -89,10 +89,10 @@ const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
       {/* ── SECTION 1: EMERGENCY ALERT BANNER ─────────────────────────────── */}
       <div className={`w-full py-4 px-6 rounded-2xl flex items-center gap-4 shadow-lg border-b-4 ${
         hasAllergies 
-          ? 'bg-red-600 border-red-800 text-white animate-pulse' 
-          : 'bg-green-600 border-green-800 text-white'
+          ? 'bg-hc-danger-soft border-hc-danger text-hc-danger'
+          : 'bg-hc-success-soft border-hc-emerald-mid text-hc-emerald-dark'
       }`}>
-        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 bg-white rounded-full border border-hc-border flex items-center justify-center flex-shrink-0">
           {hasAllergies ? (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
           ) : (
@@ -112,8 +112,8 @@ const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
       {/* ── SECTION 2: CRITICAL INFO CARDS ────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Blood Group */}
-        <div className={`p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center text-white ${
-          profile.bloodGroup?.includes('-') ? 'bg-gradient-to-br from-red-500 to-red-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'
+        <div className={`p-6 rounded-3xl shadow-hc-card flex flex-col items-center justify-center text-hc-text border border-hc-border ${
+          profile.bloodGroup?.includes('-') ? 'bg-gradient-to-br from-hc-danger-soft to-white' : 'bg-gradient-to-br from-hc-emerald-soft to-hc-emerald-mid'
         }`}>
           <p className="text-[10px] uppercase font-bold tracking-widest opacity-80 mb-2">Blood Group</p>
           <span className="text-5xl font-black">{profile.bloodGroup || 'O+'}</span>
@@ -121,39 +121,39 @@ const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
         </div>
 
         {/* Allergies List */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700">
-          <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-4">Known Allergies</p>
+        <div className="p-6 rounded-3xl bg-white  shadow-xl border border-hc-border-light ">
+          <p className="text-[10px] uppercase font-bold text-hc-text-light tracking-widest mb-4">Known Allergies</p>
           <div className="flex flex-wrap gap-2">
             {hasAllergies ? profile.allergies.map((a, i) => (
-              <span key={i} className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-lg border border-red-200 dark:border-red-800/50">
+              <span key={i} className="px-3 py-1 bg-red-100  text-red-600  text-xs font-bold rounded-lg border border-red-200 ">
                 ⚠️ {a}
               </span>
-            )) : <span className="text-gray-300 italic text-sm">None Reported</span>}
+            )) : <span className="text-hc-text-muted italic text-sm">None Reported</span>}
           </div>
         </div>
 
         {/* Chronic Conditions */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700">
-          <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-4">Chronic Conditions</p>
+        <div className="p-6 rounded-3xl bg-white  shadow-xl border border-hc-border-light ">
+          <p className="text-[10px] uppercase font-bold text-hc-text-light tracking-widest mb-4">Chronic Conditions</p>
           <div className="flex flex-wrap gap-2">
             {profile.chronicConditions?.length > 0 ? profile.chronicConditions.map((c, i) => (
-              <span key={i} className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold rounded-lg border border-orange-200 dark:border-orange-800/50">
+              <span key={i} className="px-3 py-1 bg-orange-100  text-orange-600  text-xs font-bold rounded-lg border border-orange-200 ">
                 • {c}
               </span>
-            )) : <span className="text-gray-300 italic text-sm">None Reported</span>}
+            )) : <span className="text-hc-text-muted italic text-sm">None Reported</span>}
           </div>
         </div>
       </div>
 
       {/* ── SECTION 3: AI RISK ANALYSIS ──────────────────────────────────── */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-700">
+      <div className="bg-white  rounded-3xl p-6 shadow-xl border border-hc-border-light ">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          <h3 className="font-bold text-hc-text  flex items-center gap-2">
+            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             AI Predictive Health Assessment
           </h3>
           {isHighRisk && (
-            <span className="px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-full animate-bounce">
+            <span className="px-3 py-1 bg-hc-danger-soft text-hc-danger text-[10px] font-black rounded-full border border-hc-danger/20">
               CRITICAL RISK ALERT
             </span>
           )}
@@ -161,8 +161,8 @@ const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
 
         {riskLoading ? (
           <div className="py-10 flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-gray-400 font-bold animate-pulse">RUNNING NEURAL ANALYSIS...</p>
+            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-hc-text-light font-bold animate-pulse">RUNNING NEURAL ANALYSIS...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -174,37 +174,37 @@ const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
       </div>
 
       {/* ── SECTION 4: BLOCKCHAIN MEDICAL RECORDS ─────────────────────────── */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-700">
+      <div className="bg-white  rounded-3xl p-6 shadow-xl border border-hc-border-light ">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          <h3 className="font-bold text-hc-text  flex items-center gap-2">
+            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
             Recent Medical History (On-Chain)
           </h3>
-          <span className="text-xs text-gray-400 font-medium">{records.length} records found</span>
+          <span className="text-xs text-hc-text-light font-medium">{records.length} records found</span>
         </div>
 
         {recordsLoading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map(i => <div key={i} className="h-14 bg-gray-50 dark:bg-gray-900 rounded-xl animate-pulse" />)}
+            {[1, 2, 3].map(i => <div key={i} className="h-14 bg-hc-bg  rounded-xl animate-pulse" />)}
           </div>
         ) : (
           <div className="space-y-3">
             {(isExpanded ? records : records.slice(0, 5)).map((record, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-colors group">
+              <div key={i} className="flex items-center justify-between p-4 bg-hc-bg  rounded-2xl hover:bg-emerald-50  transition-colors group">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-indigo-600 shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-white  flex items-center justify-center text-emerald-600 shadow-sm">
                     {getRecordIcon(record.type)}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900 dark:text-white capitalize">{record.type.replace('_', ' ')}</p>
-                    <p className="text-[10px] text-gray-400 font-medium">{new Date(record.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                    <p className="text-sm font-bold text-hc-text  capitalize">{record.type.replace('_', ' ')}</p>
+                    <p className="text-[10px] text-hc-text-light font-medium">{new Date(record.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                   </div>
                 </div>
                 <a 
                   href={record.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                  className="px-4 py-2 bg-white  border border-hc-border  text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                 >
                   View File
                 </a>
@@ -214,14 +214,14 @@ const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
             {records.length > 5 && (
               <button 
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-indigo-600 transition-colors"
+                className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-hc-text-light hover:text-emerald-600 transition-colors"
               >
                 {isExpanded ? '↑ Show Less' : `↓ View All ${records.length} Records`}
               </button>
             )}
 
             {records.length === 0 && (
-              <div className="text-center py-6 text-gray-400 text-sm italic">
+              <div className="text-center py-6 text-hc-text-light text-sm italic">
                 No medical records found on-chain for this patient.
               </div>
             )}
@@ -231,17 +231,17 @@ const EmergencySnapshot = ({ patientAddress, profile, contract }) => {
 
       {/* ── SECTION 5: QUICK ACTIONS ─────────────────────────────────────── */}
       <div className="flex flex-wrap gap-4">
-        <button className="flex-1 min-w-[200px] py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+        <button className="flex-1 min-w-[200px] py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-lg hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
           Upload New Record
         </button>
-        <button className="flex-1 min-w-[200px] py-4 bg-white dark:bg-gray-800 text-gray-700 dark:text-white font-bold rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
-          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+        <button className="flex-1 min-w-[200px] py-4 bg-white  text-hc-text  font-bold rounded-2xl shadow-lg border border-hc-border  hover:bg-hc-bg transition-all flex items-center justify-center gap-2">
+          <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
           Emergency Contact
         </button>
         <button 
           onClick={() => window.print()}
-          className="p-4 bg-white dark:bg-gray-800 text-gray-400 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 hover:text-indigo-600 transition-all"
+          className="p-4 bg-white  text-hc-text-light rounded-2xl shadow-lg border border-hc-border  hover:text-emerald-600 transition-all"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
         </button>
@@ -263,10 +263,10 @@ const RiskBar = ({ label, value }) => {
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-end">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</span>
-        <span className={`text-xs font-black ${value > 70 ? 'text-red-500' : 'text-gray-900 dark:text-white'}`}>{value || 0}%</span>
+        <span className="text-[10px] font-bold text-hc-text-light uppercase tracking-widest">{label}</span>
+        <span className={`text-xs font-black ${value > 70 ? 'text-red-500' : 'text-hc-text '}`}>{value || 0}%</span>
       </div>
-      <div className="h-2 w-full bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-hc-bg-alt  rounded-full overflow-hidden">
         <div 
           className={`h-full transition-all duration-1000 ${getColour(value)}`}
           style={{ width: `${value || 0}%` }}

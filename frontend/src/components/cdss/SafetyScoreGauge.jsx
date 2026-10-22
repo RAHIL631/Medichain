@@ -5,12 +5,12 @@
 import React, { useEffect, useState } from 'react';
 
 const SEVERITY_COLORS = {
-  SAFE:     { from: '#10b981', to: '#059669', label: 'SAFE' },
-  LOW:      { from: '#f59e0b', to: '#d97706', label: 'LOW RISK' },
-  MODERATE: { from: '#f97316', to: '#ea580c', label: 'MODERATE' },
-  HIGH:     { from: '#ef4444', to: '#dc2626', label: 'HIGH RISK' },
-  CRITICAL: { from: '#a855f7', to: '#9333ea', label: 'CRITICAL' },
-  UNKNOWN:  { from: '#64748b', to: '#475569', label: 'UNKNOWN' },
+  SAFE:     { from: '#16866a', to: '#0f6852', label: 'SAFE' },
+  LOW:      { from: '#ebcb82', to: '#805b12', label: 'LOW RISK' },
+  MODERATE: { from: '#d97860', to: '#b44736', label: 'MODERATE' },
+  HIGH:     { from: '#b44736', to: '#b44736', label: 'HIGH RISK' },
+  CRITICAL: { from: '#d97860', to: '#d97860', label: 'CRITICAL' },
+  UNKNOWN:  { from: '#68766e', to: '#68766e', label: 'UNKNOWN' },
 };
 
 function polarToCartesian(cx, cy, r, angleDeg) {

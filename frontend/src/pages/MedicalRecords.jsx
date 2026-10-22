@@ -91,7 +91,7 @@ export default function MedicalRecords() {
               onClick={() => setActiveType(type)}
               className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-150 flex-shrink-0 min-h-[36px] ${
                 activeType === type
-                  ? 'bg-hc-blue-soft text-hc-blue border border-hc-blue-mid shadow-xs'
+                  ? 'bg-hc-emerald-soft text-hc-emerald border border-hc-emerald-mid shadow-xs'
                   : 'text-hc-text-muted hover:bg-hc-bg-alt hover:text-hc-text border border-transparent'
               }`}
             >

@@ -6,9 +6,9 @@ import api from '../utils/api';
 
 // ── Type config ───────────────────────────────────────────────────────────────
 const TYPE_CONFIG = {
-  prescription:  { color: 'accent-blue',   icon: '💊', label: 'Prescription'  },
-  lab_report:    { color: 'accent-cyan',   icon: '🔬', label: 'Lab Report'    },
-  diagnosis:     { color: 'accent-indigo', icon: '🩺', label: 'Diagnosis'     },
+  prescription:  { color: 'accent-emerald',   icon: '💊', label: 'Prescription'  },
+  lab_report:    { color: 'accent-emerald-dark',   icon: '🔬', label: 'Lab Report'    },
+  diagnosis:     { color: 'accent-terracotta', icon: '🩺', label: 'Diagnosis'     },
   xray:          { color: 'status-warning',icon: '🩻', label: 'X-Ray / Scan'  },
   scan:          { color: 'status-warning',icon: '🩻', label: 'Scan'          },
   other:         { color: 'text-secondary',icon: '📄', label: 'Other'         },
@@ -16,10 +16,10 @@ const TYPE_CONFIG = {
 
 const SEVERITY_CONFIG = {
   SAFE:     { bg: 'bg-status-success/10', text: 'text-status-success', border: 'border-status-success/20' },
-  LOW:      { bg: 'bg-accent-blue/10',    text: 'text-accent-blue',    border: 'border-accent-blue/20'    },
+  LOW:      { bg: 'bg-accent-emerald/10',    text: 'text-accent-emerald',    border: 'border-accent-emerald/20'    },
   MODERATE: { bg: 'bg-status-warning/10', text: 'text-status-warning', border: 'border-status-warning/20' },
   HIGH:     { bg: 'bg-status-danger/10',  text: 'text-status-danger',  border: 'border-status-danger/20'  },
-  CRITICAL: { bg: 'bg-red-500/10',        text: 'text-red-400',        border: 'border-red-500/20'        },
+  CRITICAL: { bg: 'bg-red-500/10',        text: 'text-hc-danger',        border: 'border-red-500/20'        },
 };
 
 // ── Timeline Item ─────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ const TimelineItem = ({ record, isLast }) => {
       {/* Content */}
       <div className="flex-1 pb-8">
         <div
-          className="bg-medichain-surface/30 border border-medichain-border rounded-xl p-4 hover:border-accent-cyan/20 transition-colors cursor-pointer"
+          className="bg-medichain-surface/30 border border-medichain-border rounded-xl p-4 hover:border-accent-emerald-dark/20 transition-colors cursor-pointer"
           onClick={() => setExpanded(!expanded)}
         >
           {/* Header row */}
@@ -66,7 +66,7 @@ const TimelineItem = ({ record, isLast }) => {
                   </span>
                 )}
               </div>
-              <p className="text-sm font-medium text-white truncate">{record.fileName}</p>
+              <p className="text-sm font-medium text-hc-text truncate">{record.fileName}</p>
               {record.doctorId?.name && (
                 <p className="text-xs text-text-secondary mt-0.5">Dr. {record.doctorId.name}</p>
               )}
@@ -83,7 +83,7 @@ const TimelineItem = ({ record, isLast }) => {
               {record.notes && (
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-text-secondary mb-1">Doctor Notes</p>
-                  <p className="text-sm text-white/80 leading-relaxed">{record.notes}</p>
+                  <p className="text-sm text-hc-text/80 leading-relaxed">{record.notes}</p>
                 </div>
               )}
 
@@ -91,13 +91,13 @@ const TimelineItem = ({ record, isLast }) => {
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-text-secondary mb-2">AI Safety Score</p>
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 h-1.5 bg-medichain-bg-dark rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-medichain-bg-ivory rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-status-danger via-status-warning to-status-success transition-all duration-500"
                         style={{ width: `${record.aiAnalysis.safetyScore}%` }}
                       />
                     </div>
-                    <span className="text-sm font-bold text-white font-mono w-10 text-right">
+                    <span className="text-sm font-bold text-hc-text font-mono w-10 text-right">
                       {record.aiAnalysis.safetyScore}
                     </span>
                   </div>
@@ -109,7 +109,7 @@ const TimelineItem = ({ record, isLast }) => {
                   <p className="text-[10px] uppercase tracking-widest text-text-secondary mb-2">Medications</p>
                   <div className="flex flex-wrap gap-1.5">
                     {record.medications.map((med) => (
-                      <span key={med} className="text-[10px] px-2 py-1 rounded-full bg-medichain-bg-dark border border-medichain-border text-text-secondary font-mono">
+                      <span key={med} className="text-[10px] px-2 py-1 rounded-full bg-medichain-bg-ivory border border-medichain-border text-text-secondary font-mono">
                         {med}
                       </span>
                     ))}
@@ -119,7 +119,7 @@ const TimelineItem = ({ record, isLast }) => {
 
               {record.ipfsURL && (
                 <a href={record.ipfsURL} target="_blank" rel="noopener noreferrer"
-                   className="inline-flex items-center gap-1.5 text-xs text-accent-cyan hover:underline mt-1">
+                   className="inline-flex items-center gap-1.5 text-xs text-accent-emerald-dark hover:underline mt-1">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                   </svg>
@@ -151,7 +151,7 @@ const YearGroup = ({ year, records }) => {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-3 mb-4 group"
       >
-        <span className="text-xs font-black uppercase tracking-widest text-text-secondary group-hover:text-white transition-colors">
+        <span className="text-xs font-black uppercase tracking-widest text-text-secondary group-hover:text-hc-text transition-colors">
           {year}
         </span>
         <div className="flex-1 h-px bg-medichain-border group-hover:bg-medichain-border/80" />
@@ -253,8 +253,8 @@ const MedicalTimeline = ({ patientId, className = '' }) => {
             onClick={() => setFilter(f)}
             className={`px-3 py-1 rounded-full text-[10px] font-mono uppercase transition-all ${
               filter === f
-                ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
-                : 'bg-medichain-surface text-text-secondary border border-medichain-border hover:border-accent-cyan/20 hover:text-white'
+                ? 'bg-accent-emerald-dark/20 text-accent-emerald-dark border border-accent-emerald-dark/30'
+                : 'bg-medichain-surface text-text-secondary border border-medichain-border hover:border-accent-emerald-dark/20 hover:text-hc-text'
             }`}
           >
             {f === 'all' ? 'All' : TYPE_CONFIG[f]?.label || f}

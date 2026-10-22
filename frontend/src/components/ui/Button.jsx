@@ -7,7 +7,7 @@ const VARIANT_CLS = {
   secondary: "hc-btn-secondary",
   ghost:     "hc-btn-ghost",
   danger:    "hc-btn-danger",
-  teal:      "hc-btn-teal",
+  teal:      "hc-btn-emerald-dark",
 };
 const SIZE_CLS = { sm: "hc-btn-sm", md: "", lg: "hc-btn-lg" };
 

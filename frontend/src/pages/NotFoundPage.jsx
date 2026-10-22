@@ -17,27 +17,27 @@ const NotFoundPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-medichain-bg-dark flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-medichain-bg-ivory flex items-center justify-center relative overflow-hidden">
       {/* Animated background orbs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-accent-blue/5 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-accent-indigo/5 rounded-full blur-[120px]" />
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-accent-emerald/5 rounded-full blur-[120px] animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-accent-terracotta/5 rounded-full blur-[120px]" />
 
       <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
         {/* Glowing 404 */}
         <div className="relative mb-8 select-none">
-          <p className="text-[10rem] md:text-[14rem] font-display font-black leading-none bg-gradient-to-b from-accent-cyan/30 to-transparent bg-clip-text text-transparent">
+          <p className="text-[10rem] md:text-[14rem] font-display font-black leading-none bg-gradient-to-b from-accent-emerald-dark/30 to-transparent bg-clip-text text-transparent">
             404
           </p>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-40 h-40 md:w-56 md:h-56 rounded-full bg-accent-cyan/5 border border-accent-cyan/10 flex items-center justify-center">
-              <svg className="w-20 h-20 md:w-28 md:h-28 text-accent-cyan/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-40 h-40 md:w-56 md:h-56 rounded-full bg-accent-emerald-dark/5 border border-accent-emerald-dark/10 flex items-center justify-center">
+              <svg className="w-20 h-20 md:w-28 md:h-28 text-accent-emerald-dark/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-3">
+        <h1 className="text-3xl md:text-4xl font-display font-bold text-hc-text mb-3">
           Page Not Found
         </h1>
         <p className="text-text-secondary text-lg mb-10 max-w-md mx-auto">
@@ -47,19 +47,19 @@ const NotFoundPage = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={() => navigate(-1)}
-            className="px-8 py-3 rounded-xl bg-medichain-surface border border-medichain-border text-text-secondary hover:text-white hover:border-accent-cyan/30 transition-all duration-300 font-medium"
+            className="px-8 py-3 rounded-xl bg-medichain-surface border border-medichain-border text-text-secondary hover:text-hc-text hover:border-accent-emerald-dark/30 transition-all duration-300 font-medium"
           >
             ← Go Back
           </button>
           <Link
             to={getDashboardPath()}
-            className="px-8 py-3 rounded-xl bg-gradient-to-r from-accent-blue to-accent-cyan text-white font-semibold hover:opacity-90 transition-opacity duration-300 shadow-lg shadow-accent-cyan/20"
+            className="px-8 py-3 rounded-xl bg-gradient-to-r from-accent-emerald to-accent-emerald-dark text-hc-text font-semibold hover:opacity-90 transition-opacity duration-300 shadow-lg shadow-accent-emerald-dark/20"
           >
             Return to Dashboard
           </Link>
           <Link
             to="/"
-            className="px-8 py-3 rounded-xl bg-medichain-surface border border-medichain-border text-text-secondary hover:text-white hover:border-accent-cyan/30 transition-all duration-300 font-medium"
+            className="px-8 py-3 rounded-xl bg-medichain-surface border border-medichain-border text-text-secondary hover:text-hc-text hover:border-accent-emerald-dark/30 transition-all duration-300 font-medium"
           >
             Home
           </Link>

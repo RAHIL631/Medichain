@@ -114,7 +114,7 @@ export const handleTx = async (
 // ── Internal sub-components ───────────────────────────────────────────────────
 
 // Spinner ring
-const Spinner = ({ color = '#22d3ee', size = 36 }) => (
+const Spinner = ({ color = '#16866a', size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 36 36" fill="none"
     style={{ animation: 'spin 0.9s linear infinite' }}>
     <circle cx="18" cy="18" r="15" stroke={color} strokeOpacity="0.15" strokeWidth="3" />
@@ -129,12 +129,12 @@ const ChainPulse = () => (
     {/* Outer pulse ring */}
     <div style={{
       position: 'absolute', inset: 0, borderRadius: '50%',
-      background: 'rgba(139,92,246,0.15)',
+      background: 'rgba(22,134,106,0.12)',
       animation: 'pulse 1.4s ease-out infinite',
     }} />
     <div style={{
       position: 'absolute', inset: 4, borderRadius: '50%',
-      background: 'rgba(139,92,246,0.25)',
+      background: 'rgba(22,134,106,0.2)',
       animation: 'pulse 1.4s ease-out 0.4s infinite',
     }} />
     {/* Chain icon */}
@@ -142,7 +142,7 @@ const ChainPulse = () => (
       position: 'absolute', inset: 0, display: 'flex',
       alignItems: 'center', justifyContent: 'center',
     }}>
-      <svg width="22" height="22" fill="none" stroke="#a78bfa" strokeWidth="1.8"
+      <svg width="22" height="22" fill="none" stroke="#0F6852" strokeWidth="1.8"
         strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -160,7 +160,7 @@ const CheckMark = () => (
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     animation: 'scaleIn 0.35s cubic-bezier(0.175,0.885,0.32,1.275) both',
   }}>
-    <svg width="22" height="22" fill="none" stroke="#10b981"
+    <svg width="22" height="22" fill="none" stroke="#16866a"
       strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
       <path d="M5 13l4 4L19 7"
         style={{ strokeDasharray: 30, strokeDashoffset: 30,
@@ -178,7 +178,7 @@ const ErrorIcon = () => (
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     animation: 'scaleIn 0.3s ease both',
   }}>
-    <svg width="20" height="20" fill="none" stroke="#ef4444"
+    <svg width="20" height="20" fill="none" stroke="#b44736"
       strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24">
       <path d="M6 18L18 6M6 6l12 12" />
     </svg>
@@ -197,23 +197,23 @@ const HashPill = ({ hash, href }) => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-      <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#94a3b8' }}>
+      <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#68766e' }}>
         TX:
       </span>
       {href ? (
         <a href={href} target="_blank" rel="noopener noreferrer"
-          style={{ fontFamily: 'monospace', fontSize: 11, color: '#38bdf8',
+          style={{ fontFamily: 'monospace', fontSize: 11, color: '#16866a',
             textDecoration: 'none' }}>
           {short} ↗
         </a>
       ) : (
-        <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#e2e8f0' }}>
+        <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#26352e' }}>
           {short}
         </span>
       )}
       <button onClick={copy} style={{
         background: 'none', border: 'none', cursor: 'pointer',
-        fontSize: 10, color: copied ? '#22c55e' : '#64748b', padding: '1px 5px',
+        fontSize: 10, color: copied ? '#16866a' : '#68766e', padding: '1px 5px',
         borderRadius: 4, transition: 'color 0.2s',
       }}>
         {copied ? '✓ Copied' : '⎘ Copy'}
@@ -231,7 +231,7 @@ const TimeBadge = ({ network }) => {
   };
   return (
     <span style={{
-      fontSize: 10, color: '#64748b', padding: '2px 8px',
+      fontSize: 10, color: '#68766e', padding: '2px 8px',
       background: 'rgba(255,255,255,0.04)', borderRadius: 20,
       border: '1px solid rgba(255,255,255,0.07)',
     }}>
@@ -320,8 +320,7 @@ const TxStatus = ({
     <div style={{
       borderRadius: compact ? 10 : 16,
       border: `1px solid ${accent}33`,
-      background: `linear-gradient(135deg, ${accent}0d 0%, rgba(2,6,23,0.9) 100%)`,
-      backdropFilter: 'blur(12px)',
+      background: `linear-gradient(135deg, ${accent}0d 0%, #FAF8F1 100%)`,
       padding: compact ? '12px 14px' : '18px 20px',
       display: 'flex',
       flexDirection: 'column',
@@ -334,7 +333,7 @@ const TxStatus = ({
         <button onClick={onDismiss} style={{
           position: 'absolute', top: 10, right: 12,
           background: 'none', border: 'none', cursor: 'pointer',
-          color: '#475569', fontSize: 16, lineHeight: 1,
+          color: '#68766e', fontSize: 16, lineHeight: 1,
           transition: 'color 0.2s',
         }} title="Dismiss">✕</button>
       )}
@@ -348,7 +347,7 @@ const TxStatus = ({
     </div>
   );
 
-  const Label = ({ children, color = '#94a3b8', size = 13 }) => (
+  const Label = ({ children, color = '#68766e', size = 13 }) => (
     <span style={{ color, fontSize: size, lineHeight: 1.4 }}>{children}</span>
   );
 
@@ -361,11 +360,11 @@ const TxStatus = ({
   // ── PENDING ───────────────────────────────────────────────────────────────
   if (status === 'pending') {
     return (
-      <Card accent="#f59e0b">
+      <Card accent="#ebcb82">
         <Row>
-          <Spinner color="#f59e0b" size={compact ? 28 : 36} />
+          <Spinner color="#805B12" size={compact ? 28 : 36} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Title color="#fbbf24">Waiting for MetaMask approval…</Title>
+            <Title color="#805B12">Waiting for MetaMask approval…</Title>
             <Label size={11}>
               Please confirm the transaction in the MetaMask popup.
             </Label>
@@ -379,7 +378,7 @@ const TxStatus = ({
           borderRadius: 8, border: '1px solid rgba(245,158,11,0.15)',
         }}>
           <span style={{ fontSize: 18 }}>🦊</span>
-          <Label size={11} color="#fbbf24">
+          <Label size={11} color="#805B12">
             Check for the MetaMask extension popup — it may be minimised in your browser toolbar.
           </Label>
         </div>
@@ -390,11 +389,11 @@ const TxStatus = ({
   // ── MINING ────────────────────────────────────────────────────────────────
   if (status === 'mining') {
     return (
-      <Card accent="#a78bfa">
+      <Card accent="#d97860">
         <Row>
           <ChainPulse />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Title color="#a78bfa">Transaction submitted! Mining…</Title>
+            <Title color="#B44736">Transaction submitted! Mining…</Title>
             <Label size={11}>
               Your transaction is in the mempool — waiting for block inclusion.
             </Label>
@@ -405,17 +404,17 @@ const TxStatus = ({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <TimeBadge network={network} />
-          <Label size={10} color="#475569">Do not close this window.</Label>
+          <Label size={10} color="#68766e">Do not close this window.</Label>
         </div>
 
         {/* Animated progress bar */}
         <div style={{
-          height: 3, borderRadius: 2, background: 'rgba(167,139,250,0.1)',
+          height: 3, borderRadius: 2, background: '#E9F4EC',
           overflow: 'hidden',
         }}>
           <div style={{
             height: '100%', width: '60%',
-            background: 'linear-gradient(90deg, #7c3aed, #a78bfa)',
+            background: 'linear-gradient(90deg, #0F6852, #16866A)',
             borderRadius: 2,
             animation: 'slideDown 2s ease-in-out infinite alternate',
           }} />
@@ -427,13 +426,13 @@ const TxStatus = ({
   // ── CONFIRMED ─────────────────────────────────────────────────────────────
   if (status === 'confirmed') {
     return (
-      <Card accent="#10b981">
+      <Card accent="#16866a">
         <Row>
           <CheckMark />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Title color="#10b981">✓ Transaction Confirmed!</Title>
+            <Title color="#16866a">✓ Transaction Confirmed!</Title>
             {receipt?.blockNumber && (
-              <Label size={11} color="#6ee7b7">
+              <Label size={11} color="#0F6852">
                 Included in block #{receipt.blockNumber.toLocaleString()}
               </Label>
             )}
@@ -447,10 +446,10 @@ const TxStatus = ({
           {explorerLink && (
             <a href={explorerLink} target="_blank" rel="noopener noreferrer"
               style={{
-                fontSize: 11, color: '#38bdf8', textDecoration: 'none',
+                fontSize: 11, color: '#16866a', textDecoration: 'none',
                 padding: '4px 10px', borderRadius: 20,
-                border: '1px solid rgba(56,189,248,0.25)',
-                background: 'rgba(56,189,248,0.06)',
+                border: '1px solid #B9D8C5',
+                background: '#E9F4EC',
               }}>
               ⛓ View on Etherscan ↗
             </a>
@@ -458,10 +457,10 @@ const TxStatus = ({
           {ipfsURL && (
             <a href={ipfsURL} target="_blank" rel="noopener noreferrer"
               style={{
-                fontSize: 11, color: '#a78bfa', textDecoration: 'none',
+                fontSize: 11, color: '#B44736', textDecoration: 'none',
                 padding: '4px 10px', borderRadius: 20,
-                border: '1px solid rgba(167,139,250,0.25)',
-                background: 'rgba(167,139,250,0.06)',
+                border: '1px solid #F8E5DD',
+                background: '#F8E5DD',
               }}>
               📁 View file on IPFS ↗
             </a>
@@ -470,7 +469,7 @@ const TxStatus = ({
 
         {/* Tamper-proof note */}
         <div style={{
-          fontSize: 10, color: '#475569', padding: '6px 10px',
+          fontSize: 10, color: '#68766e', padding: '6px 10px',
           background: 'rgba(16,185,129,0.04)',
           borderRadius: 6, border: '1px solid rgba(16,185,129,0.1)',
         }}>
@@ -484,12 +483,12 @@ const TxStatus = ({
   // ── ERROR ─────────────────────────────────────────────────────────────────
   if (status === 'error') {
     return (
-      <Card accent="#ef4444">
+      <Card accent="#b44736">
         <Row>
           <ErrorIcon />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Title color="#f87171">Transaction Failed</Title>
-            <Label size={11} color="#fca5a5">
+            <Title color="#b44736">Transaction Failed</Title>
+            <Label size={11} color="#f8e5dd">
               {error || 'An unexpected error occurred.'}
             </Label>
           </div>
@@ -503,7 +502,7 @@ const TxStatus = ({
 
         {/* Retry hint */}
         <div style={{
-          fontSize: 10, color: '#64748b', padding: '6px 10px',
+          fontSize: 10, color: '#68766e', padding: '6px 10px',
           background: 'rgba(239,68,68,0.04)', borderRadius: 6,
           border: '1px solid rgba(239,68,68,0.12)',
         }}>

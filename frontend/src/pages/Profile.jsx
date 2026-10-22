@@ -72,7 +72,7 @@ export default function Profile() {
           {/* Left — avatar + role */}
           <div className="space-y-4">
             <div className="hc-card p-5 sm:p-6 text-center">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-hc-blue flex items-center justify-center text-xl sm:text-2xl font-bold text-white mx-auto mb-3 sm:mb-4 shadow-hc-card">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-hc-emerald-soft flex items-center justify-center text-xl sm:text-2xl font-bold text-hc-emerald-dark mx-auto mb-3 sm:mb-4 shadow-hc-card">
                 {initials}
               </div>
               <p className="font-bold text-sm sm:text-base text-hc-text truncate">{user?.name}</p>
@@ -89,11 +89,11 @@ export default function Profile() {
             <div className="hc-card p-4 space-y-2">
               <p className="text-[10px] sm:text-xs font-bold text-hc-text-muted uppercase tracking-wide mb-2.5">Blockchain Identity</p>
               <div className="flex items-center gap-2 text-xs">
-                <Activity className="w-3.5 h-3.5 text-hc-violet flex-shrink-0" />
+                <Activity className="w-3.5 h-3.5 text-hc-terracotta flex-shrink-0" />
                 <span className="text-hc-text-muted">Network: <span className="font-bold text-hc-text">Sepolia</span></span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <Shield className="w-3.5 h-3.5 text-hc-violet flex-shrink-0" />
+                <Shield className="w-3.5 h-3.5 text-hc-terracotta flex-shrink-0" />
                 <span className="text-hc-text-muted">Chain ID: <span className="font-bold text-hc-text">11155111</span></span>
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function Profile() {
               </div>
 
               {connected && (!user?.walletVerified || account?.toLowerCase() !== user?.walletAddress?.toLowerCase()) && (
-                <div className="mt-3 p-3.5 sm:p-4 rounded-xl bg-hc-blue-soft border border-hc-blue-mid space-y-3">
+                <div className="mt-3 p-3.5 sm:p-4 rounded-xl bg-hc-emerald-soft border border-hc-emerald-mid space-y-3">
                   <p className="text-xs text-hc-text-muted leading-relaxed">
                     Sign a short wallet challenge to prove ownership before using this wallet for patient-authorized access.
                   </p>

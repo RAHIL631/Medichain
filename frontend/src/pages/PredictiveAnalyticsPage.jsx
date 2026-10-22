@@ -26,11 +26,11 @@ const CONDITIONS = [
 ];
 
 const LEVEL_COLORS = {
-  CRITICAL: '#dc2626', HIGH: '#ef4444', MODERATE: '#f59e0b', LOW: '#22c55e',
+  CRITICAL: '#b44736', HIGH: '#b44736', MODERATE: '#ebcb82', LOW: '#16866a',
 };
 
 function getLevelColor(level) {
-  return LEVEL_COLORS[level] || '#94a3b8';
+  return LEVEL_COLORS[level] || '#68766e';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ function RiskGauge({ value, label, level, icon }) {
     <div className="flex flex-col items-center gap-2">
       <div className="relative w-24 h-24">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" strokeWidth="10" />
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" strokeWidth="10" />
           <circle
             cx="50" cy="50" r="40" fill="none" stroke={color} strokeWidth="10"
             strokeDasharray={`${circumference}`}
@@ -60,7 +60,7 @@ function RiskGauge({ value, label, level, icon }) {
         </div>
       </div>
       <div className="text-center">
-        <p className="text-[11px] font-semibold text-white">{label}</p>
+        <p className="text-[11px] font-semibold text-hc-text">{label}</p>
         <span
           className="text-[10px] font-bold px-2 py-0.5 rounded-full"
           style={{ color, background: `${color}20`, border: `1px solid ${color}40` }}
@@ -78,7 +78,7 @@ function RiskGauge({ value, label, level, icon }) {
 function ProgressionChart({ progressions }) {
   if (!progressions?.length) return null;
 
-  const colors = ['#22d3ee', '#f59e0b', '#8b5cf6', '#10b981', '#f43f5e'];
+  const colors = ['#16866a', '#ebcb82', '#d97860', '#16866a', '#b44736'];
   const data = progressions[0]?.timeline?.map((t, i) => {
     const entry = { month: `M${t.month}` };
     progressions.forEach((p, pi) => {
@@ -90,11 +90,11 @@ function ProgressionChart({ progressions }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-        <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 10 }} />
-        <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 10 }} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff" />
+        <XAxis dataKey="month" tick={{ fill: '#68766e', fontSize: 10 }} />
+        <YAxis domain={[0, 100]} tick={{ fill: '#68766e', fontSize: 10 }} />
         <Tooltip
-          contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8 }}
+          contentStyle={{ background: '#faf8f1', border: '1px solid #e9f4ec', borderRadius: 8 }}
           formatter={(v, name) => [`${v?.toFixed(1)}%`, name]}
         />
         {progressions.map((p, i) => (
@@ -171,18 +171,18 @@ export default function PredictiveAnalyticsPage() {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-medichain-bg-dark text-white">
+    <div className="min-h-screen bg-medichain-bg-ivory text-hc-text">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-900/40 via-slate-900 to-purple-900/30 border-b border-slate-800">
+      <div className="bg-gradient-to-r from-hc-emerald-soft via-white to-hc-terracotta-soft border-b border-hc-border">
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="text-4xl">📈</div>
             <div>
-              <span className="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-full px-3 py-0.5 uppercase tracking-widest">
+              <span className="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full px-3 py-0.5 uppercase tracking-widest">
                 6 Prediction Models
               </span>
-              <h1 className="text-3xl font-black text-white">Predictive Analytics</h1>
-              <p className="text-slate-400 text-sm">Clinical outcome predictions using AI scoring models</p>
+              <h1 className="text-3xl font-black text-hc-text">Predictive Analytics</h1>
+              <p className="text-hc-text-light text-sm">Clinical outcome predictions using AI scoring models</p>
             </div>
           </div>
         </div>
@@ -192,25 +192,25 @@ export default function PredictiveAnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Input Panel */}
           <GlassCard className="lg:col-span-1 h-fit">
-            <h2 className="text-sm font-bold text-white mb-4">⚙️ Patient Parameters</h2>
+            <h2 className="text-sm font-bold text-hc-text mb-4">⚙️ Patient Parameters</h2>
             <form onSubmit={handleAnalyze} className="space-y-4">
               {/* Conditions */}
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2 block">
+                <label className="text-[11px] font-semibold text-hc-text-light uppercase tracking-wide mb-2 block">
                   Current Conditions
                 </label>
                 <div className="space-y-1.5">
                   {CONDITIONS.map((c) => (
                     <label key={c.value} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
                       form.conditions.includes(c.value)
-                        ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300'
-                        : 'border-slate-700 text-slate-400 hover:border-slate-600'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                        : 'border-hc-border text-hc-text-light hover:border-hc-border'
                     }`}>
                       <input
                         type="checkbox"
                         checked={form.conditions.includes(c.value)}
                         onChange={() => handleConditionToggle(c.value)}
-                        className="accent-indigo-500"
+                        className="accent-terracotta-500"
                       />
                       <span className="text-xs">{c.label}</span>
                     </label>
@@ -221,28 +221,28 @@ export default function PredictiveAnalyticsPage() {
               {/* Adherence Slider */}
               <div>
                 <div className="flex justify-between mb-1">
-                  <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                  <label className="text-[11px] font-semibold text-hc-text-light uppercase tracking-wide">
                     Medication Adherence
                   </label>
-                  <span className="text-xs font-bold text-indigo-400">{form.adherenceScore}%</span>
+                  <span className="text-xs font-bold text-emerald-400">{form.adherenceScore}%</span>
                 </div>
                 <input
                   type="range" min="0" max="100" step="5"
                   value={form.adherenceScore}
                   onChange={(e) => setForm((f) => ({ ...f, adherenceScore: Number(e.target.value) }))}
-                  className="w-full accent-indigo-500"
+                  className="w-full accent-terracotta-500"
                 />
               </div>
 
               {/* Recent Hospitalizations */}
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">
+                <label className="text-[11px] font-semibold text-hc-text-light uppercase tracking-wide mb-1 block">
                   Recent Hospitalizations (past year)
                 </label>
                 <select
                   value={form.recentHospitalizations}
                   onChange={(e) => setForm((f) => ({ ...f, recentHospitalizations: Number(e.target.value) }))}
-                  className="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500/50"
+                  className="w-full bg-hc-surface border border-hc-border text-hc-text text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500/50"
                 >
                   {[0,1,2,3,4,5].map((n) => <option key={n} value={n}>{n === 0 ? 'None' : n}</option>)}
                 </select>
@@ -250,13 +250,13 @@ export default function PredictiveAnalyticsPage() {
 
               {/* Exercise */}
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">
+                <label className="text-[11px] font-semibold text-hc-text-light uppercase tracking-wide mb-1 block">
                   Exercise Frequency
                 </label>
                 <select
                   value={form.exerciseFrequency}
                   onChange={(e) => setForm((f) => ({ ...f, exerciseFrequency: e.target.value }))}
-                  className="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500/50"
+                  className="w-full bg-hc-surface border border-hc-border text-hc-text text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500/50"
                 >
                   <option value="high">High — Daily</option>
                   <option value="moderate">Moderate — 3–5x/week</option>
@@ -266,13 +266,13 @@ export default function PredictiveAnalyticsPage() {
 
               {/* Social Support */}
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">
+                <label className="text-[11px] font-semibold text-hc-text-light uppercase tracking-wide mb-1 block">
                   Social Support
                 </label>
                 <select
                   value={form.socialSupport}
                   onChange={(e) => setForm((f) => ({ ...f, socialSupport: e.target.value }))}
-                  className="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500/50"
+                  className="w-full bg-hc-surface border border-hc-border text-hc-text text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500/50"
                 >
                   <option value="high">Strong</option>
                   <option value="moderate">Moderate</option>
@@ -287,12 +287,12 @@ export default function PredictiveAnalyticsPage() {
                   { key: 'alcoholUse',    label: '🍺 Regular Alcohol Use' },
                 ].map(({ key, label }) => (
                   <label key={key} className={`flex items-center justify-between px-3 py-2.5 rounded-lg border cursor-pointer transition-all ${
-                    form[key] ? 'bg-red-500/10 border-red-500/30' : 'border-slate-700'
+                    form[key] ? 'bg-red-500/10 border-red-500/30' : 'border-hc-border'
                   }`}>
-                    <span className="text-xs text-slate-300">{label}</span>
+                    <span className="text-xs text-hc-text-muted">{label}</span>
                     <div
                       onClick={() => setForm((f) => ({ ...f, [key]: !f[key] }))}
-                      className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${form[key] ? 'bg-red-500' : 'bg-slate-700'}`}
+                      className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${form[key] ? 'bg-red-500' : 'bg-hc-emerald-soft'}`}
                     >
                       <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form[key] ? 'translate-x-4' : 'translate-x-0.5'}`} />
                     </div>
@@ -303,7 +303,7 @@ export default function PredictiveAnalyticsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 hover:shadow-lg hover:shadow-indigo-500/25 transition-shadow flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-orange-600 text-hc-text font-bold rounded-xl disabled:opacity-50 hover:shadow-lg hover:shadow-emerald-500/25 transition-shadow flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -318,7 +318,7 @@ export default function PredictiveAnalyticsPage() {
           {/* Results Panel */}
           <div className="lg:col-span-2 space-y-6">
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-hc-danger text-sm">
                 ⚠️ {error}
               </div>
             )}
@@ -326,15 +326,15 @@ export default function PredictiveAnalyticsPage() {
             {!results && !loading && (
               <GlassCard className="text-center py-16">
                 <div className="text-5xl mb-4">📊</div>
-                <h3 className="text-lg font-bold text-white mb-2">Ready to Analyze</h3>
-                <p className="text-slate-400 text-sm">Configure your patient parameters and click Generate Predictions</p>
+                <h3 className="text-lg font-bold text-hc-text mb-2">Ready to Analyze</h3>
+                <p className="text-hc-text-light text-sm">Configure your patient parameters and click Generate Predictions</p>
               </GlassCard>
             )}
 
             {loading && (
               <GlassCard className="py-16 flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-slate-300">Running 6 prediction models…</p>
+                <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-hc-text-muted">Running 6 prediction models…</p>
               </GlassCard>
             )}
 
@@ -343,7 +343,7 @@ export default function PredictiveAnalyticsPage() {
                 {/* Risk Stratification */}
                 {results.riskStratification && (
                   <GlassCard>
-                    <h3 className="text-sm font-bold text-white mb-3">⚡ Overall Risk Stratification</h3>
+                    <h3 className="text-sm font-bold text-hc-text mb-3">⚡ Overall Risk Stratification</h3>
                     <div className="flex items-center gap-4">
                       <div
                         className="text-4xl font-black"
@@ -352,7 +352,7 @@ export default function PredictiveAnalyticsPage() {
                         {results.riskStratification.overall}
                       </div>
                       <div className="flex-1">
-                        <div className="h-3 bg-slate-800 rounded-full overflow-hidden mb-2">
+                        <div className="h-3 bg-hc-surface rounded-full overflow-hidden mb-2">
                           <div
                             className="h-full rounded-full transition-all duration-1000"
                             style={{
@@ -361,10 +361,10 @@ export default function PredictiveAnalyticsPage() {
                             }}
                           />
                         </div>
-                        <p className="text-xs text-slate-400">Average risk: {results.riskStratification.averageRisk}%</p>
+                        <p className="text-xs text-hc-text-light">Average risk: {results.riskStratification.averageRisk}%</p>
                       </div>
                     </div>
-                    <div className="mt-3 bg-slate-800/50 rounded-lg px-4 py-3 text-sm text-slate-300 border border-slate-700">
+                    <div className="mt-3 bg-hc-surface/50 rounded-lg px-4 py-3 text-sm text-hc-text-muted border border-hc-border">
                       → {results.riskStratification.priorityAction}
                     </div>
                   </GlassCard>
@@ -373,7 +373,7 @@ export default function PredictiveAnalyticsPage() {
                 {/* Risk Gauges */}
                 {predictions && (
                   <GlassCard>
-                    <h3 className="text-sm font-bold text-white mb-4">📊 Prediction Gauges</h3>
+                    <h3 className="text-sm font-bold text-hc-text mb-4">📊 Prediction Gauges</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <RiskGauge icon="🏥" label="Readmission 30d" value={predictions.readmission30Day?.probability || 0} level={predictions.readmission30Day?.level} />
                       <RiskGauge icon="🚑" label="ER Visit 90d"    value={predictions.emergencyRisk90Day?.probability || 0} level={predictions.emergencyRisk90Day?.level} />
@@ -385,14 +385,14 @@ export default function PredictiveAnalyticsPage() {
 
                 {/* Bar Chart */}
                 <GlassCard>
-                  <h3 className="text-sm font-bold text-white mb-4">📊 Risk Comparison</h3>
+                  <h3 className="text-sm font-bold text-hc-text mb-4">📊 Risk Comparison</h3>
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={barData} barSize={40}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                      <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10 }} />
-                      <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 10 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff" />
+                      <XAxis dataKey="name" tick={{ fill: '#68766e', fontSize: 10 }} />
+                      <YAxis domain={[0, 100]} tick={{ fill: '#68766e', fontSize: 10 }} />
                       <Tooltip
-                        contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8 }}
+                        contentStyle={{ background: '#faf8f1', border: '1px solid #e9f4ec', borderRadius: 8 }}
                         formatter={(v, _, props) => [`${v.toFixed(1)}% — ${props.payload.level}`, 'Risk']}
                       />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]}>
@@ -407,11 +407,11 @@ export default function PredictiveAnalyticsPage() {
                 {/* LOS */}
                 {predictions?.expectedLOS && (
                   <GlassCard>
-                    <h3 className="text-sm font-bold text-white mb-3">🛏 Expected Length of Stay (if admitted)</h3>
+                    <h3 className="text-sm font-bold text-hc-text mb-3">🛏 Expected Length of Stay (if admitted)</h3>
                     <div className="flex items-center gap-4">
-                      <div className="text-4xl font-black text-cyan-400">{predictions.expectedLOS.estimatedDays}d</div>
+                      <div className="text-4xl font-black text-emerald-400">{predictions.expectedLOS.estimatedDays}d</div>
                       <div>
-                        <p className="text-sm text-slate-300">{predictions.expectedLOS.description}</p>
+                        <p className="text-sm text-hc-text-muted">{predictions.expectedLOS.description}</p>
                         {predictions.expectedLOS.icuLikely && (
                           <p className="text-xs text-orange-400 mt-1">⚠️ ICU admission may be required</p>
                         )}
@@ -423,12 +423,12 @@ export default function PredictiveAnalyticsPage() {
                 {/* Disease Progression */}
                 {predictions?.diseaseProgression?.length > 0 && (
                   <GlassCard>
-                    <h3 className="text-sm font-bold text-white mb-4">📉 Disease Progression (12-month)</h3>
+                    <h3 className="text-sm font-bold text-hc-text mb-4">📉 Disease Progression (12-month)</h3>
                     <ProgressionChart progressions={predictions.diseaseProgression} />
                     <div className="mt-3 space-y-2">
                       {predictions.diseaseProgression.map((p) => (
                         <div key={p.condition} className="flex items-center justify-between text-xs">
-                          <span className="text-slate-300">{p.condition}</span>
+                          <span className="text-hc-text-muted">{p.condition}</span>
                           <span className={`font-bold ${p.controlled ? 'text-green-400' : 'text-orange-400'}`}>
                             {p.progression} {p.controlled ? '✅' : '⚠️'}
                           </span>
@@ -441,41 +441,41 @@ export default function PredictiveAnalyticsPage() {
                 {/* Risk Trend */}
                 {results.trendData && (
                   <GlassCard>
-                    <h3 className="text-sm font-bold text-white mb-4">📈 12-Month Risk Trend</h3>
+                    <h3 className="text-sm font-bold text-hc-text mb-4">📈 12-Month Risk Trend</h3>
                     <ResponsiveContainer width="100%" height={180}>
                       <LineChart data={results.trendData.riskTrend}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                        <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 10 }} />
-                        <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 10 }} />
-                        <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8 }} />
-                        <Line type="monotone" dataKey="riskScore" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff" />
+                        <XAxis dataKey="label" tick={{ fill: '#68766e', fontSize: 10 }} />
+                        <YAxis domain={[0, 100]} tick={{ fill: '#68766e', fontSize: 10 }} />
+                        <Tooltip contentStyle={{ background: '#faf8f1', border: '1px solid #e9f4ec', borderRadius: 8 }} />
+                        <Line type="monotone" dataKey="riskScore" stroke="#d97860" strokeWidth={2} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
-                    <p className="text-xs text-slate-500 mt-2">Projection: <span className="text-purple-400">{results.trendData.projection}</span></p>
+                    <p className="text-xs text-hc-text-muted mt-2">Projection: <span className="text-orange-400">{results.trendData.projection}</span></p>
                   </GlassCard>
                 )}
 
                 {/* Actionable Insights */}
                 {results.actionableInsights?.length > 0 && (
                   <GlassCard>
-                    <h3 className="text-sm font-bold text-white mb-3">💡 Actionable Insights</h3>
+                    <h3 className="text-sm font-bold text-hc-text mb-3">💡 Actionable Insights</h3>
                     <div className="space-y-3">
                       {results.actionableInsights.map((ins, i) => (
                         <div key={i} className={`rounded-xl p-3 border ${
                           ins.type === 'warning' ? 'bg-orange-500/5 border-orange-500/20' :
                           ins.type === 'success' ? 'bg-green-500/5 border-green-500/20' :
-                          'bg-cyan-500/5 border-cyan-500/20'
+                          'bg-emerald-500/5 border-emerald-500/20'
                         }`}>
-                          <p className="text-xs font-bold text-white">{ins.title}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">{ins.message}</p>
-                          <p className="text-xs text-cyan-300 mt-1">→ {ins.action}</p>
+                          <p className="text-xs font-bold text-hc-text">{ins.title}</p>
+                          <p className="text-xs text-hc-text-light mt-0.5">{ins.message}</p>
+                          <p className="text-xs text-emerald-300 mt-1">→ {ins.action}</p>
                         </div>
                       ))}
                     </div>
                   </GlassCard>
                 )}
 
-                <p className="text-[10px] text-slate-600 text-center pb-4">{results.disclaimer}</p>
+                <p className="text-[10px] text-hc-text-muted text-center pb-4">{results.disclaimer}</p>
               </>
             )}
           </div>
