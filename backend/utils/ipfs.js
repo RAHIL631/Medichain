@@ -35,6 +35,8 @@
 
 const PinataClient = require('@pinata/sdk');
 const { Readable }  = require('stream');
+const fs = require('fs');
+const path = require('path');
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -43,6 +45,43 @@ const PINATA_GATEWAY = `https://${process.env.PINATA_GATEWAY || 'gateway.pinata.
 
 /** Upload timeout in ms — Pinata free tier can be slow for large files. */
 const UPLOAD_TIMEOUT_MS = 60_000; // 60 s
+
+/** Local fallback storage when Pinata is not configured (dev / demo). */
+const LOCAL_IPFS_DIR = path.join(__dirname, '..', 'local-ipfs');
+const useLocalIpfsFallback = () =>
+  process.env.IPFS_LOCAL_FALLBACK === 'true' ||
+  process.env.NODE_ENV === 'test' ||
+  process.env.NODE_ENV === 'development';
+
+const ensureLocalIpfsDir = () => {
+  if (!fs.existsSync(LOCAL_IPFS_DIR)) {
+    fs.mkdirSync(LOCAL_IPFS_DIR, { recursive: true });
+  }
+};
+
+const saveLocalIpfs = (cid, buffer) => {
+  ensureLocalIpfsDir();
+  const filePath = path.join(LOCAL_IPFS_DIR, cid);
+  fs.writeFileSync(filePath, buffer);
+  return filePath;
+};
+
+const readLocalIpfs = (cid) => {
+  const filePath = path.join(LOCAL_IPFS_DIR, cid);
+  if (!fs.existsSync(filePath)) return null;
+  return fs.readFileSync(filePath);
+};
+
+const localIpfsUrl = (cid) => {
+  // Prefer explicit API base; never use the frontend CORS origin for file URLs
+  const base = (
+    process.env.APP_URL ||
+    process.env.API_PUBLIC_URL ||
+    (process.env.PORT ? `http://localhost:${process.env.PORT}` : null) ||
+    'http://localhost:5000'
+  ).replace(/\/$/, '');
+  return `${base}/api/ipfs/local/${cid}`;
+};
 
 // ── Lazy-initialised SDK singleton ────────────────────────────────────────────
 //
@@ -92,9 +131,9 @@ const getPinataClient = () => {
     return _pinataClient;
   }
 
-  // In test environment, allow mock mode if explicitly testing
-  if (process.env.NODE_ENV === 'test') {
-    return null; // Signals test mock fallback
+  // Dev/test: allow local disk fallback when Pinata is not configured
+  if (useLocalIpfsFallback()) {
+    return null; // Signals local/mock fallback
   }
 
   // Neither credential set — throw a clear configuration error
@@ -192,15 +231,18 @@ const uploadToIPFS = async (fileBuffer, fileName, metadata = {}) => {
     console.warn('[IPFS] Pinata credentials notice:', credErr.message);
   }
 
-  // Fallback to deterministic IPFS CIDv1 when Pinata is unconfigured/testing
+  // Fallback to local disk storage when Pinata is unconfigured (dev/demo)
   if (!pinata) {
-    const cid = computeCID(fileBuffer);
-    const url = `${PINATA_GATEWAY}/${cid}`;
-    console.log(`[IPFS] ⚡ Fallback IPFS CID computed: ${cid} (${fileBuffer.length} bytes)`);
+    const buf = Buffer.isBuffer(fileBuffer) ? fileBuffer : Buffer.from(fileBuffer);
+    const cid = computeCID(buf);
+    saveLocalIpfs(cid, buf);
+    const url = localIpfsUrl(cid);
+    console.log(`[IPFS] ⚡ Local fallback stored: ${cid} (${buf.length} bytes) → ${url}`);
     return {
       cid,
       url,
-      size: fileBuffer.length,
+      size: buf.length,
+      local: true,
     };
   }
 
@@ -314,7 +356,21 @@ const uploadJSONToIPFS = async (jsonObject, pinName = 'medichain-metadata') => {
     throw new Error('uploadJSONToIPFS: jsonObject must be a non-null object');
   }
 
-  const pinata = getPinataClient();
+  let pinata = null;
+  try {
+    pinata = getPinataClient();
+  } catch (credErr) {
+    if (!useLocalIpfsFallback()) throw credErr;
+  }
+
+  if (!pinata) {
+    const buf = Buffer.from(JSON.stringify(jsonObject), 'utf8');
+    const cid = computeCID(buf);
+    saveLocalIpfs(cid, buf);
+    const url = localIpfsUrl(cid);
+    console.log(`[IPFS] ⚡ Local JSON fallback: ${pinName} → ${cid}`);
+    return { cid, url, local: true };
+  }
 
   const options = {
     pinataMetadata: {
@@ -485,9 +541,13 @@ const unpinFromIPFS = async (cid) => {
  */
 const testPinataConnection = async () => {
   try {
-    // Ensure credentials are configured before attempting the test
-    getPinataClient(); // throws if not configured
-    const pinata = getPinataClient();
+    const pinata = getPinataClient(); // throws if not configured (prod); null in local fallback
+    if (!pinata) {
+      ensureLocalIpfsDir();
+      const msg = 'Pinata not set — using local IPFS fallback (dev/demo mode)';
+      console.warn('📦  [IPFS]', msg);
+      return { authenticated: true, message: msg, mode: 'local' };
+    }
 
     const result = await pinata.testAuthentication();
 
@@ -510,8 +570,14 @@ const testPinataConnection = async () => {
       return { authenticated: false, message: msg };
     }
 
-    // Credentials not configured
-    if (err.message?.includes('credentials not configured')) {
+    // Credentials not configured — local fallback may still work in development
+    if (err.message?.includes('credentials not configured') || useLocalIpfsFallback()) {
+      if (useLocalIpfsFallback()) {
+        ensureLocalIpfsDir();
+        const msg = 'Pinata not set — using local IPFS fallback (dev/demo mode)';
+        console.warn('📦  [IPFS]', msg);
+        return { authenticated: true, message: msg, mode: 'local' };
+      }
       const msg = 'Pinata credentials NOT SET — IPFS uploads will fail. Set PINATA_JWT in backend/.env';
       console.warn('📦  [IPFS]', msg);
       return { authenticated: false, message: msg };
@@ -540,10 +606,19 @@ const fetchFromIPFS = async (cidOrUrl, timeoutMs = 15000) => {
   const axios = require('axios');
 
   let cid = cidOrUrl;
-  const match = cidOrUrl.match(/(?:ipfs\/|bafy[a-z0-9]+|Qm[a-zA-Z0-9]{44})/);
-  if (match) {
-    cid = match[0].replace('ipfs/', '');
+  const localMatch = cidOrUrl.match(/\/api\/ipfs\/local\/([a-zA-Z0-9]+)/);
+  if (localMatch) {
+    cid = localMatch[1];
+  } else {
+    const match = cidOrUrl.match(/(?:ipfs\/|bafy[a-z0-9]+|Qm[a-zA-Z0-9]{44})/);
+    if (match) {
+      cid = match[0].replace('ipfs/', '');
+    }
   }
+
+  // Prefer local disk store (dev/demo fallback)
+  const localBuf = readLocalIpfs(cid);
+  if (localBuf) return localBuf;
 
   const candidateUrls = [
     cidOrUrl.startsWith('http') ? cidOrUrl : `${PINATA_GATEWAY}/${cid}`,
@@ -583,4 +658,7 @@ module.exports = {
   testPinataConnection, // FUNCTION 6 — startup health check
   computeCID,           // FUNCTION 7 — compute deterministic SHA-256 IPFS CID
   fetchFromIPFS,        // FUNCTION 8 — retrieve buffer via resilient multi-gateway fallback
+  readLocalIpfs,
+  LOCAL_IPFS_DIR,
+  useLocalIpfsFallback,
 };

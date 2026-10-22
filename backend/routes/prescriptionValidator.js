@@ -84,11 +84,32 @@ router.post('/validate', upload.single('file'), async (req, res) => {
     patient.weight_kg   = patient.weight_kg    ?? 70;
     patient.allergies   = patient.allergies    ?? [];
 
-    // ── 2. Parse medications override ─────────────────────────────────────
-    const medicationsRaw = req.body.medications || '';
-    const medications = medicationsRaw
-      ? medicationsRaw.split(',').map(m => m.trim()).filter(Boolean)
-      : [];
+    // ── 2. Parse medications override (comma string or JSON array) ────────
+    let medications = [];
+    const medicationsRaw = req.body.medications;
+    if (Array.isArray(medicationsRaw)) {
+      medications = medicationsRaw
+        .map((m) => (typeof m === 'string' ? m : (m?.name || m?.drug || m?.medication || '')))
+        .map((m) => String(m).trim())
+        .filter(Boolean);
+    } else if (typeof medicationsRaw === 'string' && medicationsRaw.trim()) {
+      const trimmed = medicationsRaw.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            medications = parsed
+              .map((m) => (typeof m === 'string' ? m : (m?.name || m?.drug || m?.medication || '')))
+              .map((m) => String(m).trim())
+              .filter(Boolean);
+          }
+        } catch {
+          medications = trimmed.split(',').map((m) => m.trim()).filter(Boolean);
+        }
+      } else {
+        medications = trimmed.split(',').map((m) => m.trim()).filter(Boolean);
+      }
+    }
 
     // ── 3. Build FormData for Flask microservice ───────────────────────────
     const FormData = require('form-data');

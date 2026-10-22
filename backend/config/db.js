@@ -44,6 +44,13 @@ const connectDB = async () => {
         const uri = mongoServer.getUri();
         const conn = await mongoose.connect(uri, MONGO_OPTIONS);
         console.log(`✅  MongoDB (In-Memory) connected: ${conn.connection.host}`);
+        // Seed demo accounts so local demos work without Atlas
+        try {
+          const { seedDemoUsers } = require('../scripts/seedDemoUsers');
+          await seedDemoUsers();
+        } catch (seedErr) {
+          console.warn(`⚠️  Demo user seed skipped: ${seedErr.message}`);
+        }
         return; // Success, exit the function
       } catch (fallbackError) {
         console.error(`❌  In-Memory MongoDB fallback failed: ${fallbackError.message}`);

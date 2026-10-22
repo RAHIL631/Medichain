@@ -268,47 +268,92 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 app.get('/ready', async (req, res) => {
   const timeoutPromise = (ms) => new Promise(resolve => setTimeout(() => resolve('timeout'), ms));
-
-  // 1. Database check
-  const dbStatus = mongoose.connection.readyState === 1 ? 'ok' : 'disconnected';
-
-  // 2. Blockchain RPC health check (non-blocking, 1000ms max)
-  let blockchainStatus = 'offline';
-  try {
-    const blockchainService = require('./services/blockchainService');
-    const bHealth = await Promise.race([blockchainService.checkHealth(), timeoutPromise(1000)]);
-    blockchainStatus = (bHealth && bHealth.status === 'UP') ? 'ok' : (bHealth === 'timeout' ? 'latency_warning' : 'degraded');
-  } catch {
-    blockchainStatus = 'offline';
-  }
-
-  // 3. AI Service health check (non-blocking, 1000ms max)
-  let aiStatus = 'unreachable';
-  try {
-    const aiUrl = process.env.AI_SERVICE_URL || 'http://localhost:5001';
-    const aiRes = await Promise.race([
-      axios.get(`${aiUrl}/health`, { timeout: 1000 }),
-      timeoutPromise(1000)
-    ]);
-    aiStatus = (aiRes && aiRes.status === 200) ? 'ok' : (aiRes === 'timeout' ? 'latency_warning' : 'offline');
-  } catch {
-    aiStatus = 'offline';
-  }
-
-  const checks = {
-    database:   dbStatus,
-    blockchain: blockchainStatus,
-    aiService:  aiStatus,
-    service:    'MediChain API',
-    uptimeSeconds: Math.floor(process.uptime()),
-    timestamp:  new Date().toISOString(),
+  const timed = async (fn, ms = 1500) => {
+    const started = Date.now();
+    try {
+      const result = await Promise.race([fn(), timeoutPromise(ms)]);
+      const latencyMs = Date.now() - started;
+      if (result === 'timeout') return { status: 'latency_warning', latencyMs: ms };
+      return { ...result, latencyMs };
+    } catch (err) {
+      return { status: 'offline', latencyMs: Date.now() - started, error: err.message };
+    }
   };
 
-  const isCoreHealthy = dbStatus === 'ok';
+  // 1. Database check
+  const dbStarted = Date.now();
+  const dbOk = mongoose.connection.readyState === 1;
+  const database = {
+    status: dbOk ? 'ok' : 'disconnected',
+    latencyMs: Date.now() - dbStarted,
+  };
+
+  // 2. Blockchain RPC
+  const blockchain = await timed(async () => {
+    const blockchainService = require('./services/blockchainService');
+    const bHealth = await blockchainService.checkHealth();
+    return { status: bHealth?.status === 'UP' ? 'ok' : 'degraded', detail: bHealth };
+  });
+
+  // 3. AI Service
+  const aiService = await timed(async () => {
+    const aiUrl = process.env.AI_SERVICE_URL || 'http://localhost:5001';
+    const aiRes = await axios.get(`${aiUrl}/health`, { timeout: 1500 });
+    return { status: aiRes.status === 200 ? 'ok' : 'offline', detail: aiRes.data };
+  });
+
+  // 4. IPFS / Pinata (or local fallback)
+  const ipfs = await timed(async () => {
+    const { testPinataConnection } = require('./utils/ipfs');
+    const pinata = await testPinataConnection();
+    return {
+      status: pinata.authenticated ? 'ok' : 'degraded',
+      mode: pinata.mode || (pinata.authenticated ? 'pinata' : 'unavailable'),
+      detail: pinata.message,
+    };
+  });
+
+  // 5. Redis (optional cache)
+  const redis = await timed(async () => {
+    const { getRedisClient } = require('./utils/cache');
+    const client = getRedisClient();
+    if (!client || !client.isReady) return { status: 'offline', detail: 'Redis not connected (optional)' };
+    await client.ping();
+    return { status: 'ok' };
+  });
+
+  const checks = {
+    database,
+    blockchain,
+    aiService,
+    ipfs,
+    redis,
+    service: 'MediChain API',
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  };
+
+  const isCoreHealthy = database.status === 'ok';
   return res.status(isCoreHealthy ? 200 : 503).json({
     status: isCoreHealthy ? 'ready' : 'not_ready',
     checks,
   });
+});
+
+// ── Local IPFS fallback file serving (dev/demo when Pinata is unset) ─────────
+app.get('/api/ipfs/local/:cid', (req, res) => {
+  try {
+    const { readLocalIpfs } = require('./utils/ipfs');
+    const cid = String(req.params.cid || '').replace(/[^a-zA-Z0-9]/g, '');
+    if (!cid) return res.status(400).json({ error: 'Invalid CID' });
+    const buf = readLocalIpfs(cid);
+    if (!buf) return res.status(404).json({ error: 'Local IPFS object not found' });
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${cid}"`);
+    return res.send(buf);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Production Frontend SPA Serving ──────────────────────────────────────────

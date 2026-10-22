@@ -85,6 +85,38 @@ const ChartTooltip = ({ active, payload, label }) => {
 const COLORS = ['#16866a','#16866a','#d97860','#16866a','#ebcb82'];
 
 // ── Main Component ────────────────────────────────────────────────────────────
+const statusStyles = {
+  ok: 'bg-status-success/10 text-status-success border-status-success/20',
+  healthy: 'bg-status-success/10 text-status-success border-status-success/20',
+  degraded: 'bg-status-warning/10 text-status-warning border-status-warning/20',
+  latency_warning: 'bg-status-warning/10 text-status-warning border-status-warning/20',
+  offline: 'bg-status-danger/10 text-status-danger border-status-danger/20',
+  disconnected: 'bg-status-danger/10 text-status-danger border-status-danger/20',
+  unhealthy: 'bg-status-danger/10 text-status-danger border-status-danger/20',
+};
+
+const ServiceHealthCard = ({ name, service }) => {
+  const status = service?.status || 'offline';
+  const style = statusStyles[status] || statusStyles.offline;
+  return (
+    <div className={`rounded-xl border p-4 ${style}`}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-hc-text">{name}</p>
+        <span className="text-[10px] uppercase tracking-widest font-mono px-2 py-1 rounded-full border border-current/20">
+          {status.replace('_', ' ')}
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-text-secondary break-words">
+        {service?.detail || 'No detail available'}
+      </p>
+      <p className="mt-3 text-[10px] font-mono text-text-secondary">
+        {typeof service?.latencyMs === 'number' ? `${service.latencyMs} ms` : '—'}
+        {service?.mode ? ` · ${service.mode}` : ''}
+      </p>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const [stats,   setStats]   = useState({ totalUsers: 0, totalRecords: 0, totalDoctors: 0, totalHospitals: 0, totalPatients: 0 });
   const [users,   setUsers]   = useState([]);
@@ -93,12 +125,29 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab,     setTab]     = useState('overview');
+  const [health, setHealth] = useState(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [healthError, setHealthError] = useState('');
 
   const navItems = [
     { label: 'Dashboard',  path: '/admin-dashboard',  icon: <Icon path="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /> },
     { label: 'Analytics',  path: '/analytics',        icon: <Icon path="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /> },
     { label: 'Profile',    path: '/profile',          icon: <Icon path="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /> },
   ];
+
+  const fetchHealth = useCallback(async () => {
+    setHealthLoading(true);
+    setHealthError('');
+    try {
+      const res = await api.get('/admin/system-health');
+      setHealth(res.data);
+    } catch (err) {
+      setHealth(null);
+      setHealthError(err.response?.data?.error || err.message || 'System health unavailable');
+    } finally {
+      setHealthLoading(false);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -139,7 +188,8 @@ const AdminDashboard = () => {
       setError((current) => current ? `${current} User registry is unavailable.` : 'User registry is unavailable.');
     }
     setLoading(false);
-  }, []);
+    fetchHealth();
+  }, [fetchHealth]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -156,9 +206,11 @@ const AdminDashboard = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 bg-medichain-surface border border-medichain-border rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-text-secondary" />
-              <span className="text-xs text-text-secondary font-mono">Service health not checked</span>
+            <div className={`flex items-center gap-2 px-3 py-2 border rounded-xl ${statusStyles[health?.status] || 'bg-medichain-surface border-medichain-border text-text-secondary'}`}>
+              <span className={`w-2 h-2 rounded-full ${health?.status === 'healthy' || health?.status === 'ok' ? 'bg-status-success' : health?.status === 'degraded' ? 'bg-status-warning' : health ? 'bg-status-danger' : 'bg-text-secondary'}`} />
+              <span className="text-xs font-mono">
+                {healthLoading ? 'Checking services…' : health?.status ? `System ${health.status}` : 'Service health unknown'}
+              </span>
             </div>
             <button onClick={fetchData} className="p-2 bg-medichain-surface border border-medichain-border rounded-xl text-text-secondary hover:text-hc-text transition-colors">
               <Icon path="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -283,11 +335,51 @@ const AdminDashboard = () => {
 
         {tab === 'health' && (
           <GlassCard>
-            <h2 className="text-lg font-display font-bold text-hc-text">Service health</h2>
-            <p className="mt-2 text-sm text-text-secondary">
-              Live checks for the AI service, IPFS gateway, blockchain RPC, and Redis are not implemented.
-              No operational status or latency is reported here.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+              <div>
+                <h2 className="text-lg font-display font-bold text-hc-text">Service health</h2>
+                <p className="mt-1 text-sm text-text-secondary">
+                  Live latency checks for MongoDB, blockchain RPC, AI, IPFS, and Redis.
+                </p>
+              </div>
+              <button
+                onClick={fetchHealth}
+                className="px-4 py-2 text-sm rounded-xl border border-medichain-border bg-medichain-surface text-hc-text hover:border-accent-emerald-dark/40 transition-colors"
+              >
+                {healthLoading ? 'Refreshing…' : 'Refresh checks'}
+              </button>
+            </div>
+
+            {healthError && (
+              <div role="alert" className="mb-4 p-3 rounded-xl border border-status-danger/20 bg-status-danger/10 text-status-danger text-sm">
+                {healthError}
+              </div>
+            )}
+
+            {healthLoading && !health ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {[...Array(5)].map((_, i) => <div key={i} className="h-28 bg-medichain-surface rounded-xl animate-pulse" />)}
+              </div>
+            ) : health?.services ? (
+              <>
+                <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-text-secondary font-mono">
+                  <span className={`px-2 py-1 rounded-full border ${statusStyles[health.status] || ''}`}>
+                    Overall: {health.status}
+                  </span>
+                  <span>Checked {health.checkedAt ? new Date(health.checkedAt).toLocaleString() : '—'}</span>
+                  <span>Uptime {health.uptimeSeconds ?? 0}s</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <ServiceHealthCard name="MongoDB" service={health.services.database} />
+                  <ServiceHealthCard name="Blockchain RPC" service={health.services.blockchain} />
+                  <ServiceHealthCard name="AI Microservice" service={health.services.aiService} />
+                  <ServiceHealthCard name="IPFS / Pinata" service={health.services.ipfs} />
+                  <ServiceHealthCard name="Redis Cache" service={health.services.redis} />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-text-secondary text-center py-8">No health data yet. Refresh to run live checks.</p>
+            )}
           </GlassCard>
         )}
       </div>

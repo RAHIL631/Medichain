@@ -685,11 +685,27 @@ def analyze_all_interactions(drug_list: list[str], patient: dict = None, dosages
 
 # ── Blueprint Routes ──────────────────────────────────────────────────────────
 
+def _normalize_medication_name(med) -> str:
+    """Accept plain strings or objects like {name|drug|medication: '...'}."""
+    if med is None:
+        return ""
+    if isinstance(med, str):
+        return med.strip()
+    if isinstance(med, dict):
+        for key in ("name", "drug", "medication", "medicine", "drug_name"):
+            val = med.get(key)
+            if val:
+                return str(val).strip()
+        return ""
+    return str(med).strip()
+
+
 @interaction_bp.route('/cdss/interactions', methods=['POST'])
 def drug_interactions():
     """
     POST /cdss/interactions
-    Body: { "medications": ["Drug1", "Drug2", "Drug3", ...] }
+    Body: { "medications": ["Drug1", "Drug2", ...] }
+       or { "medications": [{"name": "Drug1"}, {"drug": "Drug2"}, ...] }
     Returns: full pairwise interaction analysis
     """
     try:
@@ -700,10 +716,20 @@ def drug_interactions():
             return jsonify({"error": "medications array is required"}), 400
         if not isinstance(medications, list):
             return jsonify({"error": "medications must be an array"}), 400
+
+        normalized = [_normalize_medication_name(m) for m in medications]
+        normalized = [m for m in normalized if m]
+        if not normalized:
+            return jsonify({"error": "medications array must contain drug names"}), 400
         
         # Deduplicate while preserving order
         seen = set()
-        unique_meds = [m for m in medications if not (m.lower() in seen or seen.add(m.lower()))]
+        unique_meds = []
+        for m in normalized:
+            key = m.lower()
+            if key not in seen:
+                seen.add(key)
+                unique_meds.append(m)
         
         logger.info(f"Analyzing interactions for {len(unique_meds)} drugs")
         result = analyze_all_interactions(unique_meds)
