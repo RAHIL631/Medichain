@@ -3,6 +3,7 @@
 import React from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import AccessManager from '../components/AccessManager';
+import AccountConsentManager from '../components/AccountConsentManager';
 import { Lock, AlertTriangle, Home, FileText, Brain, BarChart3, User } from 'lucide-react';
 
 const NAV = [
@@ -29,7 +30,9 @@ export default function ManageAccess() {
           </p>
         </div>
 
-        {/* Access Manager (blockchain access control — wallet requested on demand) */}
+        <AccountConsentManager />
+
+        {/* Blockchain grants remain available for patients who use a wallet. */}
         <AccessManager />
 
         {/* Security note */}
@@ -38,9 +41,9 @@ export default function ManageAccess() {
           <div>
             <p className="text-sm font-semibold text-hc-text">Important</p>
             <p className="text-xs text-hc-text-muted mt-0.5 leading-relaxed">
-              Granting access allows a doctor to view your decrypted IPFS records. You can revoke
-              this permission at any time. All access changes are recorded on the blockchain and
-              require a small gas fee.
+              Account-based approvals allow a verified clinician to view and add records for 30 days,
+              and can be revoked here without a wallet. Blockchain grants remain available below for
+              patients who use a wallet.
             </p>
           </div>
         </div>

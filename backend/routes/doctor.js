@@ -19,10 +19,12 @@ const axios         = require('axios');
 const { protect, authorize }    = require('../middleware/auth');
 const User                      = require('../models/User');
 const MedicalRecord             = require('../models/MedicalRecord');
+const ConsentRecord             = require('../models/ConsentRecord');
 const { uploadToIPFS, fetchFromIPFS } = require('../utils/ipfs');
 const { validateFileMagicBytes }= require('../middleware/fileValidator');
 const { encryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
 const { requirePatientAccess } = require('../middleware/patientAccess');
+const { auditLog, AuditEvents } = require('../utils/auditLogger');
 
 // ── Multer config ─────────────────────────────────────────────────────────────
 // Files are kept in memory (Buffer) — never touch disk — then streamed to IPFS.
@@ -381,7 +383,6 @@ router.patch('/record/:recordId/txhash', async (req, res) => {
  *   5. Logs audit trail event
  */
 const { decryptBuffer } = require('../utils/encryption');
-const { auditLog, AuditEvents } = require('../utils/auditLogger');
 
 router.get('/record/:recordId/download', async (req, res) => {
   try {
@@ -440,6 +441,92 @@ router.get('/record/:recordId/download', async (req, res) => {
     console.error('[DOCTOR] Record download error:', err.message);
     if (err.name === 'CastError') return res.status(404).json({ error: 'Record not found' });
     return res.status(500).json({ error: 'Failed to retrieve file: ' + err.message });
+  }
+});
+
+// ── POST /api/doctor/request-patient-access ───────────────────────────────────
+router.post('/request-patient-access', async (req, res) => {
+  try {
+    if (req.user.walletVerified !== true || !req.user.walletAddress) {
+      return res.status(403).json({
+        error: 'Link and verify your healthcare wallet in your profile before requesting patient access.',
+      });
+    }
+
+    const identifier = typeof req.body.patientId === 'string'
+      ? req.body.patientId.trim()
+      : '';
+    if (!/^(?:MC-PAT-\d{4}-[A-Z0-9]{6}|[a-fA-F0-9]{24}|0x[a-fA-F0-9]{40})$/i.test(identifier)) {
+      return res.status(400).json({ error: 'A valid MediChain Patient ID or wallet address is required.' });
+    }
+
+    const isWalletAddress = /^0x[a-fA-F0-9]{40}$/i.test(identifier);
+    const isObjectId = /^[a-fA-F0-9]{24}$/.test(identifier);
+    const patientQuery = isWalletAddress
+      ? { walletAddress: { $regex: new RegExp(`^${identifier}$`, 'i') }, role: 'patient' }
+      : {
+          $or: [
+            { patientId: { $regex: new RegExp(`^${identifier}$`, 'i') } },
+            ...(isObjectId ? [{ _id: identifier }] : []),
+          ],
+          role: 'patient',
+        };
+    const patient = await User.findOne(patientQuery).select('_id');
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient ID not found.' });
+    }
+
+    const now = new Date();
+    const activeConsent = await ConsentRecord.hasActiveConsent(patient._id, req.user._id);
+    if (activeConsent) {
+      return res.status(200).json({
+        status: 'active',
+        message: 'Patient access is already active. Rescan to load the authorized profile.',
+      });
+    }
+
+    const existingRequest = await ConsentRecord.findOne({
+      patientId: patient._id,
+      granteeId: req.user._id,
+      consentMethod: 'account',
+      status: 'pending',
+      expiresAt: { $gt: now },
+    }).select('_id');
+
+    if (existingRequest) {
+      return res.status(202).json({
+        status: 'pending',
+        message: 'Your access request is already waiting for patient approval.',
+      });
+    }
+
+    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const request = await ConsentRecord.create({
+      patientId: patient._id,
+      granteeId: req.user._id,
+      granteeRole: req.user.role,
+      consentMethod: 'account',
+      scope: ['read_records', 'write_records', 'ai_analysis'],
+      status: 'pending',
+      expiresAt,
+      ipAddress: req.ip,
+    });
+
+    auditLog(AuditEvents.ACCESS_REQUESTED, req, {
+      resourceType: 'PatientConsent',
+      resourceId: request._id.toString(),
+      patientId: patient._id.toString(),
+      consentMethod: 'account',
+      expiresAt,
+    });
+
+    return res.status(202).json({
+      status: 'pending',
+      message: 'Access request sent. The patient must approve it in MediChain before their data is available.',
+    });
+  } catch (err) {
+    console.error('[DOCTOR] Patient access request error:', err.message);
+    return res.status(500).json({ error: 'Could not send the patient access request.' });
   }
 });
 

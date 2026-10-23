@@ -55,11 +55,12 @@ const QRScannerPage = () => {
                 {!scannedAddress ? (
                     <div>
                         <p className="text-sm text-text-secondary text-center mb-4">
-                            Scan without connecting MetaMask. Patient information is returned only when your verified profile wallet has active patient consent.
+                            Scan without connecting MetaMask. If the patient has no wallet, request their approval in MediChain; patient details remain protected until they approve.
                         </p>
                         <QRScanner
                             onScanSuccess={handleScanSuccess}
                             onScanError={(err) => setError('Scanner error: ' + (err.message || err))}
+                            onWalletSetup={() => navigate('/profile')}
                         />
                     </div>
                 ) : (

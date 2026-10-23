@@ -99,6 +99,40 @@ test('offers profile wallet verification when protected lookup reports an unveri
   expect(onWalletSetup).toHaveBeenCalledTimes(1);
 });
 
+test('lets a doctor request patient approval and retry after the patient approves', async () => {
+  api.post
+    .mockRejectedValueOnce({
+      response: {
+        data: {
+          error: 'Patient approval is required. Send an access request and ask the patient to approve it in MediChain.',
+        },
+      },
+    })
+    .mockResolvedValueOnce({
+      data: {
+        status: 'pending',
+        message: 'Access request sent. The patient must approve it in MediChain before their data is available.',
+      },
+    })
+    .mockResolvedValueOnce({ data: resolvedPatient });
+
+  render(<QRScanner />);
+  fireEvent.click(screen.getByRole('button', { name: 'Manual' }));
+  fireEvent.change(screen.getByRole('textbox'), {
+    target: { value: patientId },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Find Patient' }));
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Request Patient Approval' }));
+  expect(await screen.findByText(/Access request sent/)).toBeInTheDocument();
+  expect(api.post).toHaveBeenNthCalledWith(2, '/doctor/request-patient-access', {
+    patientId,
+  });
+
+  fireEvent.click(screen.getByRole('button', { name: 'Check Patient Approval' }));
+  expect(await screen.findByText('Synthetic Patient')).toBeInTheDocument();
+});
+
 test('uploaded QR images resolve through the same protected patient lookup', async () => {
   const originals = {
     Image: window.Image,

@@ -2,12 +2,17 @@ jest.mock('../services/blockchainService', () => ({
   hasAccess: jest.fn(),
 }));
 
+jest.mock('../models/ConsentRecord', () => ({
+  hasActiveConsent: jest.fn(),
+}));
+
 jest.mock('../utils/auditLogger', () => ({
   auditLog: jest.fn(),
   AuditEvents: { UNAUTHORIZED: 'UNAUTHORIZED' },
 }));
 
 const blockchainService = require('../services/blockchainService');
+const ConsentRecord = require('../models/ConsentRecord');
 const { auditLog } = require('../utils/auditLogger');
 const { requirePatientAccess } = require('../middleware/patientAccess');
 
@@ -34,6 +39,7 @@ const createResponse = () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  ConsentRecord.hasActiveConsent.mockResolvedValue(false);
 });
 
 test('allows patient owner access without requiring doctor consent', async () => {
@@ -65,7 +71,7 @@ test('denies an unverified patient wallet with patient-specific next steps', asy
   expect(blockchainService.hasAccess).not.toHaveBeenCalled();
   expect(res.status).toHaveBeenCalledWith(403);
   expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-    error: expect.stringContaining('This patient has not linked and verified a wallet'),
+    error: expect.stringContaining('Patient approval is required'),
   }));
 });
 
@@ -84,6 +90,44 @@ test('requires active on-chain patient consent for the verified doctor wallet', 
     error: expect.stringContaining('Patient consent is not active'),
   }));
   expect(auditLog).toHaveBeenCalled();
+});
+
+test('allows an explicitly approved account consent without a patient wallet or chain call', async () => {
+  ConsentRecord.hasActiveConsent.mockResolvedValue(true);
+  const req = { user: doctor, method: 'POST', path: '/upload-record' };
+  const res = createResponse();
+
+  await expect(requirePatientAccess(req, res, {
+    ...patient,
+    walletAddress: null,
+    walletVerified: false,
+  })).resolves.toBe(true);
+
+  expect(ConsentRecord.hasActiveConsent).toHaveBeenCalledWith(
+    patient._id,
+    doctor._id,
+    'write_records'
+  );
+  expect(blockchainService.hasAccess).not.toHaveBeenCalled();
+  expect(res.status).not.toHaveBeenCalled();
+});
+
+test('checks read scope for QR patient lookup', async () => {
+  ConsentRecord.hasActiveConsent.mockResolvedValue(true);
+  const req = { user: doctor, method: 'POST', path: '/resolve-patient' };
+  const res = createResponse();
+
+  await expect(requirePatientAccess(req, res, {
+    ...patient,
+    walletAddress: null,
+    walletVerified: false,
+  })).resolves.toBe(true);
+
+  expect(ConsentRecord.hasActiveConsent).toHaveBeenCalledWith(
+    patient._id,
+    doctor._id,
+    'read_records'
+  );
 });
 
 test('allows access only when the chain confirms patient consent', async () => {

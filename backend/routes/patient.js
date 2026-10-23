@@ -10,6 +10,7 @@ const axios         = require('axios');
 const { protect, authorize } = require('../middleware/auth');
 const User          = require('../models/User');
 const MedicalRecord = require('../models/MedicalRecord');
+const ConsentRecord = require('../models/ConsentRecord');
 const blockchainService = require('../services/blockchainService');
 const { uploadToIPFS, fetchFromIPFS } = require('../utils/ipfs');
 const { validateFileMagicBytes } = require('../middleware/fileValidator');
@@ -45,6 +46,142 @@ const upload = multer({
 router.use(protect);
 // Apply role guard — only 'patient' accounts can hit these routes
 router.use(authorize('patient'));
+
+// ── Patient-controlled account consent ───────────────────────────────────────
+router.get('/access-requests', async (req, res) => {
+  try {
+    const requests = await ConsentRecord.find({
+      patientId: req.user._id,
+      consentMethod: 'account',
+      status: { $in: ['pending', 'active'] },
+      $or: [{ expiresAt: { $gt: new Date() } }, { expiresAt: null }],
+    })
+      .populate('granteeId', 'name email role specialization hospitalName')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({ requests });
+  } catch (err) {
+    console.error('[PATIENT] Access request list error:', err.message);
+    return res.status(500).json({ error: 'Could not load access requests' });
+  }
+});
+
+router.patch('/access-requests/:requestId/approve', async (req, res) => {
+  try {
+    if (!/^[a-fA-F0-9]{24}$/.test(req.params.requestId)) {
+      return res.status(400).json({ error: 'Invalid access request ID' });
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const consent = await ConsentRecord.findOneAndUpdate({
+      _id: req.params.requestId,
+      patientId: req.user._id,
+      consentMethod: 'account',
+      status: 'pending',
+      expiresAt: { $gt: now },
+    }, {
+      $set: {
+        status: 'active',
+        scope: ['read_records', 'write_records', 'ai_analysis'],
+        expiresAt,
+        ipAddress: req.ip,
+      },
+    }, { new: true });
+
+    if (!consent) {
+      return res.status(404).json({ error: 'This access request is no longer pending or has expired' });
+    }
+
+    auditLog(AuditEvents.ACCESS_GRANTED, req, {
+      resourceType: 'PatientConsent',
+      resourceId: consent._id.toString(),
+      granteeId: consent.granteeId.toString(),
+      consentMethod: 'account',
+      expiresAt,
+    });
+
+    return res.status(200).json({
+      message: 'Access approved for 30 days. You can revoke it at any time.',
+      request: consent,
+    });
+  } catch (err) {
+    console.error('[PATIENT] Approve access request error:', err.message);
+    return res.status(500).json({ error: 'Could not approve access request' });
+  }
+});
+
+router.patch('/access-requests/:requestId/deny', async (req, res) => {
+  try {
+    if (!/^[a-fA-F0-9]{24}$/.test(req.params.requestId)) {
+      return res.status(400).json({ error: 'Invalid access request ID' });
+    }
+
+    const consent = await ConsentRecord.findOneAndUpdate({
+      _id: req.params.requestId,
+      patientId: req.user._id,
+      consentMethod: 'account',
+      status: 'pending',
+      expiresAt: { $gt: new Date() },
+    }, {
+      $set: { status: 'denied', revokedAt: new Date(), ipAddress: req.ip },
+    }, { new: true });
+
+    if (!consent) {
+      return res.status(404).json({ error: 'This access request is no longer pending or has expired' });
+    }
+
+    auditLog(AuditEvents.ACCESS_DENIED, req, {
+      resourceType: 'PatientConsent',
+      resourceId: consent._id.toString(),
+      granteeId: consent.granteeId.toString(),
+      consentMethod: 'account',
+    });
+
+    return res.status(200).json({ message: 'Access request denied' });
+  } catch (err) {
+    console.error('[PATIENT] Deny access request error:', err.message);
+    return res.status(500).json({ error: 'Could not deny access request' });
+  }
+});
+
+router.patch('/access-requests/:requestId/revoke', async (req, res) => {
+  try {
+    if (!/^[a-fA-F0-9]{24}$/.test(req.params.requestId)) {
+      return res.status(400).json({ error: 'Invalid consent ID' });
+    }
+
+    const consent = await ConsentRecord.findOneAndUpdate({
+      _id: req.params.requestId,
+      patientId: req.user._id,
+      consentMethod: 'account',
+      status: 'active',
+    }, {
+      $set: {
+        status: 'revoked',
+        revokedAt: new Date(),
+        revocationReason: 'Revoked by patient',
+      },
+    }, { new: true });
+
+    if (!consent) {
+      return res.status(404).json({ error: 'Active patient account consent not found' });
+    }
+
+    auditLog(AuditEvents.ACCESS_REVOKED, req, {
+      resourceType: 'PatientConsent',
+      resourceId: consent._id.toString(),
+      granteeId: consent.granteeId.toString(),
+      consentMethod: 'account',
+    });
+
+    return res.status(200).json({ message: 'Access revoked' });
+  } catch (err) {
+    console.error('[PATIENT] Revoke account consent error:', err.message);
+    return res.status(500).json({ error: 'Could not revoke access' });
+  }
+});
 
 // ── GET /api/patient/records ──────────────────────────────────────────────────
 /**

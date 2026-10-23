@@ -146,6 +146,8 @@ const QRScanner = ({
   const [manualInput, setManualInput]         = useState('');
   const [verifiedPatient, setVerifiedPatient] = useState(null);
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [requestedIdentifier, setRequestedIdentifier] = useState('');
+  const [requestLoading, setRequestLoading] = useState(false);
 
   // Dev diagnostic state
   const [diag, setDiag] = useState({
@@ -250,6 +252,7 @@ const QRScanner = ({
     setErrorMessage('');
 
     const targetPatientId = String(identifier || '').trim();
+    setRequestedIdentifier(targetPatientId);
     if (!targetPatientId) {
       setStatus('error');
       setErrorMessage('Patient ID is required');
@@ -289,6 +292,57 @@ const QRScanner = ({
       else if (typeof onError === 'function') onError(err);
     }
   }, [stopCamera, onScan, onScanSuccess, onScanError, onError]);
+
+  const needsPatientApproval = /Patient approval is required|Patient consent is not active/i.test(errorMessage);
+  const approvalIsPending = /already waiting for patient approval|must approve it in MediChain/i.test(errorMessage);
+
+  const handleRequestPatientAccess = async () => {
+    if (!requestedIdentifier) return;
+    setRequestLoading(true);
+    try {
+      const { data } = await api.post('/doctor/request-patient-access', {
+        patientId: requestedIdentifier,
+      });
+      if (data.status === 'active') {
+        await verifyAndLookup(requestedIdentifier);
+        return;
+      }
+      setStatus('error');
+      setErrorMessage(data.message || 'Access request sent. The patient must approve it in MediChain.');
+    } catch (err) {
+      setStatus('error');
+      setErrorMessage(err.response?.data?.error || err.message || 'Could not request patient approval.');
+    } finally {
+      setRequestLoading(false);
+    }
+  };
+
+  const renderPatientApprovalAction = () => {
+    if (needsPatientApproval) {
+      return (
+        <button
+          type="button"
+          onClick={handleRequestPatientAccess}
+          disabled={requestLoading}
+          className="hc-btn hc-btn-secondary hc-btn-sm"
+        >
+          {requestLoading ? 'Sending Request…' : 'Request Patient Approval'}
+        </button>
+      );
+    }
+    if (approvalIsPending) {
+      return (
+        <button
+          type="button"
+          onClick={() => verifyAndLookup(requestedIdentifier)}
+          className="hc-btn hc-btn-secondary hc-btn-sm"
+        >
+          Check Patient Approval
+        </button>
+      );
+    }
+    return null;
+  };
 
   // ── Handle decoded QR text ────────────────────────────────────────────────
   const handleDecodedText = useCallback((decodedText) => {
@@ -1019,6 +1073,7 @@ const QRScanner = ({
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center pt-2">
+                  {renderPatientApprovalAction()}
                   <button
                     type="button"
                     onClick={handleTryAgain}
@@ -1134,6 +1189,7 @@ const QRScanner = ({
                     Link &amp; Verify Wallet in Profile
                   </button>
                 )}
+                {renderPatientApprovalAction()}
               </div>
             )}
           </div>
@@ -1191,6 +1247,7 @@ const QRScanner = ({
                     Link &amp; Verify Wallet in Profile
                   </button>
                 )}
+                {renderPatientApprovalAction()}
               </div>
             )}
             <button

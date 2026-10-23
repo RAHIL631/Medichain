@@ -24,6 +24,12 @@ const ConsentRecordSchema = new mongoose.Schema({
     enum: ['doctor', 'hospital', 'admin'],
     required: true,
   },
+  consentMethod: {
+    type: String,
+    enum: ['account', 'blockchain'],
+    default: 'account',
+    index: true,
+  },
 
   // ── Consent Scope ─────────────────────────────────────────────────────────
   scope: {
@@ -35,7 +41,7 @@ const ConsentRecordSchema = new mongoose.Schema({
   // ── Duration ──────────────────────────────────────────────────────────────
   status: {
     type:    String,
-    enum:    ['active', 'revoked', 'expired'],
+    enum:    ['pending', 'active', 'denied', 'revoked', 'expired'],
     default: 'active',
     index:   true,
   },
@@ -43,8 +49,8 @@ const ConsentRecordSchema = new mongoose.Schema({
     type:  Date,
   },
 
-  // ── Blockchain Proof ──────────────────────────────────────────────────────
-  // Transaction hash from the smart contract grantDoctorAccess / grantTimedAccess call
+  // ── Consent Proof ─────────────────────────────────────────────────────────
+  // Transaction hash for blockchain grants; account grants are authenticated and audited server-side.
   blockchainTxHash: {
     type: String,
     trim: true,
@@ -100,12 +106,14 @@ ConsentRecordSchema.pre('save', function () {
 });
 
 // Static: check if a grantee has active consent for a patient
-ConsentRecordSchema.statics.hasActiveConsent = async function (patientId, granteeId) {
+ConsentRecordSchema.statics.hasActiveConsent = async function (patientId, granteeId, requiredScope = 'read_records') {
   const now = new Date();
   const record = await this.findOne({
     patientId,
     granteeId,
+    consentMethod: 'account',
     status: 'active',
+    scope: requiredScope,
     $or: [{ expiresAt: { $gt: now } }, { expiresAt: null }],
   });
   return Boolean(record);

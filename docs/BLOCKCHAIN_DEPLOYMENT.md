@@ -79,14 +79,17 @@ npx hardhat compile
 5. The frontend defaults to this documented Sepolia contract when the checked-in
    artifact is a local Hardhat deployment. Set `REACT_APP_CONTRACT_ADDRESS` in
    Vercel to override it explicitly when deploying a different contract.
-6. Complete the patient-controlled authorization flow:
-   - Patient and doctor each connect MetaMask, switch to Sepolia, and link the
-     active wallet from **Profile** by signing the wallet-link challenge.
-   - Patient opens **Access**, registers their verified wallet on-chain if
-     prompted, then grants access to the doctor's verified wallet address.
-   - Doctor scans the patient QR, uploads its image, or enters the patient ID.
-     Each method uses the same protected resolver, which still checks the
-     patient's current on-chain grant before returning patient details.
+6. Complete the patient-controlled authorization flow using either method:
+   - **On-chain:** patient and doctor link verified wallets. The patient registers
+     their wallet on-chain and grants access to the doctor's verified wallet.
+   - **Patient account:** a patient without MetaMask can review a doctor's request
+     in **Access** and approve it from their authenticated MediChain account.
+     This account-based grant permits record viewing and uploads for 30 days and
+     can be revoked at any time from **Access**.
+   - The doctor scans the QR, uploads its image, or enters the patient ID. If no
+     active grant exists, the doctor can request patient approval. Patient details
+     stay hidden until the patient approves; a MetaMask connection by itself does
+     not grant access.
    Keep the RPC endpoint's provider key in Render's environment settings; do not
    commit it. `BLOCKCHAIN_RPC_URL`, when set, takes precedence over
    `SEPOLIA_RPC_URL`. Production does not fall back to a local Hardhat node or

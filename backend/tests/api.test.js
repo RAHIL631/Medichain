@@ -488,6 +488,63 @@ describe("Doctor Routes (protected)", () => {
     expect(resInvalid.statusCode).toBe(404);
   });
 
+  it('supports a patient-approved wallet-free access request and immediate revocation', async () => {
+    const patient = await User.findOne({ email: patientCreds.email });
+    await User.ensurePatientId(patient);
+    await User.findByIdAndUpdate(patient._id, {
+      $set: { walletVerified: false, isWalletLinked: false },
+      $unset: { walletAddress: 1 },
+    });
+
+    const deniedLookup = await request(app)
+      .post('/api/doctor/resolve-patient')
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ patientId: patient.patientId });
+    expect(deniedLookup.statusCode).toBe(403);
+    expect(deniedLookup.body.error).toMatch(/patient approval is required/i);
+
+    const requestResponse = await request(app)
+      .post('/api/doctor/request-patient-access')
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ patientId: patient.patientId });
+    expect(requestResponse.statusCode).toBe(202);
+    expect(requestResponse.body.status).toBe('pending');
+    expect(requestResponse.body.patient).toBeUndefined();
+
+    const patientRequests = await request(app)
+      .get('/api/patient/access-requests')
+      .set('Authorization', `Bearer ${patientToken}`);
+    expect(patientRequests.statusCode).toBe(200);
+    expect(patientRequests.body.requests).toHaveLength(1);
+    expect(patientRequests.body.requests[0].granteeId.email).toBe(doctorCreds.email);
+
+    const consentId = patientRequests.body.requests[0]._id;
+    const approval = await request(app)
+      .patch(`/api/patient/access-requests/${consentId}/approve`)
+      .set('Authorization', `Bearer ${patientToken}`);
+    expect(approval.statusCode).toBe(200);
+    expect(approval.body.message).toMatch(/30 days/i);
+
+    const authorizedLookup = await request(app)
+      .post('/api/doctor/resolve-patient')
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ patientId: patient.patientId });
+    expect(authorizedLookup.statusCode).toBe(200);
+    expect(authorizedLookup.body.patient.name).toBe(patientCreds.name);
+    expect(accessSpy).not.toHaveBeenCalled();
+
+    const revoke = await request(app)
+      .patch(`/api/patient/access-requests/${consentId}/revoke`)
+      .set('Authorization', `Bearer ${patientToken}`);
+    expect(revoke.statusCode).toBe(200);
+
+    const deniedAfterRevoke = await request(app)
+      .post('/api/doctor/resolve-patient')
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ patientId: patient.patientId });
+    expect(deniedAfterRevoke.statusCode).toBe(403);
+  });
+
   it("POST /api/doctor/upload-record with no auth → 401", async () => {
     const res = await request(app)
       .post('/api/doctor/upload-record')

@@ -1,4 +1,5 @@
 const blockchainService = require('../services/blockchainService');
+const ConsentRecord = require('../models/ConsentRecord');
 const { auditLog, AuditEvents } = require('../utils/auditLogger');
 
 async function requirePatientAccess(req, res, patient) {
@@ -24,6 +25,22 @@ async function requirePatientAccess(req, res, patient) {
     return false;
   }
 
+  const requiredScope = req.method === 'POST' && /(?:^|\/)upload-record$/.test(req.path)
+    ? 'write_records'
+    : 'read_records';
+
+  try {
+    if (await ConsentRecord.hasActiveConsent(patient._id, requester._id, requiredScope)) {
+      return true;
+    }
+  } catch (err) {
+    console.error('[ACCESS] Account consent check unavailable:', err.message);
+    res.status(503).json({
+      error: 'Patient access could not be verified. Please retry when the service is available.',
+    });
+    return false;
+  }
+
   if (patient.walletVerified !== true || !patient.walletAddress) {
     auditLog(AuditEvents.UNAUTHORIZED, req, {
       resourceType: 'PatientData',
@@ -31,7 +48,7 @@ async function requirePatientAccess(req, res, patient) {
       reason: 'Patient wallet is not linked and verified',
     });
     res.status(403).json({
-      error: 'This patient has not linked and verified a wallet. Ask the patient to verify their wallet in their profile, register it on-chain, and grant your verified wallet access.',
+      error: 'Patient approval is required. Send an access request and ask the patient to approve it in MediChain, or ask them to grant your verified wallet access on-chain.',
     });
     return false;
   }
@@ -54,7 +71,7 @@ async function requirePatientAccess(req, res, patient) {
     reason: 'Patient has not granted active on-chain access to this healthcare wallet',
   });
   res.status(403).json({
-    error: 'Patient consent is not active for your verified wallet. Ask the patient to register their wallet and grant you access on-chain.',
+    error: 'Patient consent is not active. Send an access request for the patient to approve in MediChain, or ask them to grant your verified wallet access on-chain.',
   });
   return false;
 }
