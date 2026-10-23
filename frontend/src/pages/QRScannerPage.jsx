@@ -6,9 +6,6 @@ import QRScanner from '../components/QRScanner';
 import GlassCard from '../components/GlassCard';
 import FuturisticButton from '../components/FuturisticButton';
 import api from '../utils/api';
-import { useAuth } from '../context/AuthContext';
-import useWallet from '../hooks/useWallet';
-import { TARGET_CHAIN_ID, TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
 
 const QRScannerPage = () => {
     const [scannedAddress, setScannedAddress] = useState(null);
@@ -16,31 +13,7 @@ const QRScannerPage = () => {
     const [loading, setLoading]             = useState(false);
     const [error, setError]                 = useState('');
     
-    const { user } = useAuth();
-    const { account, connected, connect, chainId, switchNetwork } = useWallet();
     const navigate = useNavigate();
-    const [walletError, setWalletError] = useState('');
-    const walletIdentityMatches = user?.walletVerified === true &&
-        user.walletAddress?.toLowerCase() === account?.toLowerCase();
-    const canScan = connected && chainId === TARGET_CHAIN_ID && walletIdentityMatches;
-
-    const connectForScanning = async () => {
-        setWalletError('');
-        try {
-            await connect();
-        } catch (err) {
-            setWalletError(err.message || 'Connect your verified MetaMask wallet to continue.');
-        }
-    };
-
-    const switchToTargetNetwork = async () => {
-        setWalletError('');
-        try {
-            await switchNetwork(TARGET_CHAIN_ID);
-        } catch (err) {
-            setWalletError(err.message || `Switch MetaMask to ${TARGET_NETWORK_NAME} (Chain ID ${TARGET_CHAIN_ID}).`);
-        }
-    };
 
     const navItems = [
         { label: 'Dashboard', path: '/doctor-dashboard', icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> },
@@ -80,33 +53,15 @@ const QRScannerPage = () => {
                 </div>
 
                 {!scannedAddress ? (
-                    canScan ? (
+                    <div>
+                        <p className="text-sm text-text-secondary text-center mb-4">
+                            Scan without connecting MetaMask. Patient information is returned only when your verified profile wallet has active patient consent.
+                        </p>
                         <QRScanner
                             onScanSuccess={handleScanSuccess}
                             onScanError={(err) => setError('Scanner error: ' + (err.message || err))}
                         />
-                    ) : (
-                        <GlassCard glowBorder={true} className="max-w-md mx-auto p-6 text-center">
-                            <h3 className="text-lg font-bold text-hc-text">Wallet setup required</h3>
-                            <p className="text-sm text-text-secondary mt-2">
-                                Patient details remain protected. Connect and verify your wallet on {TARGET_NETWORK_NAME}, then confirm the patient has granted active access.
-                            </p>
-                            {walletError && <p role="alert" className="text-sm text-status-danger mt-3">{walletError}</p>}
-                            {!connected ? (
-                                <FuturisticButton onClick={connectForScanning} className="mt-4">
-                                    Connect Wallet
-                                </FuturisticButton>
-                            ) : chainId !== TARGET_CHAIN_ID ? (
-                                <FuturisticButton onClick={switchToTargetNetwork} className="mt-4">
-                                    Switch to {TARGET_NETWORK_NAME}
-                                </FuturisticButton>
-                            ) : (
-                                <FuturisticButton onClick={() => navigate('/profile')} className="mt-4">
-                                    Link &amp; Verify Wallet
-                                </FuturisticButton>
-                            )}
-                        </GlassCard>
-                    )
+                    </div>
                 ) : (
                     <div className="space-y-6 animate-fadeIn">
                         <GlassCard glowBorder={true} className="border-accent-emerald-dark/30">

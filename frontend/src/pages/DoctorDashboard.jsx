@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api, { aiApi } from '../utils/api';
 import useWallet from '../hooks/useWallet';
-import { TARGET_CHAIN_ID, TARGET_NETWORK, TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
+import { TARGET_NETWORK, TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
 import { getContract, formatAddress } from '../utils/web3';
 
 import DashboardLayout from '../components/DashboardLayout';
@@ -40,7 +40,7 @@ const getRiskBadge = (level) => {
 const DoctorDashboard = () => {
     const { user, logout } = useAuth();
     const {
-        account, connected, connect, signer, network, chainId, switchNetwork,
+        account, connected, connect, signer, network,
         error: walletError,
     } = useWallet();
     const displayedNetworkName = connected ? network?.name || TARGET_NETWORK_NAME : TARGET_NETWORK_NAME;
@@ -89,34 +89,8 @@ const DoctorDashboard = () => {
         navigate('/login');
     };
 
-    const walletIdentityMatches = user?.walletVerified === true &&
-        user.walletAddress?.toLowerCase() === account?.toLowerCase();
-    const canResolvePatient = connected &&
-        chainId === TARGET_CHAIN_ID &&
-        walletIdentityMatches;
-
-    const preparePatientAccess = async () => {
+    const startPatientScan = () => {
         setPatientLookupError('');
-        if (!connected) {
-            try {
-                await connect();
-            } catch (err) {
-                setPatientLookupError(err.message || 'Connect your verified MetaMask wallet to continue.');
-            }
-            return;
-        }
-        if (chainId !== TARGET_CHAIN_ID) {
-            try {
-                await switchNetwork(TARGET_CHAIN_ID);
-            } catch (err) {
-                setPatientLookupError(err.message || `Switch MetaMask to ${TARGET_NETWORK_NAME} (Chain ID ${TARGET_CHAIN_ID}).`);
-            }
-            return;
-        }
-        if (!walletIdentityMatches) {
-            setPatientLookupError('Link and verify this wallet in your profile before scanning. Patient access is checked against your verified wallet.');
-            return;
-        }
         setScanning(true);
     };
 
@@ -452,7 +426,7 @@ const DoctorDashboard = () => {
                 </div>
             </div>
 
-            {walletError && (
+            {walletError && window.ethereum && (
                 <div className="mb-6 p-4 rounded-xl bg-hc-danger-soft border border-hc-danger/20 text-xs text-hc-danger font-semibold flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     {walletError}
@@ -487,30 +461,11 @@ const DoctorDashboard = () => {
                                 </div>
                                 <h3 className="text-sm font-semibold text-hc-text mb-1">Scan Patient QR Health ID</h3>
                                 <p className="text-xs text-hc-text-muted mb-4 max-w-xs mx-auto">
-                                    The QR contains only the patient&apos;s ID. Medical records appear only if the patient has granted you access.
+                                    Scan without MetaMask. Patient details and prescription uploads are still checked against your verified profile wallet and the patient&apos;s active on-chain consent.
                                 </p>
-                                {!connected ? (
-                                    <button onClick={preparePatientAccess} className="hc-btn hc-btn-primary hc-btn-sm w-full">
-                                        Connect Wallet to Continue
-                                    </button>
-                                ) : chainId !== TARGET_CHAIN_ID ? (
-                                    <button onClick={preparePatientAccess} className="hc-btn hc-btn-primary hc-btn-sm w-full">
-                                        Switch to {TARGET_NETWORK_NAME}
-                                    </button>
-                                ) : !walletIdentityMatches ? (
-                                    <button onClick={() => navigate('/profile')} className="hc-btn hc-btn-primary hc-btn-sm w-full">
-                                        Link &amp; Verify Wallet
-                                    </button>
-                                ) : (
-                                    <button onClick={preparePatientAccess} className="hc-btn hc-btn-primary hc-btn-sm w-full">
-                                        Launch QR Camera Scanner
-                                    </button>
-                                )}
-                                {!canResolvePatient && connected && (
-                                    <p className="text-[11px] text-hc-text-muted mt-2">
-                                        Patient records stay protected until your wallet is verified and active patient consent is confirmed on-chain.
-                                    </p>
-                                )}
+                                <button onClick={startPatientScan} className="hc-btn hc-btn-primary hc-btn-sm w-full">
+                                    Scan Patient QR
+                                </button>
                             </div>
                         )}
 
