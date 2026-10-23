@@ -48,6 +48,10 @@ connectRedis();
 
 const app = express();
 
+// Render forwards the original client IP through one trusted proxy hop.
+// This keeps IP-based rate limits scoped to users instead of Render's proxy.
+app.set('trust proxy', 1);
+
 // ══════════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE ORDER — order is critical for security
 // ══════════════════════════════════════════════════════════════════════════════
