@@ -6,14 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api, { aiApi } from '../utils/api';
 import useWallet from '../hooks/useWallet';
-import { TARGET_NETWORK, TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
+import { TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
 import { getContract, formatAddress } from '../utils/web3';
 
 import DashboardLayout from '../components/DashboardLayout';
 import QRScanner from '../components/QRScanner';
 import RecordCard from '../components/RecordCard';
 import AIAlert from '../components/AIAlert';
-import StorageProof from '../components/StorageProof';
 
 import {
   Stethoscope, QrCode, FileText, Activity, Brain,
@@ -43,7 +42,6 @@ const DoctorDashboard = () => {
         account, connected, connect, signer, network,
         error: walletError,
     } = useWallet();
-    const displayedNetworkName = connected ? network?.name || TARGET_NETWORK_NAME : TARGET_NETWORK_NAME;
     const navigate = useNavigate();
 
     const navItems = [
@@ -79,9 +77,6 @@ const DoctorDashboard = () => {
     const [uploading, setUploadLoading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState('');
 
-    const [txStatus, setTxStatus]       = useState('idle');
-    const [txHash, setTxHash]           = useState(null);
-    const [blockNumber, setBlockNumber] = useState(null);
     const [storageProof, setStorageProof] = useState(null);
 
     const handleLogout = () => {
@@ -257,41 +252,6 @@ const DoctorDashboard = () => {
         }
     };
 
-    const storeOnBlockchain = async ({ recordId, ipfsCID, ipfsURL, patientAddress, recordType }) => {
-        setUploadStatus('2/3 Awaiting MetaMask signature…');
-        setTxStatus('pending');
-
-        const contract = getContract(signer);
-        const contractRecordType = (recordType || 'other').toLowerCase().replace('-', '_');
-
-        const tx = await contract.addMedicalRecord(
-            patientAddress,
-            ipfsCID,
-            ipfsURL,
-            contractRecordType,
-            ''
-        );
-
-        setTxHash(tx.hash);
-        setUploadStatus(`3/3 Mining… TX: ${tx.hash.slice(0, 10)}…`);
-
-        const receipt = await tx.wait(1);
-        setBlockNumber(receipt.blockNumber);
-        setTxStatus('confirmed');
-
-        try {
-            await api.patch(`/doctor/record/${recordId}/txhash`, {
-                txHash:      receipt.hash,
-                blockNumber: receipt.blockNumber,
-            });
-        } catch (syncError) {
-            syncError.chainConfirmed = true;
-            throw syncError;
-        }
-
-        return receipt;
-    };
-
     const handleUploadRecord = async () => {
         if (!file)                  return alert('Please attach a prescription file (PDF, JPG, or PNG).');
         if (safeToUpload === false) return alert('Cannot upload — drug conflicts detected.');
@@ -301,11 +261,8 @@ const DoctorDashboard = () => {
         if (!scannedAddress)        return alert('Please identify or scan a patient first.');
 
         setUploadLoading(true);
-        setUploadStatus('1/2 Uploading to IPFS & Saving to Database…');
+        setUploadStatus('Uploading to IPFS & saving to database…');
         setStorageProof(null);
-        setTxStatus('idle');
-        setTxHash(null);
-        setBlockNumber(null);
 
         try {
             const formData = new FormData();
@@ -319,38 +276,14 @@ const DoctorDashboard = () => {
             const { data } = await api.post('/doctor/upload-record', formData);
 
             const {
-                _id:                  recordId,
                 ipfsCID,
                 ipfsURL,
                 fileName,
                 fileSize,
-                patientWalletAddress: patientAddr,
             } = data.record;
 
             setStorageProof({ ipfsCID, ipfsURL, fileName, fileSize });
-
-            // Optional On-Chain Anchoring (if MetaMask is connected)
-            if (signer && (patientAddr || scannedAddress)) {
-                try {
-                    setUploadStatus('2/2 Awaiting optional MetaMask confirmation…');
-                    await storeOnBlockchain({
-                        recordId,
-                        ipfsCID,
-                        ipfsURL,
-                        patientAddress: patientAddr || scannedAddress,
-                        recordType,
-                    });
-                    setUploadStatus(`✅ Prescription securely stored on IPFS & ${displayedNetworkName}`);
-                } catch (chainErr) {
-                    console.warn('[DoctorDashboard] Blockchain anchoring note:', chainErr);
-                    setTxStatus(chainErr.chainConfirmed ? 'confirmed' : 'failed');
-                    setUploadStatus(chainErr.chainConfirmed
-                        ? '✅ Prescription saved. Blockchain transaction confirmed, but its status could not be synchronized to the API.'
-                        : '✅ Prescription saved to IPFS & database. Blockchain anchoring was not confirmed.');
-                }
-            } else {
-                setUploadStatus('✅ Prescription securely saved to IPFS & database.');
-            }
+            setUploadStatus('✅ Prescription securely saved to IPFS & database.');
 
             setFile(null);
             setNotes('');
@@ -363,22 +296,11 @@ const DoctorDashboard = () => {
 
         } catch (err) {
             console.error('[UPLOAD] Error:', err);
-            setTxStatus('failed');
 
             if (err.response?.status === 422) {
                 const { conflicts = [] } = err.response?.data || {};
                 const names = conflicts.map(c => c.drug || c.name || 'Unknown').join(', ');
                 setUploadStatus(`❌ Blocked: HIGH severity drug conflict — ${names}`);
-                return;
-            }
-
-            if (err.code === 4001 || err.message?.includes('user rejected')) {
-                setUploadStatus('❌ MetaMask: Transaction rejected by user.');
-                return;
-            }
-
-            if (err.message?.includes('revert')) {
-                setUploadStatus(`❌ Contract revert: ${err.reason || err.message}`);
                 return;
             }
 
@@ -735,9 +657,9 @@ const DoctorDashboard = () => {
                                                 {uploading ? (
                                                     <span className="flex items-center justify-center gap-2">
                                                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                        {signer ? 'Processing upload…' : 'Saving to IPFS & database…'}
+                                                        Saving to IPFS & database…
                                                     </span>
-                                                ) : (signer ? 'Upload & Anchor Record' : 'Upload Record (IPFS)')}
+                                                ) : 'Upload Record (IPFS)'}
                                             </button>
                                             
                                             {uploadStatus && (
@@ -752,18 +674,19 @@ const DoctorDashboard = () => {
                                                 </div>
                                             )}
 
-                                            {storageProof && txStatus === 'confirmed' && (
-                                                <div className="mt-4">
-                                                    <StorageProof
-                                                        ipfsCID={storageProof.ipfsCID}
-                                                        ipfsURL={storageProof.ipfsURL}
-                                                        fileName={storageProof.fileName}
-                                                        fileSize={storageProof.fileSize}
-                                                        txHash={txHash}
-                                                        blockNumber={blockNumber}
-                                                        txStatus={txStatus}
-                                                        networkName={TARGET_NETWORK?.shortName || ''}
-                                                    />
+                                            {storageProof && (
+                                                <div className="mt-4 rounded-xl border border-hc-border-light bg-hc-bg-alt p-3 text-xs text-hc-text-muted">
+                                                    <p className="font-semibold text-hc-text">Stored on IPFS</p>
+                                                    <p className="mt-1 break-all">CID: {storageProof.ipfsCID}</p>
+                                                    {storageProof.fileName && <p className="mt-1">File: {storageProof.fileName}</p>}
+                                                    <a
+                                                        href={storageProof.ipfsURL}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="mt-2 inline-block font-semibold text-hc-emerald hover:underline"
+                                                    >
+                                                        Open document
+                                                    </a>
                                                 </div>
                                             )}
                                         </div>
@@ -862,7 +785,7 @@ const DoctorDashboard = () => {
                                 <li>Scan or enter the patient&apos;s QR Health ID (identification only).</li>
                                 <li>Confirm the patient has granted you access before expecting records.</li>
                                 <li>Run the drug-interaction check before uploading a prescription.</li>
-                                <li>Upload stores the file on IPFS; MetaMask anchors integrity on {TARGET_NETWORK_NAME} when connected.</li>
+                                <li>Upload stores the document on IPFS and saves its record in MediChain; no MetaMask signature is needed.</li>
                             </ol>
                             <p className="mt-3 text-[11px] text-hc-text-muted leading-relaxed border-t border-hc-border-light pt-3">
                                 AI screening is advisory decision support — not a medical diagnosis. Verify results clinically before prescribing.

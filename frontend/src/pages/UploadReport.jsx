@@ -4,10 +4,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import GlassCard from '../components/GlassCard';
 import FuturisticButton from '../components/FuturisticButton';
 import api from '../utils/api';
-import useBlockchain, { TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
-import { useWalletContext } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
-import { cidToGatewayUrl } from '../utils/web3';
 
 const UploadReport = () => {
     const { user } = useAuth();
@@ -20,9 +17,6 @@ const UploadReport = () => {
     const [loading, setLoading]               = useState(false);
     const [error, setError]                   = useState('');
     const [success, setSuccess]               = useState('');
-
-    const { addRecord, loading: chainLoading } = useBlockchain();
-    const { isConnected, connectWallet, address } = useWalletContext();
 
     const navItems = isDoctorOrHospital ? [
         { label: 'Dashboard', path: '/hospital-dashboard', icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> },
@@ -58,30 +52,9 @@ const UploadReport = () => {
                 endpoint = '/patient/upload-record';
             }
 
-            const { data } = await api.post(endpoint, formData);
+            await api.post(endpoint, formData);
 
-            const cid = data.record?.ipfsCID;
-            const recordId = data.record?._id;
-            const targetAddress = patientAddress.trim() || user?.walletAddress || address;
-
-            if (isConnected && targetAddress && cid) {
-                try {
-                    const url = data.record.ipfsURL || cidToGatewayUrl(cid);
-                    const tx = await addRecord(targetAddress, cid, url, recordType, description);
-                    if (tx?.hash && recordId) {
-                        const patchEndpoint = isDoctorOrHospital
-                            ? `/doctor/record/${recordId}/txhash`
-                            : `/patient/record/${recordId}/txhash`;
-                        await api.patch(patchEndpoint, { txHash: tx.hash }).catch(() => {});
-                    }
-                    setSuccess(`Laboratory report successfully uploaded to IPFS and anchored to ${TARGET_NETWORK_NAME}.`);
-                } catch (chainErr) {
-                    console.warn('[UploadReport] Blockchain anchoring warning:', chainErr);
-                    setSuccess('Laboratory report successfully uploaded to IPFS & saved to database.');
-                }
-            } else {
-                setSuccess('Laboratory report securely stored on IPFS & saved to database.');
-            }
+            setSuccess('Laboratory report securely uploaded to IPFS and saved to database.');
 
             setPatientAddress('');
             setDescription('');
@@ -101,11 +74,6 @@ const UploadReport = () => {
                        <h2 className="text-2xl sm:text-3xl font-display font-bold text-hc-text">Diagnostic Disbursement</h2>
                        <p className="text-text-secondary text-xs sm:text-sm mt-1">Upload verified diagnostic and laboratory findings to decentralized storage.</p>
                    </div>
-                   {!isConnected && (
-                       <FuturisticButton variant="wallet" onClick={connectWallet} className="min-h-[40px] text-xs">
-                           Connect Wallet (Optional)
-                       </FuturisticButton>
-                   )}
                 </div>
 
                 {success && (
@@ -177,10 +145,10 @@ const UploadReport = () => {
                         <FuturisticButton 
                             type="submit" 
                             fullWidth 
-                            disabled={loading || chainLoading || !file}
+                            disabled={loading || !file}
                             className="min-h-[48px]"
                         >
-                            {loading ? 'Uploading securely to IPFS...' : chainLoading ? 'Anchoring to Blockchain...' : 'Commit Report to Decentralized Storage'}
+                            {loading ? 'Uploading securely to IPFS...' : 'Upload Report to IPFS'}
                         </FuturisticButton>
                     </div>
                 </form>

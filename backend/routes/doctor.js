@@ -123,6 +123,8 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
 
     if (!(await requirePatientAccess(req, res, patient))) return;
 
+    const recordPatientWalletAddress = patient.walletAddress || '0x0000000000000000000000000000000000000000';
+
     // Reload doctor to get walletAddress (req.user comes from protect middleware)
     const doctor = await User.findById(req.user._id).select('walletAddress name');
 
@@ -236,7 +238,7 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
       bufferToUpload,
       req.file.originalname,
       {
-        patientWalletAddress: patient.walletAddress,
+        patientWalletAddress: recordPatientWalletAddress,
         recordType: normalizedRecordType,
         uploadedBy:  doctor?.walletAddress || req.user._id.toString(),
         timestamp:   new Date().toISOString(),
@@ -248,7 +250,7 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
     // ── 5. Save MedicalRecord to MongoDB ────────────────────────────────
     const record = await MedicalRecord.create({
       patientId:            patient._id,
-      patientWalletAddress: patient.walletAddress,
+      patientWalletAddress: recordPatientWalletAddress,
       doctorId:             req.user._id,
       doctorWalletAddress:  doctor?.walletAddress || null,
       ipfsCID:              cid,

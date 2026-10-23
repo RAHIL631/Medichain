@@ -60,7 +60,7 @@ export default function HelpPage() {
           </Section>
 
           <Section icon={FileText} title="Medical documents">
-            <p>Authorized doctors upload PDF/JPG/PNG records. Files are stored via IPFS; integrity may be anchored on {TARGET_NETWORK_NAME} when a wallet is connected.</p>
+            <p>Authorized doctors upload PDF/JPG/PNG records to IPFS and save them in MediChain. Uploading does not require a MetaMask signature.</p>
             <p>If upload fails, confirm patient consent, file size/type, and that storage services are available. Success is shown only after the server accepts the upload.</p>
           </Section>
 

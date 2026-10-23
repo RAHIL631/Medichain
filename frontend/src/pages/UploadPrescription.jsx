@@ -6,13 +6,7 @@ import GlassCard from '../components/GlassCard';
 import FuturisticButton from '../components/FuturisticButton';
 import CDSSAlertBanner from '../components/cdss/CDSSAlertBanner';
 import api from '../utils/api';
-import useBlockchain, {
-  TARGET_CHAIN_ID,
-  TARGET_NETWORK_NAME,
-} from '../hooks/useBlockchain';
-import { useWalletContext } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
-import { cidToGatewayUrl } from '../utils/web3';
 import { MEDICINE_IMAGES, MEDICAL_IMAGES } from '../utils/images';
 
 const UploadPrescription = () => {
@@ -32,9 +26,6 @@ const UploadPrescription = () => {
     const [success, setSuccess]               = useState('');
     const [cdssAnalysis, setCdssAnalysis]     = useState(null);
     
-    const { addRecord, loading: chainLoading } = useBlockchain();
-    const { isConnected, connectWallet, address } = useWalletContext();
-
     const navItems = isDoctorOrHospital ? [
         { label: 'Dashboard', path: '/doctor-dashboard', icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> },
         { label: 'QR Scanner', path: '/scan', icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 17h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg> },
@@ -86,29 +77,7 @@ const UploadPrescription = () => {
                 setCdssAnalysis(data.record.aiAnalysis);
             }
 
-            const cid = data.record?.ipfsCID;
-            const recordId = data.record?._id;
-            const targetAddress = patientAddress.trim() || user?.walletAddress || address;
-
-            // 3. Optional On-Chain Anchoring (if wallet connected)
-            if (isConnected && targetAddress && cid) {
-                try {
-                    const url = data.record.ipfsURL || cidToGatewayUrl(cid);
-                    const tx = await addRecord(targetAddress, cid, url, recordType, description);
-                    if (tx?.hash && recordId) {
-                        const patchEndpoint = isDoctorOrHospital
-                            ? `/doctor/record/${recordId}/txhash`
-                            : `/patient/record/${recordId}/txhash`;
-                        await api.patch(patchEndpoint, { txHash: tx.hash }).catch(() => {});
-                    }
-                    setSuccess(`Prescription securely uploaded to IPFS and anchored on ${TARGET_NETWORK_NAME}.`);
-                } catch (chainErr) {
-                    console.warn('[UploadPrescription] Blockchain anchoring warning:', chainErr);
-                    setSuccess('Prescription securely uploaded to IPFS and saved to database. (Blockchain anchoring skipped)');
-                }
-            } else {
-                setSuccess('Prescription securely stored on IPFS & database. Connect MetaMask anytime to anchor on-chain.');
-            }
+            setSuccess('Prescription securely uploaded to IPFS and saved to database.');
 
             setDescription('');
             setDrugs('');
@@ -142,11 +111,6 @@ const UploadPrescription = () => {
                                 : 'Upload and store your personal prescription safely on IPFS.'}
                         </p>
                     </div>
-                    {!isConnected && (
-                        <FuturisticButton variant="wallet" onClick={connectWallet} className="min-h-[40px] text-xs">
-                            Connect Wallet (Optional)
-                        </FuturisticButton>
-                    )}
                 </div>
 
                 {success && (
@@ -276,17 +240,14 @@ const UploadPrescription = () => {
                             <FuturisticButton 
                                 type="submit" 
                                 fullWidth 
-                                disabled={loading || chainLoading || !file}
+                                disabled={loading || !file}
                                 className="min-h-[48px]"
                             >
-                                {loading ? 'Uploading securely to IPFS...' : chainLoading ? 'Anchoring to Blockchain...' : 'Secure & Upload Prescription'}
+                                {loading ? 'Uploading securely to IPFS...' : 'Secure & Upload Prescription'}
                             </FuturisticButton>
                             
-                            <div className="p-3 rounded-lg bg-medichain-surface border border-medichain-border text-xs">
-                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-text-secondary">
-                                    <span>Target Network</span>
-                                    <span className="text-hc-emerald font-bold">{TARGET_NETWORK_NAME} ({TARGET_CHAIN_ID})</span>
-                                </div>
+                            <div className="p-3 rounded-lg bg-medichain-surface border border-medichain-border text-xs text-text-secondary">
+                                The document is stored on IPFS and its record is saved in MediChain. No MetaMask signature is required.
                             </div>
                         </div>
                     </div>
