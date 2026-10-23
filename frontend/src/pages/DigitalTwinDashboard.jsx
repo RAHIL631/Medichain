@@ -68,7 +68,7 @@ export default function DigitalTwinDashboard() {
       const { data } = await api.post('/digital-twin/simulate', payload);
       setSimResults(data.simulation);
     } catch (err) {
-      setError('Medication simulation failed.');
+      setError(err?.response?.data?.error || err?.message || 'Medication simulation failed.');
     }
   }, [isPatient, user, patientId]);
 
@@ -235,7 +235,7 @@ export default function DigitalTwinDashboard() {
 
         {/* Errors */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-500 text-sm font-semibold">
+          <div role="alert" className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-500 text-sm font-semibold">
             ❌ {error}
           </div>
         )}
