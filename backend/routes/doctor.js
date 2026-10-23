@@ -25,6 +25,7 @@ const { validateFileMagicBytes }= require('../middleware/fileValidator');
 const { encryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
 const { requirePatientAccess } = require('../middleware/patientAccess');
 const { auditLog, AuditEvents } = require('../utils/auditLogger');
+const { normalizeRecordType } = require('../utils/recordTypes');
 
 // ── Multer config ─────────────────────────────────────────────────────────────
 // Files are kept in memory (Buffer) — never touch disk — then streamed to IPFS.
@@ -82,15 +83,7 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
     }
 
     // Normalize recordType
-    let normalizedRecordType = (recordType || 'prescription').toLowerCase().trim();
-    if (normalizedRecordType === 'lab-report') normalizedRecordType = 'lab_report';
-    if (normalizedRecordType === 'imaging')    normalizedRecordType = 'xray';
-    if (normalizedRecordType === 'vaccination') normalizedRecordType = 'other';
-
-    const validTypes = ['prescription', 'lab_report', 'diagnosis', 'xray', 'scan', 'other'];
-    if (!validTypes.includes(normalizedRecordType)) {
-      normalizedRecordType = 'prescription';
-    }
+    const normalizedRecordType = normalizeRecordType(recordType) || 'prescription';
 
     if (!req.file) {
       return res.status(400).json({ error: 'File is required (PDF, JPG, or PNG)' });
@@ -244,7 +237,7 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
       req.file.originalname,
       {
         patientWalletAddress: patient.walletAddress,
-        recordType,
+        recordType: normalizedRecordType,
         uploadedBy:  doctor?.walletAddress || req.user._id.toString(),
         timestamp:   new Date().toISOString(),
         encrypted:   isEncrypted ? 'true' : 'false',
@@ -260,7 +253,7 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
       doctorWalletAddress:  doctor?.walletAddress || null,
       ipfsCID:              cid,
       ipfsURL:              ipfsURL,
-      recordType:           recordType,
+      recordType:           normalizedRecordType,
       fileName:             req.file.originalname,
       // If we use validatedMime, it ensures accuracy over whatever header was sent
       fileMimeType:         req.file.validatedMime || req.file.mimetype,

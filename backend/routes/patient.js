@@ -16,6 +16,7 @@ const { uploadToIPFS, fetchFromIPFS } = require('../utils/ipfs');
 const { validateFileMagicBytes } = require('../middleware/fileValidator');
 const { encryptBuffer, decryptBuffer, isEncryptionConfigured } = require('../utils/encryption');
 const { auditLog, AuditEvents } = require('../utils/auditLogger');
+const { normalizeRecordType } = require('../utils/recordTypes');
 const {
   linkWalletWithSignature,
 } = require('../services/walletLinkService');
@@ -257,15 +258,7 @@ router.post('/upload-record', upload.single('file'), validateFileMagicBytes, asy
     }
 
     // Normalize recordType
-    let normalizedRecordType = (recordType || 'prescription').toLowerCase().trim();
-    if (normalizedRecordType === 'lab-report') normalizedRecordType = 'lab_report';
-    if (normalizedRecordType === 'imaging')    normalizedRecordType = 'xray';
-    if (normalizedRecordType === 'vaccination') normalizedRecordType = 'other';
-
-    const validTypes = ['prescription', 'lab_report', 'diagnosis', 'xray', 'scan', 'other'];
-    if (!validTypes.includes(normalizedRecordType)) {
-      normalizedRecordType = 'other';
-    }
+    const normalizedRecordType = normalizeRecordType(recordType) || 'other';
 
     const patient = await User.findById(req.user._id);
     if (!patient) {

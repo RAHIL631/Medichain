@@ -67,7 +67,7 @@ const DoctorDashboard = () => {
     const [recordsLoading, setRecordsLoading] = useState(false);
 
     const [file, setFile] = useState(null);
-    const [recordType, setRecordType] = useState('Prescription');
+    const [recordType, setRecordType] = useState('prescription');
     const [notes, setNotes] = useState('');
     const [medications, setMedications] = useState([]);
     const [medInput, setMedInput] = useState('');
@@ -312,7 +312,7 @@ const DoctorDashboard = () => {
             formData.append('file',                 file);
             formData.append('patientWalletAddress', scannedAddress);
             formData.append('patientId',            patientData?.patientId || scannedAddress);
-            formData.append('recordType',           recordType.toLowerCase().replace('-', '_'));
+            formData.append('recordType', recordType);
             formData.append('notes',                notes || '');
             formData.append('medications',          medications.join(','));
 
@@ -355,7 +355,7 @@ const DoctorDashboard = () => {
             setFile(null);
             setNotes('');
             setMedications([]);
-            setRecordType('Prescription');
+            setRecordType('prescription');
             setSafeToUpload(null);
             if (fileInputRef.current) fileInputRef.current.value = '';
 
@@ -617,11 +617,11 @@ const DoctorDashboard = () => {
                                             onChange={(e) => setRecordType(e.target.value)}
                                             className="hc-input"
                                         >
-                                            <option>Prescription</option>
-                                            <option>Lab Report</option>
-                                            <option>Diagnosis</option>
-                                            <option>X-Ray</option>
-                                            <option>Other</option>
+                                            <option value="prescription">Prescription</option>
+                                            <option value="lab_report">Lab Report</option>
+                                            <option value="diagnosis">Diagnosis</option>
+                                            <option value="xray">X-Ray</option>
+                                            <option value="other">Other</option>
                                         </select>
                                     </div>
                                     
