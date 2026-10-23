@@ -127,6 +127,7 @@ export const useWallet = () => {
   const [balance,   setBalance]   = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error,     setError]     = useState(null);
+  const connectRequestRef = useRef(null);
 
   // ── Internal helpers ────────────────────────────────────────────────────────
 
@@ -223,48 +224,58 @@ export const useWallet = () => {
    * @returns {{ address, signer, chainId, balance }} on success
    * @throws if MetaMask is not installed or user rejects the request
    */
-  const connectWallet = useCallback(async () => {
+  const connectWallet = useCallback(() => {
     if (!window.ethereum) {
       const msg = 'MetaMask is not installed. Please visit https://metamask.io';
       setError(msg);
-      throw new Error(msg);
+      return Promise.reject(new Error(msg));
     }
+
+    if (connectRequestRef.current) return connectRequestRef.current;
 
     setIsLoading(true);
     setError(null);
 
-    try {
-      const ethers = await loadEthers();
-      const ethProvider = new ethers.BrowserProvider(window.ethereum);
+    const connectRequest = (async () => {
+      try {
+        const ethers = await loadEthers();
+        const ethProvider = new ethers.BrowserProvider(window.ethereum);
 
-      // This line triggers the MetaMask account-selection popup
-      await ethProvider.send('eth_requestAccounts', []);
+        // This line triggers the MetaMask account-selection popup
+        await ethProvider.send('eth_requestAccounts', []);
 
-      const sig     = await ethProvider.getSigner();
-      const addr    = await sig.getAddress();
-      const net     = await ethProvider.getNetwork();
-      const cId     = Number(net.chainId);
-      const rawBal  = await ethProvider.getBalance(addr);
-      const formBal = ethers.formatEther(rawBal);
+        const sig     = await ethProvider.getSigner();
+        const addr    = await sig.getAddress();
+        const net     = await ethProvider.getNetwork();
+        const cId     = Number(net.chainId);
+        const rawBal  = await ethProvider.getBalance(addr);
+        const formBal = ethers.formatEther(rawBal);
 
-      setSigner(sig);
-      setProvider(ethProvider);
-      setAddress(addr);
-      setChainId(cId);
-      setBalance(formBal);
-      localStorage.setItem(LS_KEY, addr);
+        setSigner(sig);
+        setProvider(ethProvider);
+        setAddress(addr);
+        setChainId(cId);
+        setBalance(formBal);
+        localStorage.setItem(LS_KEY, addr);
 
-      return { address: addr, signer: sig, chainId: cId, balance: formBal };
+        return { address: addr, signer: sig, chainId: cId, balance: formBal };
 
-    } catch (err) {
-      const msg = err.code === 4001
-        ? 'Connection rejected — please approve the MetaMask request.'
-        : (err.message || 'Failed to connect wallet');
-      setError(msg);
-      throw new Error(msg); // re-throw so callers can catch and show UI feedback
-    } finally {
-      setIsLoading(false);
-    }
+      } catch (err) {
+        const msg = err.code === 4001
+          ? 'Connection rejected — please approve the MetaMask request.'
+          : err.code === -32002
+            ? 'A MetaMask connection request is already open. Complete or cancel it in MetaMask before trying again.'
+            : (err.message || 'Failed to connect wallet');
+        setError(msg);
+        throw new Error(msg);
+      } finally {
+        connectRequestRef.current = null;
+        setIsLoading(false);
+      }
+    })();
+
+    connectRequestRef.current = connectRequest;
+    return connectRequest;
   }, []);
 
   // ── disconnect ──────────────────────────────────────────────────────────────

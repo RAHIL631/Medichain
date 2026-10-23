@@ -8,21 +8,30 @@ async function requirePatientAccess(req, res, patient) {
 
   if (isPatientOwner) return true;
 
-  const canCheckOnChain =
-    ['doctor', 'hospital'].includes(requester.role) &&
-    patient.walletVerified === true &&
-    requester.walletVerified === true &&
-    Boolean(patient.walletAddress) &&
-    Boolean(requester.walletAddress);
-
-  if (!canCheckOnChain) {
+  if (
+    !['doctor', 'hospital'].includes(requester.role) ||
+    requester.walletVerified !== true ||
+    !requester.walletAddress
+  ) {
     auditLog(AuditEvents.UNAUTHORIZED, req, {
       resourceType: 'PatientData',
       resourceId: patient._id.toString(),
-      reason: 'Patient or healthcare requester wallet is not linked and verified',
+      reason: 'Healthcare requester wallet is not linked and verified',
     });
     res.status(403).json({
-      error: 'Access denied: link and verify your healthcare wallet in your profile before requesting patient access.',
+      error: 'Your healthcare wallet is not linked and verified. Link and verify this wallet in your profile before requesting patient access.',
+    });
+    return false;
+  }
+
+  if (patient.walletVerified !== true || !patient.walletAddress) {
+    auditLog(AuditEvents.UNAUTHORIZED, req, {
+      resourceType: 'PatientData',
+      resourceId: patient._id.toString(),
+      reason: 'Patient wallet is not linked and verified',
+    });
+    res.status(403).json({
+      error: 'This patient has not linked and verified a wallet. Ask the patient to verify their wallet in their profile, register it on-chain, and grant your verified wallet access.',
     });
     return false;
   }

@@ -44,7 +44,7 @@ test('allows patient owner access without requiring doctor consent', async () =>
   expect(blockchainService.hasAccess).not.toHaveBeenCalled();
 });
 
-test('denies unverified requester wallet without querying the chain', async () => {
+test('denies unverified requester wallet with a doctor-specific message without querying the chain', async () => {
   const req = { user: { ...doctor, walletVerified: false } };
   const res = createResponse();
 
@@ -52,7 +52,20 @@ test('denies unverified requester wallet without querying the chain', async () =
   expect(blockchainService.hasAccess).not.toHaveBeenCalled();
   expect(res.status).toHaveBeenCalledWith(403);
   expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-    error: expect.stringContaining('link and verify your healthcare wallet'),
+    error: expect.stringContaining('Your healthcare wallet is not linked and verified'),
+  }));
+});
+
+test('denies an unverified patient wallet with patient-specific next steps', async () => {
+  const unverifiedPatient = { ...patient, walletVerified: false };
+  const req = { user: doctor };
+  const res = createResponse();
+
+  await expect(requirePatientAccess(req, res, unverifiedPatient)).resolves.toBe(false);
+  expect(blockchainService.hasAccess).not.toHaveBeenCalled();
+  expect(res.status).toHaveBeenCalledWith(403);
+  expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+    error: expect.stringContaining('This patient has not linked and verified a wallet'),
   }));
 });
 
