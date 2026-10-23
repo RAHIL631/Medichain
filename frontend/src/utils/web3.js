@@ -6,6 +6,7 @@
 // It is exported to frontend/src/contracts/MediChain.json by the deploy script.
 
 import { ethers } from 'ethers';
+import { resolveContractAddress, TARGET_CHAIN_ID } from './contractConfig';
 
 // Gracefully handle missing contract artifact (before first deploy)
 let MediChainABI = { abi: [], address: '' };
@@ -42,10 +43,11 @@ export const connectWallet = async () => {
  * @param {ethers.Signer} signer
  */
 export const getContract = (signer) => {
-  if (!MediChainABI.address) {
+  const contractAddress = resolveContractAddress(MediChainABI);
+  if (!contractAddress) {
     throw new Error('Contract address not found. Deploy the smart contract first.');
   }
-  return new ethers.Contract(MediChainABI.address, MediChainABI.abi, signer);
+  return new ethers.Contract(contractAddress, MediChainABI.abi, signer);
 };
 
 // ── getReadonlyContract ───────────────────────────────────────────────────────
@@ -54,9 +56,17 @@ export const getContract = (signer) => {
  */
 export const getReadonlyContract = () => {
   const provider = new ethers.JsonRpcProvider(
-    process.env.REACT_APP_RPC_URL || 'http://127.0.0.1:8545'
+    process.env.REACT_APP_RPC_URL || (
+      TARGET_CHAIN_ID === 11155111
+        ? 'https://rpc.sepolia.org'
+        : 'http://127.0.0.1:8545'
+    )
   );
-  return new ethers.Contract(MediChainABI.address, MediChainABI.abi, provider);
+  const contractAddress = resolveContractAddress(MediChainABI);
+  if (!contractAddress) {
+    throw new Error('Contract address not found. Deploy the smart contract first.');
+  }
+  return new ethers.Contract(contractAddress, MediChainABI.abi, provider);
 };
 
 // ── switchToHardhat ───────────────────────────────────────────────────────────

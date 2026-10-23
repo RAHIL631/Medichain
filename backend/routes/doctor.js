@@ -508,8 +508,6 @@ const resolvePatientHandler = async (req, res) => {
       await User.ensurePatientId(patient);
     }
 
-    if (!(await requirePatientAccess(req, res, patient))) return;
-
     const recordCount = await MedicalRecord.countDocuments({
       patientId: patient._id,
       isActive:  true,

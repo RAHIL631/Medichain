@@ -68,6 +68,29 @@ npx hardhat compile
    REACT_APP_CONTRACT_ADDRESS=0xYourDeployedSepoliaContractAddress
    REACT_APP_TARGET_CHAIN_ID=11155111
    ```
+4. Configure the Render backend service with:
+   ```env
+   SEPOLIA_RPC_URL=<your Sepolia JSON-RPC endpoint>
+   BLOCKCHAIN_CHAIN_ID=11155111
+   CONTRACT_ADDRESS=0x54fb71438b6A79947BE43dFAfB72194619405004
+   ```
+   This is the Sepolia address documented by the project; confirm it matches
+   the intended deployment before using it.
+5. The frontend defaults to this documented Sepolia contract when the checked-in
+   artifact is a local Hardhat deployment. Set `REACT_APP_CONTRACT_ADDRESS` in
+   Vercel to override it explicitly when deploying a different contract.
+6. Complete the patient-controlled authorization flow:
+   - Patient and doctor each connect MetaMask, switch to Sepolia, and link the
+     active wallet from **Profile** by signing the wallet-link challenge.
+   - Patient opens **Access**, registers their verified wallet on-chain if
+     prompted, then grants access to the doctor's verified wallet address.
+   - Doctor scans the patient QR, uploads its image, or enters the patient ID.
+     Each method uses the same protected resolver, which still checks the
+     patient's current on-chain grant before returning patient details.
+   Keep the RPC endpoint's provider key in Render's environment settings; do not
+   commit it. `BLOCKCHAIN_RPC_URL`, when set, takes precedence over
+   `SEPOLIA_RPC_URL`. Production does not fall back to a local Hardhat node or
+   the local address in the checked-in deployment artifacts.
 
 ---
 

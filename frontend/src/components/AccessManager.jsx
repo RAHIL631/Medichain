@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useWalletContext }   from '../context/WalletContext';
 import { useAuth }            from '../context/AuthContext';
+import api from '../utils/api';
 import {
   TARGET_CHAIN_ID,
   TARGET_EXPLORER_URL,
@@ -30,11 +31,32 @@ const AccessManager = () => {
   const [txHash,              setTxHash]              = useState(null);
   const [authorizedDoctors,   setAuthorizedDoctors]   = useState([]);
   const [listLoading,         setListLoading]         = useState(false);
+  const [patientRegistered,   setPatientRegistered]   = useState(null);
 
   const isOnCorrectNetwork = chainId === TARGET_CHAIN_ID;
   const linkedWalletMatches = user?.walletVerified === true &&
     user.walletAddress?.toLowerCase() === address?.toLowerCase();
   const isReady = isConnected && isOnCorrectNetwork && linkedWalletMatches && !!contract;
+
+  useEffect(() => {
+    let active = true;
+    setPatientRegistered(null);
+
+    if (!isReady || !address) return () => { active = false; };
+
+    contract.isRegistered(address)
+      .then((registered) => {
+        if (active) setPatientRegistered(Boolean(registered));
+      })
+      .catch((err) => {
+        if (active) {
+          setPatientRegistered(null);
+          setError(`Could not verify patient registration on ${TARGET_NETWORK_NAME}: ${err.message}`);
+        }
+      });
+
+    return () => { active = false; };
+  }, [contract, address, isReady]);
 
   // ── Require wallet helper ──────────────────────────────────────────────────
   const requireWallet = useCallback((action) => {
@@ -54,6 +76,46 @@ const AccessManager = () => {
     setWalletModalOpen(false);
   }, []);
 
+  const handleRegisterPatient = useCallback(async () => {
+    if (!isReady || !contract || !address || !signer) {
+      setError('Connect and verify your wallet on the required network before registering.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccessMsg(null);
+    setTxHash(null);
+    try {
+      const signerAddress = await signer.getAddress();
+      const network = await signer.provider.getNetwork();
+      if (signerAddress.toLowerCase() !== address.toLowerCase() ||
+          Number(network.chainId) !== TARGET_CHAIN_ID) {
+        throw new Error('The connected wallet or network changed. Reconnect and try again.');
+      }
+
+      if (!await contract.isRegistered(address)) {
+        const tx = await contract.registerPatient();
+        setTxHash(tx.hash);
+        await tx.wait(1);
+      }
+
+      setPatientRegistered(true);
+      try {
+        await api.post('/patient/confirm-registration');
+        setSuccessMsg('Patient wallet registered on-chain. You can now grant doctor access.');
+      } catch (syncError) {
+        console.error('[AccessManager] Registration profile sync failed:', syncError);
+        setError(`On-chain registration succeeded, but profile sync failed: ${syncError.message}. Refresh this page to retry verification.`);
+      }
+    } catch (err) {
+      console.error('[AccessManager] Patient registration failed:', err);
+      setError(err.reason || err.message || 'Could not register patient wallet on-chain.');
+    } finally {
+      setLoading(false);
+    }
+  }, [isReady, contract, address, signer]);
+
   // Run pendingAction once wallet becomes ready
   useEffect(() => {
     if (isReady && pendingAction) {
@@ -64,11 +126,10 @@ const AccessManager = () => {
 
   // ── Fetch Authorized Doctors from Blockchain Events ───────────────────────
   const fetchAuthorizedDoctors = useCallback(async () => {
-    if (!contract || !isConnected || !linkedWalletMatches) return;
+    if (!contract || !isReady) return;
 
     setListLoading(true);
     try {
-      const { address } = await contract.runner.provider.getSigner();
       const account = address;
 
       const grantFilter  = contract.filters.DoctorAccessGranted(account);
@@ -78,24 +139,25 @@ const AccessManager = () => {
         contract.queryFilter(revokeFilter),
       ]);
 
-      const accessMap = new Map();
-      grantEvents.forEach(ev  => accessMap.set(ev.args[1], true));
-      revokeEvents.forEach(ev => accessMap.set(ev.args[1], false));
-
-      setAuthorizedDoctors(
-        Array.from(accessMap.entries())
-          .filter(([, has]) => has)
-          .map(([doc]) => doc)
+      const doctorAddresses = new Set(
+        [...grantEvents, ...revokeEvents].map((event) => event.args[1])
       );
+      const accessChecks = await Promise.all(
+        Array.from(doctorAddresses, async (doctorAddress) => [
+          doctorAddress,
+          await contract.hasAccess(account, doctorAddress),
+        ])
+      );
+      setAuthorizedDoctors(accessChecks.filter(([, hasAccess]) => hasAccess).map(([doctorAddress]) => doctorAddress));
     } catch (err) {
       console.error('Error fetching access events:', err);
     } finally {
       setListLoading(false);
     }
-  }, [contract, isConnected, linkedWalletMatches]);
+  }, [contract, isReady, address]);
 
   useEffect(() => {
-    if (!contract || !isConnected || !linkedWalletMatches) return;
+    if (!contract || !isReady) return;
     fetchAuthorizedDoctors();
 
     const onGrant  = () => fetchAuthorizedDoctors();
@@ -106,7 +168,7 @@ const AccessManager = () => {
       contract.off('DoctorAccessGranted',  onGrant);
       contract.off('DoctorAccessRevoked',  onRevoke);
     };
-  }, [contract, isConnected, linkedWalletMatches, fetchAuthorizedDoctors]);
+  }, [contract, isReady, fetchAuthorizedDoctors]);
 
   // ── Grant Access ──────────────────────────────────────────────────────────
   const doGrantAccess = useCallback(async () => {
@@ -119,6 +181,17 @@ const AccessManager = () => {
     setSuccessMsg(null);
     setTxHash(null);
     try {
+      const signerAddress = await signer.getAddress();
+      const network = await signer.provider.getNetwork();
+      if (signerAddress.toLowerCase() !== address.toLowerCase() ||
+          Number(network.chainId) !== TARGET_CHAIN_ID) {
+        throw new Error('The connected wallet or network changed. Reconnect and try again.');
+      }
+      if (!await contract.isRegistered(address)) {
+        setPatientRegistered(false);
+        throw new Error('Register your patient wallet on-chain before granting doctor access.');
+      }
+
       const tx = await contract.grantDoctorAccess(doctorAddress);
       setTxHash(tx.hash);
       await tx.wait();
@@ -131,7 +204,7 @@ const AccessManager = () => {
     } finally {
       setLoading(false);
     }
-  }, [contract, doctorAddress, fetchAuthorizedDoctors]);
+  }, [contract, doctorAddress, fetchAuthorizedDoctors, signer, address]);
 
   const handleGrantAccess = useCallback((e) => {
     e.preventDefault();
@@ -209,6 +282,32 @@ const AccessManager = () => {
           </div>
         )}
 
+        {isReady && patientRegistered === false && (
+          <div className="p-4 rounded-xl bg-hc-warning-soft border border-hc-warning/20 flex flex-col sm:flex-row sm:items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-hc-warning flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs sm:text-sm font-bold text-hc-text">Register your patient wallet on-chain</p>
+              <p className="text-[11px] sm:text-xs text-hc-text-muted mt-0.5">
+                The contract requires patient registration before consent can be granted. This submits a transaction from your verified wallet.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRegisterPatient}
+              disabled={loading}
+              className="hc-btn hc-btn-primary hc-btn-sm min-h-[42px] flex-shrink-0"
+            >
+              {loading ? 'Registering…' : 'Register Patient Wallet'}
+            </button>
+          </div>
+        )}
+
+        {isReady && patientRegistered === null && (
+          <p className="text-xs text-hc-text-muted" role="status">
+            Checking patient registration on {TARGET_NETWORK_NAME}…
+          </p>
+        )}
+
         {/* ── Grant Access Form ──────────────────────────────────────── */}
         <div className="hc-card p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
@@ -231,7 +330,7 @@ const AccessManager = () => {
                 />
                 <button
                   type="submit"
-                  disabled={loading || !doctorAddress}
+                  disabled={loading || !doctorAddress || !isReady || patientRegistered !== true}
                   className="hc-btn hc-btn-primary w-full sm:w-auto min-w-[130px] justify-center min-h-[48px]"
                   id="grant-access-submit-btn"
                 >

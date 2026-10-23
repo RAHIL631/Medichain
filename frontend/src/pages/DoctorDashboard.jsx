@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api, { aiApi } from '../utils/api';
 import useWallet from '../hooks/useWallet';
-import { TARGET_NETWORK, TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
+import { TARGET_CHAIN_ID, TARGET_NETWORK, TARGET_NETWORK_NAME } from '../hooks/useBlockchain';
 import { getContract, formatAddress } from '../utils/web3';
 
 import DashboardLayout from '../components/DashboardLayout';
@@ -39,7 +39,10 @@ const getRiskBadge = (level) => {
 
 const DoctorDashboard = () => {
     const { user, logout } = useAuth();
-    const { account, connected, connect, signer, network, error: walletError } = useWallet();
+    const {
+        account, connected, connect, signer, network, chainId, switchNetwork,
+        error: walletError,
+    } = useWallet();
     const displayedNetworkName = connected ? network?.name || TARGET_NETWORK_NAME : TARGET_NETWORK_NAME;
     const navigate = useNavigate();
 
@@ -84,6 +87,37 @@ const DoctorDashboard = () => {
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    const walletIdentityMatches = user?.walletVerified === true &&
+        user.walletAddress?.toLowerCase() === account?.toLowerCase();
+    const canResolvePatient = connected &&
+        chainId === TARGET_CHAIN_ID &&
+        walletIdentityMatches;
+
+    const preparePatientAccess = async () => {
+        setPatientLookupError('');
+        if (!connected) {
+            try {
+                await connect();
+            } catch (err) {
+                setPatientLookupError(err.message || 'Connect your verified MetaMask wallet to continue.');
+            }
+            return;
+        }
+        if (chainId !== TARGET_CHAIN_ID) {
+            try {
+                await switchNetwork(TARGET_CHAIN_ID);
+            } catch (err) {
+                setPatientLookupError(err.message || `Switch MetaMask to ${TARGET_NETWORK_NAME} (Chain ID ${TARGET_CHAIN_ID}).`);
+            }
+            return;
+        }
+        if (!walletIdentityMatches) {
+            setPatientLookupError('Link and verify this wallet in your profile before scanning. Patient access is checked against your verified wallet.');
+            return;
+        }
+        setScanning(true);
     };
 
     const handleScanSuccess = async (data, summary) => {
@@ -455,9 +489,28 @@ const DoctorDashboard = () => {
                                 <p className="text-xs text-hc-text-muted mb-4 max-w-xs mx-auto">
                                     The QR contains only the patient&apos;s ID. Medical records appear only if the patient has granted you access.
                                 </p>
-                                <button onClick={() => setScanning(true)} className="hc-btn hc-btn-primary hc-btn-sm w-full">
-                                    Launch QR Camera Scanner
-                                </button>
+                                {!connected ? (
+                                    <button onClick={preparePatientAccess} className="hc-btn hc-btn-primary hc-btn-sm w-full">
+                                        Connect Wallet to Continue
+                                    </button>
+                                ) : chainId !== TARGET_CHAIN_ID ? (
+                                    <button onClick={preparePatientAccess} className="hc-btn hc-btn-primary hc-btn-sm w-full">
+                                        Switch to {TARGET_NETWORK_NAME}
+                                    </button>
+                                ) : !walletIdentityMatches ? (
+                                    <button onClick={() => navigate('/profile')} className="hc-btn hc-btn-primary hc-btn-sm w-full">
+                                        Link &amp; Verify Wallet
+                                    </button>
+                                ) : (
+                                    <button onClick={preparePatientAccess} className="hc-btn hc-btn-primary hc-btn-sm w-full">
+                                        Launch QR Camera Scanner
+                                    </button>
+                                )}
+                                {!canResolvePatient && connected && (
+                                    <p className="text-[11px] text-hc-text-muted mt-2">
+                                        Patient records stay protected until your wallet is verified and active patient consent is confirmed on-chain.
+                                    </p>
+                                )}
                             </div>
                         )}
 
@@ -465,7 +518,6 @@ const DoctorDashboard = () => {
                             <div className="relative rounded-xl overflow-hidden border-2 border-hc-emerald">
                                 <QRScanner 
                                     autoStart={true}
-                                    onScan={handleScanSuccess} 
                                     onScanSuccess={handleScanSuccess}
                                     onError={(err) => console.error(err)} 
                                     onClose={() => setScanning(false)}

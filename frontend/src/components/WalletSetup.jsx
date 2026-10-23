@@ -5,7 +5,7 @@
 // All blockchain logic (connect, switch network, link wallet) is preserved.
 // Added: "Back to Dashboard" link for users who choose not to continue.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWalletContext } from '../context/WalletContext';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +17,7 @@ import { CheckCircle, AlertCircle, Shield, ArrowLeft } from 'lucide-react';
 
 export default function WalletSetup({ backPath = '/patient-dashboard' }) {
   const {
-    address, isConnected, chainId,
+    address, signer, isConnected, chainId,
     connectWallet, switchNetwork,
     error: walletError, isLoading: connecting,
     network,
@@ -25,23 +25,23 @@ export default function WalletSetup({ backPath = '/patient-dashboard' }) {
 
   const { user, updateWallet } = useAuth();
   const [linking,   setLinking]   = useState(false);
-  const [linked,    setLinked]    = useState(false);
   const [linkError, setLinkError] = useState('');
 
   const isCorrectNetwork = chainId === TARGET_CHAIN_ID;
   const networkName = network?.name || (chainId ? `Chain ${chainId}` : 'Unknown');
-
-  useEffect(() => {
-    if (user?.walletAddress) setLinked(true);
-  }, [user]);
+  const linked = user?.walletVerified === true &&
+    user.walletAddress?.toLowerCase() === address?.toLowerCase();
 
   const handleLink = async () => {
     if (!address) return;
+    if (!isCorrectNetwork) {
+      setLinkError(`Switch to ${TARGET_NETWORK_NAME} before linking your blockchain identity.`);
+      return;
+    }
     setLinking(true);
     setLinkError('');
     try {
-      await updateWallet(address);
-      setLinked(true);
+      await updateWallet(address, signer);
     } catch (err) {
       setLinkError(err.message || 'Could not link wallet.');
     } finally {

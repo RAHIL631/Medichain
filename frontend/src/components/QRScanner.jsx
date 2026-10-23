@@ -29,7 +29,7 @@ export function extractPatientIdFromQR(decodedText) {
   if (!decodedText || typeof decodedText !== 'string') return null;
 
   // Step 5: Clean whitespace, carriage returns, newlines, and non-printable characters
-  const trimmed = decodedText.replace(/[\r\n\t]/g, '').trim();
+  const trimmed = decodedText.replace(/[\r\n\t\u200B-\u200D\uFEFF]/g, '').trim();
   if (!trimmed) return null;
 
   // Format 1: Plain Patient ID string (e.g. "MC-PAT-2026-000001", "MC-123456", "MC-TEST-001")
@@ -81,11 +81,13 @@ export function extractPatientIdFromQR(decodedText) {
         const cleanParam = param.trim();
         if (/^MC-/i.test(cleanParam)) return cleanParam.toUpperCase();
         if (/^0x[a-fA-F0-9]{40}$/i.test(cleanParam)) return cleanParam;
+        if (/^[0-9a-fA-F]{24}$/.test(cleanParam)) return cleanParam;
       }
       const pathParts = url.pathname.split('/').filter(Boolean);
       for (const part of pathParts) {
         if (/^MC-/i.test(part)) return part.toUpperCase();
         if (/^0x[a-fA-F0-9]{40}$/i.test(part)) return part;
+        if (/^[0-9a-fA-F]{24}$/.test(part)) return part;
       }
     } catch {
       // Not a valid URL, continue
@@ -304,12 +306,14 @@ const QRScanner = ({
       verifyAndLookup(patientId);
     } else {
       console.warn("QR EXTRACTION FAILED for raw value:", decodedText);
+      isScanningRef.current = false;
+      stopCamera();
       if (mountedRef.current) {
         setStatus('error');
         setErrorMessage('Invalid MediChain Patient QR');
       }
     }
-  }, [verifyAndLookup]);
+  }, [verifyAndLookup, stopCamera]);
 
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -727,11 +731,12 @@ const QRScanner = ({
 
     setStatus('verifying');
     setErrorMessage('');
+    let fileUrl;
 
     try {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      const fileUrl = URL.createObjectURL(file);
+      fileUrl = URL.createObjectURL(file);
 
       await new Promise((resolve, reject) => {
         img.onload = resolve;
@@ -768,8 +773,6 @@ const QRScanner = ({
         }
       }
 
-      URL.revokeObjectURL(fileUrl);
-
       if (decodedText) {
         isScanningRef.current = true;
         handleDecodedText(decodedText);
@@ -782,6 +785,7 @@ const QRScanner = ({
       setStatus('error');
       setErrorMessage('Could not find a valid QR code in this image. Please upload a clear QR photo or use Manual Entry.');
     } finally {
+      if (fileUrl) URL.revokeObjectURL(fileUrl);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -789,12 +793,12 @@ const QRScanner = ({
   // ── Manual lookup handler ────────────────────────────────────────────────
   const handleManualSubmit = (e) => {
     e.preventDefault();
-    const clean = manualInput.trim();
-    if (!clean) {
+    const patientId = extractPatientIdFromQR(manualInput);
+    if (!patientId) {
       setErrorMessage('Please enter a valid Patient ID (e.g. MC-PAT-2026-000001) or Ethereum address.');
       return;
     }
-    verifyAndLookup(clean);
+    verifyAndLookup(patientId);
   };
 
   const handleClose = () => {
@@ -1005,7 +1009,7 @@ const QRScanner = ({
                   <AlertCircle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-hc-text">Camera Scan Issue</h4>
+                  <h4 className="text-sm font-bold text-hc-text">Patient Access Check</h4>
                   <p className="text-xs text-hc-danger mt-1 max-w-xs mx-auto leading-relaxed font-medium whitespace-pre-line">{errorMessage}</p>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center pt-2">

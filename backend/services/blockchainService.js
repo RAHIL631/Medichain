@@ -9,8 +9,16 @@ const path       = require('path');
 
 class BlockchainService {
   constructor() {
-    this.rpcUrl = process.env.BLOCKCHAIN_RPC_URL || 'http://127.0.0.1:8545';
-    this.chainId = parseInt(process.env.BLOCKCHAIN_CHAIN_ID, 10) || 31337;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const sepoliaRpcUrl = process.env.SEPOLIA_RPC_URL;
+    const configuredChainId = Number.parseInt(process.env.BLOCKCHAIN_CHAIN_ID, 10);
+
+    this.rpcUrl = process.env.BLOCKCHAIN_RPC_URL
+      || sepoliaRpcUrl
+      || (isProduction ? '' : 'http://127.0.0.1:8545');
+    this.chainId = Number.isInteger(configuredChainId)
+      ? configuredChainId
+      : (sepoliaRpcUrl && !process.env.BLOCKCHAIN_RPC_URL ? 11155111 : 31337);
     this.contractAddress = process.env.CONTRACT_ADDRESS || '';
     this.abi = null;
     this.provider = null;
@@ -25,6 +33,8 @@ class BlockchainService {
    */
   init() {
     try {
+      const isProduction = process.env.NODE_ENV === 'production';
+
       // 1. Resolve ABI from deployedContract.json or fallback paths
       const possibleArtifactPaths = [
         path.join(__dirname, '..', '..', 'blockchain', 'deployedContract.json'),
@@ -36,7 +46,7 @@ class BlockchainService {
         if (fs.existsSync(p)) {
           const content = JSON.parse(fs.readFileSync(p, 'utf8'));
           this.abi = content.abi || (Array.isArray(content) ? content : null);
-          if (!this.contractAddress && content.address) {
+          if (!isProduction && !this.contractAddress && content.address) {
             this.contractAddress = content.address;
           }
           if (this.abi) break;

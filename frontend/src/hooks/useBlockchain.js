@@ -26,6 +26,10 @@ import {
   useCallback,
   useRef,
 } from 'react';
+import {
+  resolveContractAddress,
+  TARGET_CHAIN_ID,
+} from '../utils/contractConfig';
 
 let ethersPromise;
 const loadEthers = () => {
@@ -80,8 +84,7 @@ const NETWORKS = {
   },
 };
 
-export const TARGET_CHAIN_ID =
-  Number(process.env.REACT_APP_TARGET_CHAIN_ID) || 11155111;
+export { TARGET_CHAIN_ID };
 
 export const TARGET_NETWORK = NETWORKS[TARGET_CHAIN_ID];
 export const TARGET_NETWORK_NAME = TARGET_NETWORK?.name || `Chain ${TARGET_CHAIN_ID}`;
@@ -366,15 +369,12 @@ export const useContract = (signer) => {
     setContract(null);
     if (!signer) return () => { isCurrent = false; };
 
-    // In production, prefer environment variable to avoid using local Hardhat address
-    let contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS;
-    if (!contractAddress) {
-      // If targeting Sepolia but artifact is Hardhat, ignore the Hardhat address
-      if (TARGET_CHAIN_ID === 11155111 && MediChainArtifact.chainId === 31337) {
-        console.warn('[useContract] Production requires a Sepolia contract address via REACT_APP_CONTRACT_ADDRESS. Local Hardhat address ignored.');
-        return () => { isCurrent = false; };
-      }
-      contractAddress = MediChainArtifact.address;
+    let contractAddress;
+    try {
+      contractAddress = resolveContractAddress(MediChainArtifact);
+    } catch (err) {
+      console.error('[useContract] Invalid contract configuration:', err.message);
+      return () => { isCurrent = false; };
     }
 
     if (!contractAddress) {
@@ -383,7 +383,14 @@ export const useContract = (signer) => {
     }
 
     loadEthers()
-      .then((ethers) => {
+      .then(async (ethers) => {
+        const network = await signer.provider?.getNetwork();
+        if (network && Number(network.chainId) !== TARGET_CHAIN_ID) {
+          console.warn(
+            `[useContract] Wallet is on chain ${network.chainId}; expected ${TARGET_CHAIN_ID}.`
+          );
+          return;
+        }
         if (isCurrent) {
           setContract(new ethers.Contract(
             contractAddress,
