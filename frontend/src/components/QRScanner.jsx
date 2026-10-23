@@ -135,6 +135,7 @@ const QRScanner = ({
   onScanSuccess, 
   onScanError, 
   onError, 
+  onWalletSetup,
   onClose, 
   autoStart = false 
 }) => {
@@ -1011,6 +1012,11 @@ const QRScanner = ({
                 <div>
                   <h4 className="text-sm font-bold text-hc-text">Patient Access Check</h4>
                   <p className="text-xs text-hc-danger mt-1 max-w-xs mx-auto leading-relaxed font-medium whitespace-pre-line">{errorMessage}</p>
+                  {errorMessage.includes('Your healthcare wallet is not linked and verified') && (
+                    <p className="text-xs text-hc-text-muted mt-2 max-w-xs mx-auto">
+                      Connecting MetaMask is separate from verifying your healthcare wallet. Verify the active account in your profile, then retry.
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center pt-2">
                   <button
@@ -1034,6 +1040,15 @@ const QRScanner = ({
                   >
                     Enter ID
                   </button>
+                  {errorMessage.includes('Your healthcare wallet is not linked and verified') && onWalletSetup && (
+                    <button
+                      type="button"
+                      onClick={onWalletSetup}
+                      className="hc-btn hc-btn-secondary hc-btn-sm"
+                    >
+                      Link &amp; Verify Wallet
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -1106,9 +1121,20 @@ const QRScanner = ({
             )}
 
             {errorMessage && status !== 'success' && (
-              <p className="text-xs text-hc-danger font-semibold bg-hc-danger-soft p-3 rounded-xl border border-hc-danger/20 text-center w-full">
-                {errorMessage}
-              </p>
+              <div className="w-full space-y-2">
+                <p className="text-xs text-hc-danger font-semibold bg-hc-danger-soft p-3 rounded-xl border border-hc-danger/20 text-center">
+                  {errorMessage}
+                </p>
+                {errorMessage.includes('Your healthcare wallet is not linked and verified') && onWalletSetup && (
+                  <button
+                    type="button"
+                    onClick={onWalletSetup}
+                    className="hc-btn hc-btn-secondary hc-btn-sm w-full"
+                  >
+                    Link &amp; Verify Wallet in Profile
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -1152,9 +1178,20 @@ const QRScanner = ({
             )}
 
             {errorMessage && status !== 'success' && (
-              <p className="text-xs text-hc-danger font-semibold bg-hc-danger-soft p-2.5 rounded-lg border border-hc-danger/20">
-                {errorMessage}
-              </p>
+              <div className="space-y-2">
+                <p className="text-xs text-hc-danger font-semibold bg-hc-danger-soft p-2.5 rounded-lg border border-hc-danger/20">
+                  {errorMessage}
+                </p>
+                {errorMessage.includes('Your healthcare wallet is not linked and verified') && onWalletSetup && (
+                  <button
+                    type="button"
+                    onClick={onWalletSetup}
+                    className="hc-btn hc-btn-secondary hc-btn-sm w-full"
+                  >
+                    Link &amp; Verify Wallet in Profile
+                  </button>
+                )}
+              </div>
             )}
             <button
               type="submit"

@@ -89,6 +89,9 @@ const DoctorDashboard = () => {
         navigate('/login');
     };
 
+    const profileWalletMatches = user?.walletVerified === true &&
+        user.walletAddress?.toLowerCase() === account?.toLowerCase();
+
     const startPatientScan = () => {
         setPatientLookupError('');
         setScanning(true);
@@ -406,11 +409,21 @@ const DoctorDashboard = () => {
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     {connected ? (
-                        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-hc-success-soft border border-hc-success/20 rounded-full">
-                            <span className="w-2 h-2 rounded-full bg-hc-success animate-pulse" />
-                            <span className="text-xs font-mono font-semibold text-hc-success">{formatAddress(account)}</span>
-                            <span className="text-[10px] text-hc-success uppercase font-bold tracking-wider ml-1">{network?.shortName || TARGET_NETWORK_NAME}</span>
-                        </div>
+                        <>
+                            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-hc-success-soft border border-hc-success/20 rounded-full">
+                                <span className="w-2 h-2 rounded-full bg-hc-success animate-pulse" />
+                                <span className="text-xs font-mono font-semibold text-hc-success">{formatAddress(account)}</span>
+                                <span className="text-[10px] text-hc-success uppercase font-bold tracking-wider ml-1">{network?.shortName || TARGET_NETWORK_NAME}</span>
+                            </div>
+                            {!profileWalletMatches && (
+                                <button
+                                    onClick={() => navigate('/profile')}
+                                    className="hc-btn hc-btn-secondary hc-btn-sm"
+                                >
+                                    Link &amp; Verify Profile Wallet
+                                </button>
+                            )}
+                        </>
                     ) : (
                         <button onClick={connect} className="hc-btn hc-btn-primary hc-btn-sm flex items-center gap-2">
                             <Wallet className="w-4 h-4" />
@@ -474,7 +487,8 @@ const DoctorDashboard = () => {
                                 <QRScanner 
                                     autoStart={true}
                                     onScanSuccess={handleScanSuccess}
-                                    onError={(err) => console.error(err)} 
+                                    onError={(err) => console.error(err)}
+                                    onWalletSetup={() => navigate('/profile')}
                                     onClose={() => setScanning(false)}
                                 />
                             </div>

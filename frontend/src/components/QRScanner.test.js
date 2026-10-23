@@ -75,6 +75,30 @@ test('manual entry resolves the normalized patient ID through the protected endp
   expect(await screen.findByText('Synthetic Patient')).toBeInTheDocument();
 });
 
+test('offers profile wallet verification when protected lookup reports an unverified doctor wallet', async () => {
+  const onWalletSetup = jest.fn();
+  api.post.mockRejectedValueOnce({
+    response: {
+      data: {
+        error: 'Your healthcare wallet is not linked and verified. Link and verify this wallet in your profile before requesting patient access.',
+      },
+    },
+  });
+  render(<QRScanner onWalletSetup={onWalletSetup} />);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Manual' }));
+  fireEvent.change(screen.getByRole('textbox'), {
+    target: { value: patientId },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Find Patient' }));
+
+  const profileButton = await screen.findByRole('button', {
+    name: 'Link & Verify Wallet in Profile',
+  });
+  fireEvent.click(profileButton);
+  expect(onWalletSetup).toHaveBeenCalledTimes(1);
+});
+
 test('uploaded QR images resolve through the same protected patient lookup', async () => {
   const originals = {
     Image: window.Image,
