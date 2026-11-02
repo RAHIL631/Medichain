@@ -27,6 +27,7 @@ PORT=5001
 ENV=production
 LOG_LEVEL=INFO
 MODEL_DIR=models_registry
+CORS_ORIGINS=https://medichain-henna.vercel.app
 ```
 
 ### 3. Frontend (`frontend/.env`)

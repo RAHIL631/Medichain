@@ -22,8 +22,14 @@ const api = axios.create({
 // ── AI Service Base URL ────────────────────────────────────────────────────────
 // Production: https://medichain-ai.onrender.com
 // Default fallback: http://localhost:5001
+const aiBaseURL = process.env.REACT_APP_AI_URL || (
+  process.env.NODE_ENV === 'production'
+    ? 'https://medichain-ai.onrender.com'
+    : 'http://localhost:5001'
+);
+
 export const aiApi = axios.create({
-  baseURL: process.env.REACT_APP_AI_URL || 'http://localhost:5001',
+  baseURL: aiBaseURL,
   headers: { 'Content-Type': 'application/json' },
   // 60 seconds — AI inference + cold-start
   timeout: 60000,

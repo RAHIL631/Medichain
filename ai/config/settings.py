@@ -41,7 +41,7 @@ class Settings:
         o.strip()
         for o in os.getenv(
             "CORS_ORIGINS",
-            "http://localhost:3000,http://localhost:3005,http://localhost:3006,http://localhost:5000"
+            "https://medichain-henna.vercel.app,http://localhost:3000,http://localhost:3005,http://localhost:3006,http://localhost:5000"
         ).split(",")
         if o.strip()
     ]
