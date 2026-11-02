@@ -19,7 +19,13 @@ class BlockchainService {
     this.chainId = Number.isInteger(configuredChainId)
       ? configuredChainId
       : (sepoliaRpcUrl && !process.env.BLOCKCHAIN_RPC_URL ? 11155111 : 31337);
-    this.contractAddress = process.env.CONTRACT_ADDRESS || '';
+    const configuredContractAddress = process.env.CONTRACT_ADDRESS || '';
+    if (configuredContractAddress && !ethers.isAddress(configuredContractAddress)) {
+      console.warn('[BlockchainService] Ignoring invalid CONTRACT_ADDRESS');
+    }
+    this.contractAddress = ethers.isAddress(configuredContractAddress)
+      ? ethers.getAddress(configuredContractAddress)
+      : '';
     this.abi = null;
     this.provider = null;
     this.contract = null;
@@ -47,7 +53,11 @@ class BlockchainService {
           const content = JSON.parse(fs.readFileSync(p, 'utf8'));
           this.abi = content.abi || (Array.isArray(content) ? content : null);
           if (!isProduction && !this.contractAddress && content.address) {
-            this.contractAddress = content.address;
+            if (ethers.isAddress(content.address)) {
+              this.contractAddress = ethers.getAddress(content.address);
+            } else {
+              console.warn('[BlockchainService] Ignoring invalid address in local contract artifact');
+            }
           }
           if (this.abi) break;
         }

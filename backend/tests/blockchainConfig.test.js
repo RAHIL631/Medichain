@@ -50,4 +50,23 @@ describe('BlockchainService deployment configuration', () => {
     expect(service.chainId).toBe(31337);
     expect(service.contractAddress).toMatch(/^0x[a-fA-F0-9]{40}$/);
   });
+
+  it('ignores an invalid configured address and uses the local artifact in development', () => {
+    const service = createService({
+      NODE_ENV: 'development',
+      CONTRACT_ADDRESS: 'invalid-contract-address',
+    });
+
+    expect(service.contractAddress).toMatch(/^0x[a-fA-F0-9]{40}$/);
+  });
+
+  it('does not use an invalid configured address in production', () => {
+    const service = createService({
+      NODE_ENV: 'production',
+      CONTRACT_ADDRESS: 'invalid-contract-address',
+    });
+
+    expect(service.contractAddress).toBe('');
+    expect(service.contract).toBeNull();
+  });
 });

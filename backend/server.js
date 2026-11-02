@@ -189,6 +189,7 @@ app.use((req, res, next) => {
 const generalLimiter = rateLimit({
   windowMs:         15 * 60 * 1000, // 15 minutes
   max:              100,             // max requests per window per IP
+  skip:             () => process.env.NODE_ENV === 'test',
   standardHeaders:  true,           // return RateLimit-* headers
   legacyHeaders:    false,
   message: {
@@ -202,6 +203,7 @@ app.use('/api', generalLimiter);
 const authLimiter = rateLimit({
   windowMs:         15 * 60 * 1000, // 15 minutes
   max:              process.env.NODE_ENV === 'production' ? 10 : 100, // relaxed for dev
+  skip:             () => process.env.NODE_ENV === 'test',
   standardHeaders:  true,
   legacyHeaders:    false,
   message: {
